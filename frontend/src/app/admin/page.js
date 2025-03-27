@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Box,
   Grid,
@@ -59,13 +59,8 @@ import {
 } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
-
-// Mock data - Replace with actual API calls
-const mockUsers = [
-  { id: 1, name: 'John Doe', email: 'john@example.com', role: 'Admin', status: 'Active', lastLogin: '2024-03-26 15:30:00' },
-  { id: 2, name: 'Jane Smith', email: 'jane@example.com', role: 'User', status: 'Pending', lastLogin: '2024-03-25 11:45:00' },
-  { id: 3, name: 'Mike Johnson', email: 'mike@example.com', role: 'Manager', status: 'Active', lastLogin: '2024-03-26 09:15:00' },
-];
+import { API_BASE_URL } from '../config';
+import { useRouter } from 'next/navigation';
 
 const mockRoles = [
   { id: 1, name: 'Admin', permissions: ['all'], userCount: 5, description: 'Full system access' },
@@ -89,10 +84,27 @@ const AdminDashboard = () => {
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [selectedUser, setSelectedUser] = useState(null);
   const [selectedRole, setSelectedRole] = useState(null);
-  const { user } = useAuth();
+  const [users, setUsers] = useState([]);
+  const [pendingApprovals, setPendingApprovals] = useState([]);
+  const [newUser, setNewUser] = useState({
+    username: '',
+    email: '',
+    password: '',
+    first_name: '',
+    last_name: '',
+    role: 'user',
+    active: true,
+  });
+  const [notification, setNotification] = useState({ message: '', type: '' });
+  const { user, loading, handleTokenExpiration } = useAuth();
+  const router = useRouter();
 
   const handleTabChange = (event, newValue) => {
     setActiveTab(newValue);
+    if(newValue === 0) {
+      loadUsers();
+      loadPendingApprovals();
+    }
   };
 
   const handleOpenDialog = (type, data = null) => {
@@ -100,6 +112,16 @@ const AdminDashboard = () => {
       setSelectedUser(data);
     } else if (type === 'editRole') {
       setSelectedRole(data);
+    } else if (type === 'newUser') {
+      setNewUser({
+        username: '',
+        email: '',
+        password: '',
+        first_name: '',
+        last_name: '',
+        role: 'user',
+        active: true,
+      });
     }
     setDialogType(type);
     setOpenDialog(true);
@@ -118,6 +140,159 @@ const AdminDashboard = () => {
   const handleChangeRowsPerPage = (event) => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
+  };
+
+  const handleApiError = async (response) => {
+    if (response.status === 401) {
+      const data = await response.json();
+      if (data.error === 'Token has expired') {
+        handleTokenExpiration();
+      } else {
+        setNotification({ message: 'Session expired. Please login again.', type: 'error' });
+        router.push('/auth/login');
+      }
+      return true;
+    }
+    return false;
+  };
+
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push('/auth/login');
+      return;
+    }
+
+    if (!loading) {
+      loadUsers();
+      loadPendingApprovals();
+    }
+  }, [loading, user]);
+
+  const loadUsers = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      const response = await fetch(`${API_BASE_URL}/admin/users`, { 
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (await handleApiError(response)) return;
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to load users');
+      }
+
+      const data = await response.json();
+      setUsers(data);
+    } catch (err) {
+      setNotification({ message: err.message || 'Error loading users', type: 'error' });
+    }
+  };
+
+  const loadPendingApprovals = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      const response = await fetch(`${API_BASE_URL}/admin/pending-approvals`, { 
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (await handleApiError(response)) return;
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to load pending approvals');
+      }
+
+      const data = await response.json();
+      setPendingApprovals(data);
+    } catch (err) {
+      setNotification({ message: err.message || 'Error loading pending approvals', type: 'error' });
+    }
+  };
+
+  const createUser = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setNotification({ message: 'Authentication required', type: 'error' });
+        router.push('/auth/login');
+        return;
+      }
+
+      const response = await fetch(`${API_BASE_URL}/admin/users`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(newUser),
+      });
+
+      if (await handleApiError(response)) return;
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to create user');
+      }
+
+      const result = await response.json();
+      setNotification({ message: 'User created successfully', type: 'success' });
+      loadUsers();
+      loadPendingApprovals();
+      handleCloseDialog();
+    } catch (err) {
+      setNotification({ message: err.message || 'Error creating user', type: 'error' });
+    }
+  };
+
+  const approveUser = async (userId, actionType) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setNotification({ message: 'Authentication required', type: 'error' });
+        router.push('/auth/login');
+        return;
+      }
+
+      const response = await fetch(`${API_BASE_URL}/admin/approve-user/${userId}`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ action: actionType }),
+      });
+
+      if (await handleApiError(response)) return;
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to update approval');
+      }
+
+      const result = await response.json();
+      setNotification({ message: result.message, type: 'success' });
+      loadUsers();
+      loadPendingApprovals();
+    } catch (err) {
+      setNotification({ message: err.message || 'Error updating approval', type: 'error' });
+    }
   };
 
   const StatCard = ({ title, value, icon, color, trend }) => (
@@ -179,62 +354,159 @@ const AdminDashboard = () => {
     </Card>
   );
 
-  const UserDialog = () => (
-    <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 2.5 }}>
-      <TextField
-        label="Full Name"
-        fullWidth
-        defaultValue={selectedUser?.name}
-        variant="outlined"
-        InputProps={{
-          sx: {
-            borderRadius: 2,
-            '&:hover': {
-              borderColor: theme.palette.primary.main,
-            },
-          },
-        }}
-      />
-      <TextField
-        label="Email"
-        fullWidth
-        defaultValue={selectedUser?.email}
-        variant="outlined"
-        InputProps={{
-          sx: {
-            borderRadius: 2,
-          },
-        }}
-      />
-      <FormControl fullWidth variant="outlined">
-        <InputLabel>Role</InputLabel>
-        <Select
-          label="Role"
-          defaultValue={selectedUser?.role || 'user'}
-          sx={{ borderRadius: 2 }}
-        >
-          <MenuItem value="admin">Admin</MenuItem>
-          <MenuItem value="manager">Manager</MenuItem>
-          <MenuItem value="user">User</MenuItem>
-        </Select>
-      </FormControl>
-      <FormGroup>
-        <FormControlLabel
-          control={
-            <Switch
-              defaultChecked={selectedUser?.status === 'Active'}
-              color="primary"
+  const UserDialog = () => {
+    if (dialogType === 'newUser') {
+      return (
+        <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 2.5 }}>
+          <TextField
+            label="Username"
+            fullWidth
+            value={newUser.username}
+            onChange={(e) => setNewUser({ ...newUser, username: e.target.value })}
+            variant="outlined"
+            InputProps={{
+              sx: {
+                borderRadius: 2,
+                '&:hover': {
+                  borderColor: theme.palette.primary.main,
+                },
+              },
+            }}
+          />
+          <TextField
+            label="Email"
+            fullWidth
+            value={newUser.email}
+            onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
+            variant="outlined"
+            InputProps={{
+              sx: {
+                borderRadius: 2,
+              },
+            }}
+          />
+          <TextField
+            label="Password"
+            type="password"
+            fullWidth
+            value={newUser.password}
+            onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
+            variant="outlined"
+            InputProps={{
+              sx: {
+                borderRadius: 2,
+              },
+            }}
+          />
+          <TextField
+            label="First Name"
+            fullWidth
+            value={newUser.first_name}
+            onChange={(e) => setNewUser({ ...newUser, first_name: e.target.value })}
+            variant="outlined"
+            InputProps={{
+              sx: { borderRadius: 2 },
+            }}
+          />
+          <TextField
+            label="Last Name"
+            fullWidth
+            value={newUser.last_name}
+            onChange={(e) => setNewUser({ ...newUser, last_name: e.target.value })}
+            variant="outlined"
+            InputProps={{
+              sx: { borderRadius: 2 },
+            }}
+          />
+          <FormControl fullWidth variant="outlined">
+            <InputLabel>Role</InputLabel>
+            <Select
+              label="Role"
+              value={newUser.role}
+              onChange={(e) => setNewUser({ ...newUser, role: e.target.value })}
+              sx={{ borderRadius: 2 }}
+            >
+              <MenuItem value="admin">Admin</MenuItem>
+              <MenuItem value="manager">Manager</MenuItem>
+              <MenuItem value="user">User</MenuItem>
+            </Select>
+          </FormControl>
+          <FormGroup>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={newUser.active}
+                  onChange={(e) => setNewUser({ ...newUser, active: e.target.checked })}
+                  color="primary"
+                />
+              }
+              label={
+                <Typography variant="body1" color="textPrimary">
+                  Active Status
+                </Typography>
+              }
             />
-          }
-          label={
-            <Typography variant="body1" color="textPrimary">
-              Active Status
-            </Typography>
-          }
+          </FormGroup>
+        </Box>
+      );
+    }
+    return (
+      <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 2.5 }}>
+        <TextField
+          label="Full Name"
+          fullWidth
+          defaultValue={selectedUser?.name}
+          variant="outlined"
+          InputProps={{
+            sx: {
+              borderRadius: 2,
+              '&:hover': {
+                borderColor: theme.palette.primary.main,
+              },
+            },
+          }}
         />
-      </FormGroup>
-    </Box>
-  );
+        <TextField
+          label="Email"
+          fullWidth
+          defaultValue={selectedUser?.email}
+          variant="outlined"
+          InputProps={{
+            sx: {
+              borderRadius: 2,
+            },
+          }}
+        />
+        <FormControl fullWidth variant="outlined">
+          <InputLabel>Role</InputLabel>
+          <Select
+            label="Role"
+            defaultValue={selectedUser?.role || 'user'}
+            sx={{ borderRadius: 2 }}
+          >
+            <MenuItem value="admin">Admin</MenuItem>
+            <MenuItem value="manager">Manager</MenuItem>
+            <MenuItem value="user">User</MenuItem>
+          </Select>
+        </FormControl>
+        <FormGroup>
+          <FormControlLabel
+            control={
+              <Switch
+                defaultChecked={selectedUser?.status === 'Active'}
+                color="primary"
+              />
+            }
+            label={
+              <Typography variant="body1" color="textPrimary">
+                Active Status
+              </Typography>
+            }
+          />
+        </FormGroup>
+      </Box>
+    );
+  };
 
   const RoleDialog = () => (
     <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 2.5 }}>
@@ -297,6 +569,11 @@ const AdminDashboard = () => {
       case 0: // Users
         return (
           <Box>
+            {notification.message && (
+              <Alert severity={notification.type} onClose={() => setNotification({ message: '', type: '' })} sx={{ mb: 2 }}>
+                {notification.message}
+              </Alert>
+            )}
             <Paper
               elevation={0}
               sx={{
@@ -359,6 +636,101 @@ const AdminDashboard = () => {
                 </Stack>
               </Stack>
             </Paper>
+            {pendingApprovals.length > 0 && (
+              <Box sx={{ mb: 3 }}>
+                <Typography variant="h6" sx={{ mb: 2 }}>
+                  Pending Approvals
+                </Typography>
+                <TableContainer
+                  component={Paper}
+                  elevation={0}
+                  sx={{
+                    borderRadius: 3,
+                    overflow: 'hidden',
+                    border: `1px solid ${theme.palette.divider}`,
+                  }}
+                >
+                  <Table>
+                    <TableHead>
+                      <TableRow>
+                        <TableCell sx={{ fontWeight: 600 }}>Name</TableCell>
+                        <TableCell sx={{ fontWeight: 600 }}>Email</TableCell>
+                        <TableCell sx={{ fontWeight: 600 }}>Created At</TableCell>
+                        <TableCell align="center" sx={{ fontWeight: 600 }}>Actions</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {pendingApprovals.map((pending) => (
+                        <TableRow
+                          key={pending.user_id}
+                          hover
+                          sx={{
+                            '&:hover': {
+                              backgroundColor: alpha(theme.palette.primary.main, 0.04),
+                            },
+                          }}
+                        >
+                          <TableCell>
+                            <Box display="flex" alignItems="center">
+                              <Avatar
+                                sx={{
+                                  mr: 2,
+                                  bgcolor: theme.palette.primary.main,
+                                  fontWeight: 600,
+                                }}
+                              >
+                                {pending.first_name ? pending.first_name[0] : '?'}
+                              </Avatar>
+                              <Typography variant="body1" fontWeight="500">
+                                {pending.first_name} {pending.last_name}
+                              </Typography>
+                            </Box>
+                          </TableCell>
+                          <TableCell>{pending.email}</TableCell>
+                          <TableCell>
+                            <Typography variant="body2" color="text.secondary">
+                              {pending.created_at ? new Date(pending.created_at).toLocaleString() : ''}
+                            </Typography>
+                          </TableCell>
+                          <TableCell align="center">
+                            <Stack direction="row" spacing={1} justifyContent="center">
+                              <Tooltip title="Approve User">
+                                <IconButton
+                                  size="small"
+                                  color="primary"
+                                  onClick={() => approveUser(pending.user_id, 'approve')}
+                                  sx={{
+                                    '&:hover': {
+                                      backgroundColor: alpha(theme.palette.primary.main, 0.1),
+                                    },
+                                  }}
+                                >
+                                  <CheckIcon />
+                                </IconButton>
+                              </Tooltip>
+                              <Tooltip title="Reject User">
+                                <IconButton
+                                  size="small"
+                                  color="error"
+                                  onClick={() => approveUser(pending.user_id, 'reject')}
+                                  sx={{
+                                    '&:hover': {
+                                      backgroundColor: alpha(theme.palette.error.main, 0.1),
+                                    },
+                                  }}
+                                >
+                                  <BlockIcon />
+                                </IconButton>
+                              </Tooltip>
+                            </Stack>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              </Box>
+            )}
             <TableContainer
               component={Paper}
               elevation={0}
@@ -380,9 +752,9 @@ const AdminDashboard = () => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {mockUsers.map((user) => (
+                  {users.map((userRow) => (
                     <TableRow
-                      key={user.id}
+                      key={userRow.user_id}
                       hover
                       sx={{
                         '&:hover': {
@@ -399,18 +771,18 @@ const AdminDashboard = () => {
                               fontWeight: 600,
                             }}
                           >
-                            {user.name[0]}
+                            {userRow.first_name ? userRow.first_name[0] : '?'}
                           </Avatar>
                           <Typography variant="body1" fontWeight="500">
-                            {user.name}
+                            {userRow.first_name} {userRow.last_name}
                           </Typography>
                         </Box>
                       </TableCell>
-                      <TableCell>{user.email}</TableCell>
+                      <TableCell>{userRow.email}</TableCell>
                       <TableCell>
                         <Chip
-                          label={user.role}
-                          color={user.role === 'Admin' ? 'primary' : user.role === 'Manager' ? 'info' : 'default'}
+                          label={userRow.roles && userRow.roles.length > 0 ? userRow.roles.join(', ') : 'N/A'}
+                          color={userRow.roles && userRow.roles.includes('SUPER_ADMIN') || userRow.roles.includes('ADMIN') ? 'primary' : 'default'}
                           size="small"
                           sx={{
                             fontWeight: 500,
@@ -421,10 +793,10 @@ const AdminDashboard = () => {
                       </TableCell>
                       <TableCell>
                         <Chip
-                          label={user.status}
-                          color={user.status === 'Active' ? 'success' : 'warning'}
+                          label={userRow.account_status}
+                          color={userRow.account_status === 'ACTIVE' ? 'success' : userRow.account_status === 'PENDING' ? 'warning' : 'default'}
                           size="small"
-                          icon={user.status === 'Active' ? <CheckIcon /> : <BlockIcon />}
+                          icon={userRow.account_status === 'ACTIVE' ? <CheckIcon /> : <BlockIcon />}
                           sx={{
                             fontWeight: 500,
                             borderRadius: '8px',
@@ -434,7 +806,7 @@ const AdminDashboard = () => {
                       </TableCell>
                       <TableCell>
                         <Typography variant="body2" color="text.secondary">
-                          {user.lastLogin}
+                          {userRow.lastLogin ? new Date(userRow.lastLogin).toLocaleString() : ''}
                         </Typography>
                       </TableCell>
                       <TableCell align="center">
@@ -443,7 +815,7 @@ const AdminDashboard = () => {
                             <IconButton
                               size="small"
                               color="primary"
-                              onClick={() => handleOpenDialog('editUser', user)}
+                              onClick={() => handleOpenDialog('editUser', userRow)}
                               sx={{
                                 '&:hover': {
                                   backgroundColor: alpha(theme.palette.primary.main, 0.1),
@@ -487,7 +859,7 @@ const AdminDashboard = () => {
               </Table>
               <TablePagination
                 component="div"
-                count={100}
+                count={users.length}
                 page={page}
                 onPageChange={handleChangePage}
                 rowsPerPage={rowsPerPage}
@@ -766,7 +1138,7 @@ const AdminDashboard = () => {
         <Grid item xs={12} sm={6} md={4}>
           <StatCard
             title="Total Users"
-            value="156"
+            value={users.length.toString()}
             trend="+12% this month"
             icon={<AssignmentIcon fontSize="large" />}
             color={theme.palette.primary.main}
@@ -888,7 +1260,13 @@ const AdminDashboard = () => {
           </Button>
           <Button
             variant="contained"
-            onClick={handleCloseDialog}
+            onClick={() => {
+              if (dialogType === 'newUser') {
+                createUser();
+              } else {
+                handleCloseDialog();
+              }
+            }}
             sx={{
               borderRadius: 2,
               boxShadow: theme.shadows[3],
@@ -905,4 +1283,4 @@ const AdminDashboard = () => {
   );
 };
 
-export default AdminDashboard; 
+export default AdminDashboard;

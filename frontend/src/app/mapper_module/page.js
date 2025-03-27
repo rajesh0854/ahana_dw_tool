@@ -2624,21 +2624,20 @@ const MapperModule = () => {
                               handleValidateRow(index + page * 8);
                             }}
                             size="small"
-                            className={`
-                              ${
-                                row.LogicVerFlag === ''
-                                  ? darkMode
-                                    ? 'text-gray-400'
-                                    : 'text-gray-600'
+                            sx={{
+                              color: row.LogicVerFlag === ''
+                                ? (darkMode ? 'rgba(156, 163, 175, 0.9)' : 'rgba(75, 85, 99, 0.9)')
+                                : row.LogicVerFlag === 'Y'
+                                ? (darkMode ? 'rgba(34, 197, 94, 0.9)' : 'rgba(22, 163, 74, 0.9)')
+                                : (darkMode ? 'rgba(239, 68, 68, 0.9)' : 'rgba(220, 38, 38, 0.9)'),
+                              '&:hover': {
+                                color: row.LogicVerFlag === ''
+                                  ? (darkMode ? 'rgba(156, 163, 175, 1)' : 'rgba(75, 85, 99, 1)')
                                   : row.LogicVerFlag === 'Y'
-                                  ? darkMode
-                                    ? 'text-green-400'
-                                    : 'text-green-600'
-                                  : darkMode
-                                  ? 'text-red-400'
-                                  : 'text-red-600'
+                                  ? (darkMode ? 'rgba(34, 197, 94, 1)' : 'rgba(22, 163, 74, 1)')
+                                  : (darkMode ? 'rgba(239, 68, 68, 1)' : 'rgba(220, 38, 38, 1)'),
                               }
-                            `}
+                            }}
                           >
                             {row.LogicVerFlag === '' ? (
                               <HelpOutlineIcon fontSize="small" />

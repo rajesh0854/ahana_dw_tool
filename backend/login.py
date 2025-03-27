@@ -300,16 +300,27 @@ def reset_password():
 # Middleware for protected routes
 def token_required(f):
     def decorated(*args, **kwargs):
-        token = request.headers.get('Authorization')
+        token = None
+        auth_header = request.headers.get('Authorization')
+        
+        if auth_header:
+            try:
+                # Check if it's a Bearer token
+                if auth_header.startswith('Bearer '):
+                    token = auth_header.split(' ')[1]
+                else:
+                    token = auth_header
+            except:
+                return jsonify({'error': 'Invalid token format'}), 401
         
         if not token:
             return jsonify({'error': 'Token is missing'}), 401
             
         try:
-            token = token.split(' ')[1]  # Remove 'Bearer ' prefix
             data = jwt.decode(token, os.getenv('JWT_SECRET_KEY'), algorithms=['HS256'])
             current_user_id = data['user_id']
             
+            # Verify user exists and is active
             session = Session()
             user = session.execute(
                 text("SELECT * FROM users WHERE user_id = :user_id AND is_active = 1"),
@@ -318,16 +329,21 @@ def token_required(f):
             session.close()
             
             if not user:
-                return jsonify({'error': 'User not found or inactive'}), 401
+                return jsonify({'error': 'Invalid or inactive user'}), 401
                 
         except jwt.ExpiredSignatureError:
             return jsonify({'error': 'Token has expired'}), 401
         except jwt.InvalidTokenError:
             return jsonify({'error': 'Invalid token'}), 401
         except Exception as e:
-            return jsonify({'error': 'Token validation error'}), 401
+            return jsonify({'error': 'Token validation failed'}), 401
             
         return f(current_user_id, *args, **kwargs)
-    
+        
     decorated.__name__ = f.__name__
     return decorated 
+
+@auth_bp.route('/verify-token', methods=['GET'])
+@token_required
+def verify_token(current_user_id):
+    return jsonify({'valid': True, 'user_id': current_user_id}) 

@@ -104,20 +104,39 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
           expanded={sidebarOpen}
           href="/home"
         />
-        {/* <SidebarItem 
-          icon={<Home />} 
+
+        <SidebarItem 
+          icon={<Layout />} 
           text="Mapper Module" 
           active={pathname === '/mapper_module'} 
           expanded={sidebarOpen}
           href="/mapper_module"
-        /> */}
-        {/* <SidebarItem 
+        /> 
+
+        <SidebarItem 
           icon={<Layout />} 
-          text="Settings" 
-          active={pathname === '/settings'} 
+          text="Type Mapping Module" 
+          active={pathname === '/type_mapper'} 
           expanded={sidebarOpen}
-          href="/settings"
-        /> */}
+          href="/type_mapper"
+        />
+
+        <SidebarItem 
+          icon={<Settings />} 
+          text="Admin Module" 
+          active={pathname === '/admin'} 
+          expanded={sidebarOpen}
+          href="/admin"
+          />  
+
+        <SidebarItem 
+          icon={<Users />} 
+          text="User Profile" 
+          active={pathname === '/profile'} 
+          expanded={sidebarOpen}
+          href="/profile"
+        />  
+
       </nav>
 
       {sidebarOpen && (

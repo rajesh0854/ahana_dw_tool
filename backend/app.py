@@ -19,7 +19,15 @@ from admin import admin_bp
 from dotenv import load_dotenv
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, resources={
+    r"/*": {
+        "origins": ["http://localhost:3000"],
+        "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        "allow_headers": ["Content-Type", "Authorization"],
+        "supports_credentials": True,
+        "expose_headers": ["Authorization"]
+    }
+})
 
 # Load environment variables
 load_dotenv()

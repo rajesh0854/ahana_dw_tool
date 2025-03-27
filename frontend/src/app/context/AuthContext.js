@@ -3,6 +3,7 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Cookies from 'js-cookie';
+import { API_BASE_URL } from '../config';
 
 const AuthContext = createContext();
 
@@ -20,37 +21,82 @@ export const AuthProvider = ({ children }) => {
   const router = useRouter();
   const pathname = usePathname();
 
-  useEffect(() => {
-    // Check for token in localStorage and cookies on initial load
-    const token = localStorage.getItem('token');
-    const userData = localStorage.getItem('user');
-    if (token && userData) {
-      setUser(JSON.parse(userData));
-      // Ensure cookie is set
-      Cookies.set('token', token, { expires: 7 });
+  // Function to handle token expiration
+  const handleTokenExpiration = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    Cookies.remove('token');
+    setUser(null);
+    router.push('/auth/login');
+  };
+
+  // Function to verify token
+  const verifyToken = async (token) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/verify-token`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        return false;
+      }
+
+      const data = await response.json();
+      return data.valid;
+    } catch (error) {
+      console.error('Token verification error:', error);
+      return false;
     }
-    setLoading(false);
+  };
+
+  useEffect(() => {
+    const initializeAuth = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const userData = localStorage.getItem('user');
+
+        if (token && userData) {
+          const isValid = await verifyToken(token);
+          
+          if (isValid) {
+            setUser(JSON.parse(userData));
+            Cookies.set('token', token, { expires: 7 });
+          } else {
+            handleTokenExpiration();
+          }
+        }
+      } catch (error) {
+        console.error('Auth initialization error:', error);
+        handleTokenExpiration();
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    initializeAuth();
   }, []);
 
   // Add authentication check
   useEffect(() => {
+    if (loading) return;
+
     const token = localStorage.getItem('token');
     const isAuthRoute = pathname?.startsWith('/auth/');
     
-    if (!loading) {
-      if (!token && !isAuthRoute) {
-        // Redirect to login if not authenticated and trying to access protected route
-        router.push('/auth/login');
-      } else if (token && isAuthRoute && pathname !== '/auth/logout') {
-        // Redirect to home/dashboard if already authenticated and trying to access auth routes
-        router.push('/');
-      }
+    // Don't redirect if we're already on the login page
+    if (!token && !isAuthRoute && pathname !== '/auth/login') {
+      router.push('/auth/login');
+    } else if (token && isAuthRoute && pathname !== '/auth/logout') {
+      router.push('/');
     }
   }, [loading, pathname, router]);
 
   const login = async (username, password) => {
     try {
-      const response = await fetch('http://localhost:5000/auth/login', {
+      const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -87,10 +133,15 @@ export const AuthProvider = ({ children }) => {
   const logout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-    // Remove cookie
     Cookies.remove('token');
     setUser(null);
     router.push('/auth/login');
+  };
+
+  const checkTokenExpiration = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) return false;
+    return await verifyToken(token);
   };
 
   const forgotPassword = async (email) => {
@@ -142,6 +193,8 @@ export const AuthProvider = ({ children }) => {
     loading,
     login,
     logout,
+    checkTokenExpiration,
+    handleTokenExpiration,
     forgotPassword,
     resetPassword,
     isAuthenticated: !!user,
