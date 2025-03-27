@@ -124,7 +124,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
 
         <SidebarItem 
           icon={<Layout />} 
-          text="Type Mapping Module" 
+          text="Type Mapping" 
           active={pathname === '/type_mapper'} 
           expanded={sidebarOpen}
           href="/type_mapper"

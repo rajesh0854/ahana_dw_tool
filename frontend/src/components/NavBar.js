@@ -219,10 +219,10 @@ const NavBar = ({ userProfile, showProfile, setShowProfile, sidebarOpen }) => {
                   w-8 h-8 rounded-full flex items-center justify-center
                   bg-gradient-to-r from-blue-500 to-purple-500 text-white
                 `}>
-                  {userProfile.name.charAt(0).toUpperCase()}
+                  {user?.name?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || 'U'}
                 </div>
                 <span className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                  {userProfile.name}
+                  {user?.name || user?.email || 'User'}
                 </span>
                 <KeyboardArrowDownOutlined className={`
                   w-5 h-5 transition-transform duration-200
@@ -247,17 +247,17 @@ const NavBar = ({ userProfile, showProfile, setShowProfile, sidebarOpen }) => {
                         w-14 h-14 rounded-full flex items-center justify-center
                         bg-gradient-to-r from-blue-500 to-purple-500 text-white text-xl font-semibold
                       `}>
-                        {userProfile.name.charAt(0).toUpperCase()}
+                        {user?.name?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || 'U'}
                       </div>
                       <div>
                         <h3 className={`font-semibold ${darkMode ? 'text-gray-100' : 'text-gray-900'}`}>
-                          {userProfile.name}
+                          {user?.name || 'User'}
                         </h3>
                         <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                          {userProfile.role}
+                          {user?.role || 'User'}
                         </p>
                         <p className={`text-xs mt-1 ${darkMode ? 'text-blue-400' : 'text-blue-500'}`}>
-                          {userProfile.email || 'user@example.com'}
+                          {user?.email || 'No email available'}
                         </p>
                       </div>
                     </div>

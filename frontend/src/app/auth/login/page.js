@@ -2,12 +2,12 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Typography, Box, Alert, TextField, Checkbox, FormControlLabel } from '@mui/material';
+import { Typography, Box, Alert, TextField, Checkbox, FormControlLabel, IconButton, InputAdornment } from '@mui/material';
 import { motion } from 'framer-motion';
 import { styled } from '@mui/material/styles';
 import Link from 'next/link';
 import { useAuth } from '../../context/AuthContext';
-import { LockOutlined, AccountCircleOutlined } from '@mui/icons-material';
+import { LockOutlined, AccountCircleOutlined, Visibility, VisibilityOff } from '@mui/icons-material';
 
 // Main container for the login page
 const LoginContainer = styled(Box)`
@@ -60,39 +60,44 @@ const RightPanel = styled(Box)`
   }
 `;
 
-// Form container
+// Form container - smaller size and improved styling
 const FormContainer = styled(Box)`
   width: 100%;
-  max-width: 450px;
-  padding: 3rem;
-  border-radius: 1rem;
+  max-width: 380px;
+  padding: 2.5rem;
+  border-radius: 1.25rem;
   background-color: white;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.12);
+  transition: all 0.3s ease;
+  
+  &:hover {
+    box-shadow: 0 15px 50px rgba(0, 0, 0, 0.18);
+  }
 `;
 
-// Custom styled button
+// Custom styled button with improved animation
 const LoginButton = styled('button')`
   width: 100%;
   padding: 0.875rem;
   margin-top: 1.5rem;
   border: none;
-  border-radius: 0.5rem;
+  border-radius: 0.75rem;
   background: linear-gradient(90deg, #2065b0 0%, #0d47a1 100%);
   color: white;
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   position: relative;
   overflow: hidden;
   
   &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(13, 71, 161, 0.3);
   }
   
   &:active {
-    transform: translateY(0);
+    transform: translateY(-1px);
   }
   
   &::after {
@@ -117,13 +122,14 @@ const LoginButton = styled('button')`
   }
 `;
 
-// Custom styled input component
+// Improved styled text field
 const StyledTextField = styled(TextField)`
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.25rem;
   
   .MuiOutlinedInput-root {
-    border-radius: 0.5rem;
+    border-radius: 0.75rem;
     transition: all 0.3s ease;
+    font-size: 0.95rem;
     
     &.Mui-focused {
       .MuiOutlinedInput-notchedOutline {
@@ -137,8 +143,12 @@ const StyledTextField = styled(TextField)`
     }
   }
   
-  .MuiInputLabel-root.Mui-focused {
-    color: #2065b0;
+  .MuiInputLabel-root {
+    font-size: 0.95rem;
+    
+    &.Mui-focused {
+      color: #2065b0;
+    }
   }
   
   .MuiInputAdornment-root {
@@ -146,9 +156,10 @@ const StyledTextField = styled(TextField)`
   }
 `;
 
+// Enhanced Logo
 const Logo = styled(motion.div)`
-  margin-bottom: 2rem;
-  font-size: 2.5rem;
+  margin-bottom: 1.5rem;
+  font-size: 2.25rem;
   font-weight: 700;
   color: #2065b0;
   display: flex;
@@ -170,8 +181,17 @@ const LoginPage = () => {
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
   const { login } = useAuth();
+
+  const handleClickShowPassword = () => {
+    setShowPassword(!showPassword);
+  };
+
+  const handleMouseDownPassword = (event) => {
+    event.preventDefault();
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -190,24 +210,24 @@ const LoginPage = () => {
     }
   };
 
-  // Animation variants
+  // Enhanced animation variants
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: { 
       opacity: 1,
       transition: { 
-        delayChildren: 0.3,
-        staggerChildren: 0.2 
+        delayChildren: 0.2,
+        staggerChildren: 0.15 
       }
     }
   };
 
   const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
+    hidden: { y: 15, opacity: 0 },
     visible: { 
       y: 0, 
       opacity: 1,
-      transition: { type: 'spring', stiffness: 300, damping: 24 }
+      transition: { type: 'spring', stiffness: 400, damping: 20 }
     }
   };
 
@@ -222,32 +242,42 @@ const LoginPage = () => {
           style={{ zIndex: 2, maxWidth: '80%', textAlign: 'center', color: 'white' }}
         >
           <Typography variant="h2" component="h1" sx={{ 
-            fontWeight: 700, 
+            fontWeight: 800, 
             marginBottom: 4,
-            textShadow: '0 2px 10px rgba(0, 0, 0, 0.2)' 
+            textShadow: '0 2px 15px rgba(0, 0, 0, 0.3)',
+            letterSpacing: '-0.5px'
           }}>
             Welcome to DW Tool
           </Typography>
           <Typography variant="h5" sx={{ 
-            fontWeight: 300, 
+            fontWeight: 400, 
             marginBottom: 6,
-            textShadow: '0 2px 8px rgba(0, 0, 0, 0.2)' 
+            textShadow: '0 2px 10px rgba(0, 0, 0, 0.25)',
+            maxWidth: '80%',
+            mx: 'auto',
+            lineHeight: 1.5
           }}>
             Your complete solution for data management and mapping
           </Typography>
           
           <Box sx={{ display: 'flex', justifyContent: 'center', gap: 3, flexWrap: 'wrap' }}>
             <motion.div
-              whileHover={{ scale: 1.05, y: -5 }}
-              whileTap={{ scale: 0.95 }}
+              whileHover={{ scale: 1.05, y: -8 }}
+              whileTap={{ scale: 0.97 }}
+              transition={{ type: 'spring', stiffness: 400 }}
             >
               <Box sx={{ 
-                backgroundColor: 'rgba(255, 255, 255, 0.15)', 
-                backdropFilter: 'blur(10px)',
+                backgroundColor: 'rgba(255, 255, 255, 0.12)', 
+                backdropFilter: 'blur(12px)',
                 padding: 3,
-                borderRadius: 2,
+                borderRadius: 3,
                 textAlign: 'center',
-                width: '180px'
+                width: '180px',
+                height: '130px',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)'
               }}>
                 <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>100+</Typography>
                 <Typography variant="body1">Data Connectors</Typography>
@@ -255,17 +285,22 @@ const LoginPage = () => {
             </motion.div>
             
             <motion.div
-              whileHover={{ scale: 1.05, y: -5 }}
-              whileTap={{ scale: 0.95 }}
-              transition={{ delay: 0.1 }}
+              whileHover={{ scale: 1.05, y: -8 }}
+              whileTap={{ scale: 0.97 }}
+              transition={{ type: 'spring', stiffness: 400, delay: 0.05 }}
             >
               <Box sx={{ 
-                backgroundColor: 'rgba(255, 255, 255, 0.15)', 
-                backdropFilter: 'blur(10px)',
+                backgroundColor: 'rgba(255, 255, 255, 0.12)', 
+                backdropFilter: 'blur(12px)',
                 padding: 3,
-                borderRadius: 2,
+                borderRadius: 3,
                 textAlign: 'center',
-                width: '180px'
+                width: '180px',
+                height: '130px',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)'
               }}>
                 <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>Fast</Typography>
                 <Typography variant="body1">Data Mapping</Typography>
@@ -273,17 +308,22 @@ const LoginPage = () => {
             </motion.div>
             
             <motion.div
-              whileHover={{ scale: 1.05, y: -5 }}
-              whileTap={{ scale: 0.95 }}
-              transition={{ delay: 0.2 }}
+              whileHover={{ scale: 1.05, y: -8 }}
+              whileTap={{ scale: 0.97 }}
+              transition={{ type: 'spring', stiffness: 400, delay: 0.1 }}
             >
               <Box sx={{ 
-                backgroundColor: 'rgba(255, 255, 255, 0.15)', 
-                backdropFilter: 'blur(10px)',
+                backgroundColor: 'rgba(255, 255, 255, 0.12)', 
+                backdropFilter: 'blur(12px)',
                 padding: 3,
-                borderRadius: 2,
+                borderRadius: 3,
                 textAlign: 'center',
-                width: '180px'
+                width: '180px',
+                height: '130px',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)'
               }}>
                 <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>Secure</Typography>
                 <Typography variant="body1">Enterprise Ready</Typography>
@@ -299,20 +339,28 @@ const LoginPage = () => {
           variants={containerVariants}
           initial="hidden"
           animate="visible"
-          style={{ width: '100%', maxWidth: '450px' }}
+          style={{ width: '100%', maxWidth: '380px' }}
         >
           <FormContainer as={motion.form} onSubmit={handleSubmit} variants={itemVariants}>
             <Logo
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
+              initial={{ scale: 0, rotate: -5 }}
+              animate={{ scale: 1, rotate: 0 }}
               transition={{ type: 'spring', stiffness: 200, damping: 20, delay: 0.2 }}
             >
               DW<span>Tool</span>
             </Logo>
 
             <motion.div variants={itemVariants}>
-              <Typography variant="h4" align="center" gutterBottom sx={{ fontWeight: 600, mb: 4 }}>
-                Sign In
+              <Typography variant="h5" align="center" gutterBottom sx={{ 
+                fontWeight: 600, 
+                mb: 3,
+                background: 'linear-gradient(90deg, #2065b0, #0d47a1)',
+                backgroundClip: 'text',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                letterSpacing: '0.5px'
+              }}>
+                Sign In to Your Account
               </Typography>
             </motion.div>
 
@@ -323,7 +371,7 @@ const LoginPage = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3 }}
               >
-                <Alert severity="error" sx={{ mb: 3, borderRadius: '0.5rem' }}>
+                <Alert severity="error" sx={{ mb: 3, borderRadius: '0.75rem' }}>
                   {error}
                 </Alert>
               </motion.div>
@@ -338,7 +386,7 @@ const LoginPage = () => {
                 onChange={(e) => setUsername(e.target.value)}
                 required
                 InputProps={{
-                  startAdornment: <AccountCircleOutlined sx={{ mr: 1 }} />,
+                  startAdornment: <AccountCircleOutlined sx={{ mr: 1, color: '#2065b0' }} />,
                 }}
               />
             </motion.div>
@@ -346,14 +394,27 @@ const LoginPage = () => {
             <motion.div variants={itemVariants}>
               <StyledTextField
                 label="Password"
-                type="password"
+                type={showPassword ? 'text' : 'password'}
                 variant="outlined"
                 fullWidth
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 InputProps={{
-                  startAdornment: <LockOutlined sx={{ mr: 1 }} />,
+                  startAdornment: <LockOutlined sx={{ mr: 1, color: '#2065b0' }} />,
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton
+                        aria-label="toggle password visibility"
+                        onClick={handleClickShowPassword}
+                        onMouseDown={handleMouseDownPassword}
+                        edge="end"
+                        size="small"
+                      >
+                        {showPassword ? <VisibilityOff /> : <Visibility />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
                 }}
               />
             </motion.div>
@@ -371,11 +432,22 @@ const LoginPage = () => {
                       color: '#adb5bd',
                       '&.Mui-checked': { color: '#2065b0' }
                     }}
+                    size="small"
                   />
                 }
-                label="Remember me"
+                label={<Typography variant="body2">Remember me</Typography>}
               />
-              <Link href="/auth/forgot-password" style={{ color: '#2065b0', textDecoration: 'none', fontWeight: 500 }}>
+              <Link href="/auth/forgot-password" style={{ 
+                color: '#2065b0', 
+                textDecoration: 'none', 
+                fontWeight: 600,
+                fontSize: '0.85rem',
+                transition: 'all 0.2s ease',
+                '&:hover': {
+                  color: '#0d47a1',
+                  textDecoration: 'underline'
+                }
+              }}>
                 Forgot Password?
               </Link>
             </motion.div>
@@ -384,8 +456,8 @@ const LoginPage = () => {
               <LoginButton
                 type="submit"
                 as={motion.button}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
               >
                 Sign In
               </LoginButton>

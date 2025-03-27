@@ -67,35 +67,10 @@ os.makedirs('data/drafts', exist_ok=True)
 os.makedirs('data/templates', exist_ok=True)
 
 # Template structure for the mapper
-FORM_FIELDS = [
-    'reference',
-    'description',
-    'mapperId',
-    'targetSchema',
-    'tableName',
-    'tableType',
-    'freqCode',
-    'sourceSystem',
-    'logicVerified',
-    'bulkProcessRows'
-]
-
-TABLE_FIELDS = [
-    'mapdtlid',
-    'mapref',
-    'fieldName',
-    'dataType',
-    'primaryKey',
-    'pkSeq',
-    'fieldDesc',
-    'logic',
-    'keyColumn',
-    'valColumn',
-    'mapCombineCode',
-    'execSequence',
-    'scdType',
-    'LogicVerFlag'
-]
+FORM_FIELDS = ["bulkProcessRows","description","freqCode","reference","sourceSystem","tableName","tableType","targetSchema"]
+ 
+TABLE_FIELDS = ["dataType","execSequence","fieldDesc","fieldName","keyColumn","logic","mapCombineCode","pkSeq","primaryKey","scdType","valColumn"]
+ 
 
 @app.route('/mapper/download-template', methods=['GET'])
 def download_template():
