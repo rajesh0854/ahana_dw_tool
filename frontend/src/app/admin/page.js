@@ -1111,7 +1111,7 @@ const AdminDashboard = () => {
         backgroundColor: theme.palette.background.default,
       }}
     >
-      <Typography
+      {/* <Typography
         variant="h4"
         sx={{
           mb: 4,
@@ -1131,7 +1131,7 @@ const AdminDashboard = () => {
         }}
       >
         Admin Dashboard
-      </Typography>
+      </Typography> */}
 
       {/* Stats Cards */}
       <Grid container spacing={3} sx={{ mb: 4 }}>

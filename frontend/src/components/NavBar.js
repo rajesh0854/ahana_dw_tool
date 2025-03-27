@@ -26,6 +26,10 @@ const getPageTitle = (pathname) => {
       return 'All Jobs';
     case '/type_mapper':
       return 'Type Mapper';
+    case '/admin':
+      return 'Admin Dashboard';
+    case '/profile':
+      return 'User Profile';
     case '/settings':
       return 'Settings';
     default:

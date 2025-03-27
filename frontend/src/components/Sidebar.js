@@ -115,6 +115,15 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
 
         <SidebarItem 
           icon={<Layout />} 
+          text="All Jobs" 
+          active={pathname === '/jobs'} 
+          expanded={sidebarOpen}
+          href="/jobs"
+        /> 
+        
+
+        <SidebarItem 
+          icon={<Layout />} 
           text="Type Mapping Module" 
           active={pathname === '/type_mapper'} 
           expanded={sidebarOpen}

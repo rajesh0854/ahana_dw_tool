@@ -369,7 +369,7 @@ const Page = () => {
               mx: 'auto'
             }} />
             <Typography variant="body2" sx={{ opacity: 0.6 }}>
-              © 2023 Data Warehouse Tool | All Rights Reserved
+              © 2025 Ahana Systems & Solutions Pvt Ltd | All Rights Reserved
             </Typography>
           </Box>
         </Container>
