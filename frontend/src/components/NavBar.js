@@ -65,8 +65,9 @@ const NavBar = ({ userProfile, showProfile, setShowProfile, sidebarOpen }) => {
 
   return (
     <nav className={`
-      fixed top-0 right-0 border-b z-40 transition-all duration-300 backdrop-blur-md
-      ${sidebarOpen ? 'left-64' : 'left-20'}
+      sticky top-0 z-30 w-full
+      transition-all duration-300 ease-in-out
+      border-b backdrop-blur-md
       ${darkMode 
         ? 'bg-gray-900/90 border-gray-800 shadow-lg shadow-gray-900/20' 
         : 'bg-white/90 border-gray-100 shadow-lg shadow-gray-200/30'}

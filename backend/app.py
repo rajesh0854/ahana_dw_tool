@@ -15,9 +15,13 @@ import random
 import re
 import traceback
 from login import auth_bp, token_required
-from admin import admin_bp
+from admin import admin_bp, admin_required
 from dotenv import load_dotenv
 from sqlalchemy.orm import Session
+from license_manager import LicenseManager
+
+# Initialize license manager at module level
+license_manager = LicenseManager()
 
 app = Flask(__name__)
 CORS(app, resources={
@@ -842,6 +846,53 @@ def create_update_job():
             'success': False,
             'message': f'An error occurred while processing the request: {str(e)}'
         }), 500
+
+@app.route('/api/license/status', methods=['GET'])
+def get_license_status():
+    """Get license status without requiring authentication"""
+    status = license_manager.get_license_status()
+    response = jsonify(status)
+    # Add CORS headers
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    return response
+
+@app.route('/api/admin/license/activate', methods=['POST'])
+@token_required
+@admin_required
+def activate_license(current_user_id):  # Add current_user_id parameter
+    data = request.get_json()
+    license_key = data.get('license_key')
+    
+    if not license_key:
+        return jsonify({
+            'success': False,
+            'message': 'License key is required'
+        }), 400
+        
+    success, message = license_manager.activate_license(license_key)
+    return jsonify({
+        'success': success,
+        'message': message
+    })
+
+@app.route('/api/admin/license/deactivate', methods=['POST'])
+@token_required
+@admin_required
+def deactivate_license(current_user_id):  # Add current_user_id parameter
+    success, message = license_manager.deactivate_license()
+    return jsonify({
+        'success': success,
+        'message': message
+    })
+
+# Add CORS preflight handler
+@app.route('/api/license/status', methods=['OPTIONS'])
+def handle_license_status_preflight():
+    response = jsonify({})
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    response.headers.add('Access-Control-Allow-Headers', '*')
+    response.headers.add('Access-Control-Allow-Methods', 'GET, OPTIONS')
+    return response
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)   

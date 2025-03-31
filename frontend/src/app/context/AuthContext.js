@@ -18,6 +18,7 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [licenseStatus, setLicenseStatus] = useState(null);
   const router = useRouter();
   const pathname = usePathname();
 
@@ -25,8 +26,10 @@ export const AuthProvider = ({ children }) => {
   const handleTokenExpiration = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    localStorage.removeItem('licenseStatus');
     Cookies.remove('token');
     setUser(null);
+    setLicenseStatus(null);
     router.push('/auth/login');
   };
 
@@ -52,17 +55,38 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Function to check license status
+  const checkLicenseStatus = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/license/status`);
+      const data = await response.json();
+      setLicenseStatus(data);
+      localStorage.setItem('licenseStatus', JSON.stringify(data));
+      return data;
+    } catch (error) {
+      console.error('License check error:', error);
+      const status = { valid: false, message: 'Failed to check license status' };
+      setLicenseStatus(status);
+      localStorage.setItem('licenseStatus', JSON.stringify(status));
+      return status;
+    }
+  };
+
   useEffect(() => {
     const initializeAuth = async () => {
       try {
         const token = localStorage.getItem('token');
         const userData = localStorage.getItem('user');
+        const storedLicenseStatus = localStorage.getItem('licenseStatus');
 
         if (token && userData) {
           const isValid = await verifyToken(token);
           
           if (isValid) {
             setUser(JSON.parse(userData));
+            if (storedLicenseStatus) {
+              setLicenseStatus(JSON.parse(storedLicenseStatus));
+            }
             Cookies.set('token', token, { expires: 7 });
           } else {
             handleTokenExpiration();
@@ -136,6 +160,9 @@ export const AuthProvider = ({ children }) => {
         role: data.role
       });
 
+      // Check license status after successful login
+      await checkLicenseStatus();
+
       return { success: true };
     } catch (error) {
       return { success: false, error: error.message };
@@ -145,8 +172,10 @@ export const AuthProvider = ({ children }) => {
   const logout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    localStorage.removeItem('licenseStatus');
     Cookies.remove('token');
     setUser(null);
+    setLicenseStatus(null);
     router.push('/auth/login');
   };
 
@@ -224,6 +253,8 @@ export const AuthProvider = ({ children }) => {
     resetPassword,
     updateUserProfile,
     isAuthenticated: !!user,
+    licenseStatus,
+    checkLicenseStatus
   };
 
   return (

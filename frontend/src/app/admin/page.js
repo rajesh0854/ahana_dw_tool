@@ -59,6 +59,7 @@ import {
   Block as BlockIcon,
   MoreVert as MoreVertIcon,
   TrendingUp as TrendingUpIcon,
+  Info as InfoIcon,
 } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
@@ -66,6 +67,7 @@ import { API_BASE_URL } from '../config';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
 import { message } from 'antd';
+import LicenseManager from '@/components/LicenseManager';
 
 const mockRoles = [
   { id: 1, name: 'Admin', permissions: ['all'], userCount: 5, description: 'Full system access' },
@@ -3012,4 +3014,116 @@ const UserTableRow = memo(({ user, onEdit, onDelete, onResetPassword }) => {
 
 UserTableRow.displayName = 'UserTableRow';
 
-export default AdminDashboard;
+// Define the content for the About tab
+const AboutTabContent = () => {
+    const theme = useTheme();
+    return (
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                {/* Placeholder for Logo */}
+                <Avatar sx={{ bgcolor: theme.palette.primary.main, width: 56, height: 56 }}>L</Avatar>
+                <Typography variant="h5" component="h2" fontWeight="bold">
+                    Ahana DW Tool
+                </Typography>
+            </Box>
+            <Divider />
+            <Box>
+                <Typography variant="h6" gutterBottom>Company Details</Typography>
+                <Typography variant="body1">Innovate Solutions Inc.</Typography>
+                <Typography variant="body2" color="text.secondary">Leading the way in data warehousing innovations.</Typography>
+            </Box>
+            <Box>
+                <Typography variant="h6" gutterBottom>Development Team</Typography>
+                <Typography variant="body1">Innovate Core Development Team</Typography>
+                {/* Add more developer details if needed */}
+            </Box>
+            <Box>
+                <Typography variant="h6" gutterBottom>Version</Typography>
+                <Typography variant="body1">1.0.0</Typography> { /* Placeholder version */}
+            </Box>
+            <Divider />
+            <Box>
+                <Typography variant="body2" color="text.secondary">
+                    &copy; {new Date().getFullYear()} Innovate Solutions Inc. All rights reserved.
+                </Typography>
+            </Box>
+        </Box>
+    );
+};
+
+export default function AdminPage() {
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+    const [mainTabValue, setMainTabValue] = useState(0); // 0 for Manage Users, 1 for License, 2 for About
+
+    const handleMainTabChange = (event, newValue) => {
+        setMainTabValue(newValue);
+    };
+
+    return (
+        <Box sx={{ flexGrow: 1, p: { xs: 2, sm: 3 }, backgroundColor: theme.palette.background.default, maxWidth: '1600px', mx: 'auto' }}>
+            {/* Tabs are now outside the Paper */}
+            <Tabs
+                value={mainTabValue}
+                onChange={handleMainTabChange}
+                variant={isMobile ? 'fullWidth' : 'standard'}
+                sx={{
+                    mb: 2, // Add some margin below the tabs
+                    borderBottom: 1,
+                    borderColor: 'divider',
+                    // Removed background color - tabs will sit directly on the page background
+                    '& .MuiTab-root': {
+                        minHeight: 56,
+                        fontSize: '1rem',
+                        fontWeight: 500,
+                        textTransform: 'none',
+                        '&.Mui-selected': {
+                            fontWeight: 600,
+                        },
+                    },
+                    '& .MuiTabs-indicator': {
+                        height: 3,
+                        borderTopLeftRadius: 3,
+                        borderTopRightRadius: 3,
+                    },
+                }}
+            >
+                <Tab 
+                    label="Manage Users & Roles" 
+                    icon={<SecurityIcon fontSize="small" />} 
+                    iconPosition="start"
+                />
+                <Tab 
+                    label="License Management" 
+                    icon={<AssignmentIcon fontSize="small" />} 
+                    iconPosition="start" 
+                />
+                <Tab 
+                    label="About" 
+                    icon={<InfoIcon fontSize="small" />} // Add About tab
+                    iconPosition="start" 
+                />
+            </Tabs>
+
+            {/* Paper now only wraps the content */}
+            <Paper
+                elevation={0}
+                sx={{
+                    width: '100%',
+                    borderRadius: 2,
+                    overflow: 'hidden',
+                    border: `1px solid ${theme.palette.divider}`,
+                    boxShadow: '0 2px 10px rgba(0,0,0,0.05)',
+                    // Removed mb: 2 from Paper
+                    // Removed px from Tabs sx above as it's no longer inside Paper
+                }}
+            >
+                 <Box sx={{ p: { xs: 2, sm: 2.5 } }}>
+                    {mainTabValue === 0 && <AdminDashboard />}
+                    {mainTabValue === 1 && <LicenseManager />}
+                    {mainTabValue === 2 && <AboutTabContent />} { /* Render About content */}
+                 </Box>
+            </Paper>
+        </Box>
+    );
+}

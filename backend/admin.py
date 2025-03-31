@@ -6,6 +6,8 @@ from dotenv import load_dotenv
 from login import token_required, hash_password, generate_salt, is_valid_password
 from datetime import datetime
 import json
+from functools import wraps
+from license_manager import LicenseManager
 
 load_dotenv()
 
@@ -15,6 +17,7 @@ Session = sessionmaker(bind=engine)
 
 # Blueprint setup
 admin_bp = Blueprint('admin', __name__)
+license_manager = LicenseManager()
 
 def check_admin_permission(user_id):
     session = Session()
@@ -1055,4 +1058,29 @@ def reset_user_password(current_user_id, user_id):
         print(f"Error resetting password: {str(e)}")
         return jsonify({'error': 'Failed to reset password'}), 500
     finally:
-        session.close() 
+        session.close()
+
+@admin_bp.route('/license/activate', methods=['POST'])
+def activate_license():
+    data = request.get_json()
+    license_key = data.get('license_key')
+    
+    if not license_key:
+        return jsonify({
+            'success': False,
+            'message': 'License key is required'
+        }), 400
+        
+    success, message = license_manager.activate_license(license_key)
+    return jsonify({
+        'success': success,
+        'message': message
+    })
+
+@admin_bp.route('/license/deactivate', methods=['POST'])
+def deactivate_license():
+    success, message = license_manager.deactivate_license()
+    return jsonify({
+        'success': success,
+        'message': message
+    }) 

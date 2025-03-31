@@ -145,37 +145,40 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
   return (
     <motion.div 
       className={`
-        fixed top-0 left-0 h-full z-50
+        fixed top-0 left-0 h-full z-40
         ${darkMode 
           ? 'bg-gray-900/95 border-r border-gray-800' 
           : 'bg-white/95 border-r border-gray-100'}
-        ${sidebarOpen ? 'w-72' : 'w-24'}
         backdrop-blur-md
       `}
-      initial={{ x: -100, opacity: 0 }}
+      initial={false}
       animate={{ 
-        x: 0, 
-        opacity: 1,
-        width: sidebarOpen ? '18rem' : '6rem',
+        width: sidebarOpen ? '18rem' : '6rem'
       }}
       transition={{ 
-        duration: 0.4, 
-        type: "spring", 
-        width: { duration: 0.3 }
+        type: "spring",
+        stiffness: 400,
+        damping: 30,
+        mass: 0.8
       }}
     >
       {/* Logo Section */}
       <div className={`
-        h-24 flex items-center justify-center px-4 border-b
+        h-16 flex items-center justify-center px-4 border-b
         ${darkMode ? 'border-gray-800' : 'border-gray-100'}
       `}>
         <motion.div 
-          className={`relative ${sidebarOpen ? 'w-48 h-12' : 'w-16 h-16'}`}
+          className="relative"
           animate={{ 
             width: sidebarOpen ? '12rem' : '4rem',
-            height: sidebarOpen ? '3rem' : '4rem'
+            height: '3rem'
           }}
-          transition={{ duration: 0.3 }}
+          transition={{ 
+            type: "spring",
+            stiffness: 400,
+            damping: 30,
+            mass: 0.8
+          }}
         >
           <Image
             src="https://www.ahana.co.in/wp-content/uploads/2024/03/New1-Ahana-2024-website-Logo-Medium.svg"
@@ -186,142 +189,81 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
           />
         </motion.div>
       </div>
-      
+
       {/* Main Navigation */}
-      <div className="flex flex-col h-[calc(100%-24px)] justify-between">
-        <nav className="mt-8 space-y-1.5 px-3">
-          <SidebarItem 
-            icon={<Home />} 
-            text="Home" 
-            active={pathname === '/home'} 
-            expanded={sidebarOpen}
-            href="/home"
-          />
+      <nav className="mt-6 px-2 space-y-1">
+        <SidebarItem 
+          icon={<Home />} 
+          text="Home" 
+          active={pathname === '/home'} 
+          expanded={sidebarOpen}
+          href="/home"
+        />
 
-          <SidebarItem 
-            icon={<Layers />} 
-            text="Mapper Module" 
-            active={pathname === '/mapper_module'} 
-            expanded={sidebarOpen}
-            href="/mapper_module"
-          /> 
+        <SidebarItem 
+          icon={<Layers />} 
+          text="Mapper Module" 
+          active={pathname === '/mapper_module'} 
+          expanded={sidebarOpen}
+          href="/mapper_module"
+        /> 
 
-          <SidebarItem 
-            icon={<FileText />} 
-            text="All Jobs" 
-            active={pathname === '/jobs'} 
-            expanded={sidebarOpen}
-            href="/jobs"
-          /> 
+        <SidebarItem 
+          icon={<FileText />} 
+          text="All Jobs" 
+          active={pathname === '/jobs'} 
+          expanded={sidebarOpen}
+          href="/jobs"
+        /> 
 
-          <SidebarItem 
-            icon={<Database />} 
-            text="Type Mapping" 
-            active={pathname === '/type_mapper'} 
-            expanded={sidebarOpen}
-            href="/type_mapper"
-          />
+        <SidebarItem 
+          icon={<Database />} 
+          text="Type Mapping" 
+          active={pathname === '/type_mapper'} 
+          expanded={sidebarOpen}
+          href="/type_mapper"
+        />
 
-          <SidebarItem 
-            icon={<PanelRight />} 
-            text="Admin Module" 
-            active={pathname === '/admin'} 
-            expanded={sidebarOpen}
-            href="/admin"
-          />  
+        <SidebarItem 
+          icon={<PanelRight />} 
+          text="Admin Module" 
+          active={pathname === '/admin'} 
+          expanded={sidebarOpen}
+          href="/admin"
+        />  
 
-          <SidebarItem 
-            icon={<User />} 
-            text="User Profile" 
-            active={pathname === '/profile'} 
-            expanded={sidebarOpen}
-            href="/profile"
-          />  
-        </nav>
+        <SidebarItem 
+          icon={<User />} 
+          text="User Profile" 
+          active={pathname === '/profile'} 
+          expanded={sidebarOpen}
+          href="/profile"
+        />  
+      </nav>
 
-        {/* Toggle Button & Footer Info */}
-        <div className="mb-8 px-3">
-          {/* Toggle Button - Positioned in the middle */}
-          <div className="flex justify-center mb-6">
-            <motion.button
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              className={`
-                p-3 rounded-full
-                ${darkMode 
-                  ? 'bg-gradient-to-br from-blue-500/20 to-indigo-600/20 text-blue-400 hover:text-blue-300 border border-blue-800/40' 
-                  : 'bg-gradient-to-br from-blue-100 to-indigo-100/70 text-blue-600 hover:text-blue-500 border border-blue-200/70'}
-                shadow-md
-              `}
-              whileHover={{ 
-                scale: 1.1,
-                rotate: sidebarOpen ? -5 : 5,
-                transition: { duration: 0.2 }
-              }}
-              whileTap={{ scale: 0.95 }}
-              animate={{
-                backgroundColor: darkMode 
-                  ? sidebarOpen ? 'rgba(30, 64, 175, 0.2)' : 'rgba(30, 64, 175, 0.15)'
-                  : sidebarOpen ? 'rgba(219, 234, 254, 0.9)' : 'rgba(219, 234, 254, 0.7)'
-              }}
-              aria-label={sidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
-            >
-              {sidebarOpen ? 
-                <ChevronLeft size={22} /> : 
-                <ChevronRight size={22} />
-              }
-            </motion.button>
-          </div>
-
-          {/* Footer Info */}
-          <AnimatePresence mode="wait">
-            {sidebarOpen ? (
-              <motion.div 
-                key="expanded-footer"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 10 }}
-                transition={{ duration: 0.3 }}
-                className={`
-                  px-6 py-4 mx-1 rounded-xl
-                  ${darkMode 
-                    ? 'bg-gradient-to-br from-gray-800/80 to-gray-800/40 border border-gray-700/50' 
-                    : 'bg-gradient-to-br from-blue-50/90 to-indigo-50/40 border border-blue-100/50'}
-                  shadow-sm
-                `}
-              >
-                <h4 className={`text-sm font-medium mb-2 ${darkMode ? 'text-gray-200' : 'text-gray-700'}`}>
-                  DW Tool v1.0
-                </h4>
-                <div className={`text-xs flex items-center space-x-1 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                  <BarChart2 size={12} />
-                  <span>v1.0.0</span>
-                </div>
-              </motion.div>
-            ) : (
-              <motion.div 
-                key="collapsed-footer"
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.8 }}
-                transition={{ duration: 0.3 }}
-                className="flex justify-center"
-              >
-                <motion.div 
-                  className={`
-                    w-12 h-12 rounded-full flex items-center justify-center
-                    ${darkMode 
-                      ? 'bg-gradient-to-br from-gray-800 to-gray-900 text-gray-300 border border-gray-700/50' 
-                      : 'bg-gradient-to-br from-gray-50 to-blue-50/30 text-gray-600 border border-gray-200/70'}
-                    shadow-sm
-                  `}
-                  whileHover={{ scale: 1.05 }}
-                >
-                  <span className="text-xs font-medium">v1.0</span>
-                </motion.div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
+      {/* Toggle Button */}
+      <div className="absolute bottom-8 left-0 right-0 flex justify-center">
+        <motion.button
+          onClick={() => setSidebarOpen(!sidebarOpen)}
+          className={`
+            p-3 rounded-full
+            ${darkMode 
+              ? 'bg-gradient-to-br from-blue-500/20 to-indigo-600/20 text-blue-400 hover:text-blue-300 border border-blue-800/40' 
+              : 'bg-gradient-to-br from-blue-100 to-indigo-100/70 text-blue-600 hover:text-blue-500 border border-blue-200/70'}
+            shadow-md
+          `}
+          whileHover={{ 
+            scale: 1.05,
+            rotate: sidebarOpen ? -3 : 3,
+            transition: { duration: 0.15 }
+          }}
+          whileTap={{ scale: 0.95 }}
+        >
+          {sidebarOpen ? 
+            <ChevronLeft size={22} /> : 
+            <ChevronRight size={22} />
+          }
+        </motion.button>
       </div>
     </motion.div>
   );
