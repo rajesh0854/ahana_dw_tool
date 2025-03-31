@@ -138,7 +138,7 @@ const ProfileField = ({ label, value, icon }) => (
 
 const ProfilePage = () => {
   const theme = useTheme();
-  const { user, logout } = useAuth();
+  const { user, logout, updateUserProfile } = useAuth();
   const router = useRouter();
   const [profileData, setProfileData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -162,54 +162,19 @@ const ProfilePage = () => {
   useEffect(() => {
     if (!user) return;
 
-    const fetchProfile = async () => {
-      try {
-        const response = await fetch(`http://localhost:5000/user/profile/${user.id}`, {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          },
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to fetch profile');
-        }
-
-        const data = await response.json();
-        setProfileData(data);
-        setEditedData({
-          first_name: data.first_name || '',
-          last_name: data.last_name || '',
-          email: data.email || '',
-          phone: data.phone || '',
-          department: data.department || ''
-        });
-      } catch (err) {
-        console.error('Error fetching profile:', err);
-        setError('Failed to load profile data');
-        // Use user data from auth context as fallback
-        const fallbackData = {
-          username: user.username,
-          email: 'user@example.com',
-          first_name: 'User',
-          last_name: '',
-          role: 'User',
-          created_at: new Date().toISOString(),
-          is_active: true,
-        };
-        setProfileData(fallbackData);
-        setEditedData({
-          first_name: fallbackData.first_name || '',
-          last_name: fallbackData.last_name || '',
-          email: fallbackData.email || '',
-          phone: fallbackData.phone || '',
-          department: fallbackData.department || ''
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProfile();
+    // Initialize with user data from context
+    setProfileData({
+      ...user,
+      is_active: true
+    });
+    setEditedData({
+      first_name: user.first_name || '',
+      last_name: user.last_name || '',
+      email: user.email || '',
+      phone: user.phone || '',
+      department: user.department || ''
+    });
+    setLoading(false);
   }, [user]);
 
   const handleLogout = async () => {
@@ -256,12 +221,14 @@ const ProfilePage = () => {
 
   const handleSaveProfile = async () => {
     try {
-      // Implement API call to save profile
+      // TODO: Implement API call to save profile
       // For now, just update local state
       setProfileData(prev => ({
         ...prev,
         ...editedData
       }));
+      
+      updateUserProfile(editedData);
       
       setNotification({
         open: true,

@@ -6,13 +6,6 @@ import Sidebar from './Sidebar';
 import NavBar from './NavBar';
 import { useTheme } from '@/context/ThemeContext';
 
-// Dummy data for user profile
-const userProfile = {
-  name: "Rajesh",
-  role: "Lead AI Engineer",
-  email: "rajesh.s@ahanait.com"
-};
-
 export default function LayoutWrapper({ children }) {
   const { darkMode } = useTheme();
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -33,7 +26,6 @@ export default function LayoutWrapper({ children }) {
       <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
       <div className={`transition-all duration-300 ${sidebarOpen ? 'ml-64' : 'ml-20'}`}>
         <NavBar 
-          userProfile={userProfile}
           showProfile={showProfile}
           setShowProfile={setShowProfile}
           sidebarOpen={sidebarOpen}

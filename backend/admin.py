@@ -5,6 +5,7 @@ import os
 from dotenv import load_dotenv
 from login import token_required, hash_password, generate_salt, is_valid_password
 from datetime import datetime
+import json
 
 load_dotenv()
 
@@ -47,76 +48,60 @@ def admin_required(f):
 def get_users(current_user_id):
     session = Session()
     try:
-        # First get all users
+        # Get all users with their roles and profiles in a single query using JOINs
         users = session.execute(
             text("""
-                SELECT u.user_id, u.username, u.email, u.is_active, u.account_status,
-                       u.created_at, u.created_by, u.approved_by, u.last_login
+                SELECT 
+                    u.user_id, 
+                    u.username, 
+                    u.email, 
+                    u.is_active, 
+                    u.account_status,
+                    u.created_at, 
+                    u.created_by, 
+                    u.approved_by,
+                    r.role_id,
+                    r.role_name,
+                    up.first_name,
+                    up.last_name,
+                    up.department,
+                    up.position
                 FROM users u
+                LEFT JOIN user_roles ur ON u.user_id = ur.user_id
+                LEFT JOIN roles r ON ur.role_id = r.role_id
+                LEFT JOIN user_profiles up ON u.user_id = up.user_id
+                ORDER BY u.user_id
             """)
         ).fetchall()
         
-        users_list = []
+        # Process the results
+        users_dict = {}
         for user in users:
-            # Convert SQLAlchemy Row to dictionary with safe type checking
-            user_dict = {
-                'user_id': str(user.user_id) if user.user_id else None,
-                'username': str(user.username) if user.username else None,
-                'email': str(user.email) if user.email else None,
-                'is_active': bool(user.is_active) if user.is_active is not None else False,
-                'account_status': str(user.account_status) if user.account_status else None,
-                'created_at': str(user.created_at) if user.created_at else None,
-                'created_by': str(user.created_by) if user.created_by else None,
-                'approved_by': str(user.approved_by) if user.approved_by else None,
-                'last_login': str(user.last_login) if user.last_login else None
-            }
+            user_id = user.user_id
+            if user_id not in users_dict:
+                users_dict[user_id] = {
+                    'user_id': str(user.user_id),
+                    'username': str(user.username),
+                    'email': str(user.email),
+                    'is_active': bool(user.is_active),
+                    'account_status': str(user.account_status),
+                    'created_at': str(user.created_at),
+                    'created_by': str(user.created_by),
+                    'approved_by': str(user.approved_by),
+                    'first_name': str(user.first_name) if user.first_name else None,
+                    'last_name': str(user.last_name) if user.last_name else None,
+                    'department': str(user.department) if user.department else None,
+                    'position': str(user.position) if user.position else None,
+                    'role_id': str(user.role_id) if user.role_id else None,
+                    'role_name': str(user.role_name) if user.role_name else None
+                }
             
-            try:
-                # Get roles for each user separately
-                roles = session.execute(
-                    text("""
-                        SELECT r.role_name 
-                        FROM user_roles ur 
-                        JOIN roles r ON ur.role_id = r.role_id 
-                        WHERE ur.user_id = :user_id
-                    """),
-                    {'user_id': user.user_id}
-                ).fetchall()
-                
-                user_dict['roles'] = [str(role[0]) for role in roles] if roles else []
-                
-                # Get user profile
-                profile = session.execute(
-                    text("""
-                        SELECT first_name, last_name, department, position
-                        FROM user_profiles
-                        WHERE user_id = :user_id
-                    """),
-                    {'user_id': user.user_id}
-                ).fetchone()
-                
-                if profile:
-                    user_dict.update({
-                        'first_name': str(profile.first_name) if profile.first_name else None,
-                        'last_name': str(profile.last_name) if profile.last_name else None,
-                        'department': str(profile.department) if profile.department else None,
-                        'position': str(profile.position) if profile.position else None
-                    })
-                else:
-                    user_dict.update({
-                        'first_name': None,
-                        'last_name': None,
-                        'department': None,
-                        'position': None
-                    })
-            except Exception as inner_e:
-                print(f"Error processing user {user.user_id}: {str(inner_e)}")
-                # Continue with next user if there's an error with roles or profile
-                continue
-            
-            users_list.append(user_dict)
-            
+        
+        # Convert dictionary to list
+        users_list = list(users_dict.values())
+        print(users_list)
         return jsonify(users_list)
+        
     except Exception as e:
         print(f"Error in get_users: {str(e)}")
         print(f"Error type: {type(e).__name__}")
@@ -129,91 +114,124 @@ def get_users(current_user_id):
 @token_required
 @admin_required
 def create_user(current_user_id):
+    session = Session()
     try:
         data = request.get_json()
-        required_fields = ['username', 'email', 'password', 'first_name', 'last_name']
+        print("Received data:", data)  # Debug log
         
-        for field in required_fields:
-            if not data.get(field):
-                return jsonify({'error': f'{field} is required'}), 400
-                
+        # Validate required fields
+        required_fields = ['username', 'email', 'password', 'first_name', 'last_name', 'role_id']
+        missing_fields = [field for field in required_fields if not data.get(field)]
+        if missing_fields:
+            return jsonify({'error': f'Missing required fields: {", ".join(missing_fields)}'}), 400
+
+        # Validate password
         if not is_valid_password(data['password']):
             return jsonify({
                 'error': 'Password must be at least 8 characters long and contain uppercase, lowercase, numbers, and special characters'
             }), 400
-            
-        session = Session()
-        
+
         # Check if username or email already exists
         existing_user = session.execute(
-            text("SELECT user_id FROM users WHERE username = :username OR email = :email"),
+            text("""
+                SELECT user_id, username, email 
+                FROM users 
+                WHERE username = :username OR email = :email
+            """),
             {'username': data['username'], 'email': data['email']}
         ).fetchone()
-        
+
         if existing_user:
-            return jsonify({'error': 'Username or email already exists'}), 400
-            
+            if existing_user.username == data['username']:
+                return jsonify({'error': 'Username already exists'}), 400
+            if existing_user.email == data['email']:
+                return jsonify({'error': 'Email already exists'}), 400
+
+        # Check if role exists
+        role = session.execute(
+            text("SELECT role_id FROM roles WHERE role_id = :role_id"),
+            {'role_id': data['role_id']}
+        ).fetchone()
+
+        if not role:
+            return jsonify({'error': f'Invalid role ID: {data["role_id"]}'}), 400
+
         # Generate password hash and salt
         salt = generate_salt()
         password_hash = hash_password(data['password'], salt)
-        
-        # Create user
-        result = session.execute(
-            text("""
-                INSERT INTO users (username, email, password_hash, salt, created_by, account_status)
-                VALUES (:username, :email, :password_hash, :salt, :created_by, 'PENDING')
-                RETURNING user_id
-            """),
-            {
-                'username': data['username'],
-                'email': data['email'],
-                'password_hash': password_hash,
-                'salt': salt,
-                'created_by': current_user_id
-            }
-        )
-        user_id = result.fetchone()[0]
-        
-        # Create user profile
-        session.execute(
-            text("""
-                INSERT INTO user_profiles (user_id, first_name, last_name)
-                VALUES (:user_id, :first_name, :last_name)
-            """),
-            {
-                'user_id': user_id,
-                'first_name': data['first_name'],
-                'last_name': data['last_name']
-            }
-        )
-        
-        # Assign roles if provided
-        if 'roles' in data and isinstance(data['roles'], list):
-            for role_name in data['roles']:
-                role = session.execute(
-                    text("SELECT role_id FROM roles WHERE role_name = :role_name"),
-                    {'role_name': role_name}
-                ).fetchone()
-                
-                if role:
-                    session.execute(
-                        text("""
-                            INSERT INTO user_roles (user_id, role_id, assigned_by)
-                            VALUES (:user_id, :role_id, :assigned_by)
-                        """),
-                        {
-                            'user_id': user_id,
-                            'role_id': role.role_id,
-                            'assigned_by': current_user_id
-                        }
+
+        # Create user with transaction
+        try:
+            # Insert user
+            result = session.execute(
+                text("""
+                    INSERT INTO users (
+                        username, email, password_hash, salt, 
+                        created_by, account_status, is_active
                     )
-        
-        session.commit()
-        return jsonify({'message': 'User created successfully', 'user_id': user_id}), 201
-        
+                    VALUES (
+                        :username, :email, :password_hash, :salt,
+                        :created_by, 'PENDING', :is_active
+                    )
+                    RETURNING user_id
+                """),
+                {
+                    'username': data['username'],
+                    'email': data['email'],
+                    'password_hash': password_hash,
+                    'salt': salt,
+                    'created_by': current_user_id,
+                    'is_active': data.get('is_active', True)
+                }
+            )
+            user_id = result.fetchone()[0]
+
+            # Create user profile
+            session.execute(
+                text("""
+                    INSERT INTO user_profiles (
+                        user_id, first_name, last_name, department, position
+                    )
+                    VALUES (
+                        :user_id, :first_name, :last_name, :department, :position
+                    )
+                """),
+                {
+                    'user_id': user_id,
+                    'first_name': data['first_name'],
+                    'last_name': data['last_name'],
+                    'department': data.get('department'),
+                    'position': data.get('position')
+                }
+            )
+
+            # Create user_roles entry
+            session.execute(
+                text("""
+                    INSERT INTO user_roles (user_id, role_id, assigned_by)
+                    VALUES (:user_id, :role_id, :assigned_by)
+                """),
+                {
+                    'user_id': user_id,
+                    'role_id': data['role_id'],
+                    'assigned_by': current_user_id
+                }
+            )
+
+            session.commit()
+            return jsonify({
+                'message': 'User created successfully',
+                'user_id': user_id
+            }), 201
+
+        except Exception as e:
+            session.rollback()
+            print(f"Database error in create_user: {str(e)}")
+            return jsonify({'error': f'Database error: {str(e)}'}), 500
+
     except Exception as e:
-        print(f"Error creating user: {str(e)}")
-        return jsonify({'error': 'Failed to create user'}), 500
+        print(f"Error in create_user: {str(e)}")
+        return jsonify({'error': f'Failed to create user: {str(e)}'}), 500
     finally:
         session.close()
 
@@ -250,8 +268,7 @@ def approve_user(current_user_id, user_id):
                     UPDATE users 
                     SET account_status = 'ACTIVE',
                         is_active = 1,
-                        approved_by = :approved_by,
-                        approved_at = CURRENT_TIMESTAMP
+                        approved_by = :approved_by
                     WHERE user_id = :user_id
                 """),
                 {
@@ -266,8 +283,7 @@ def approve_user(current_user_id, user_id):
                 text("""
                     UPDATE users 
                     SET account_status = 'REJECTED',
-                        approved_by = :approved_by,
-                        approved_at = CURRENT_TIMESTAMP
+                        approved_by = :approved_by
                     WHERE user_id = :user_id
                 """),
                 {
@@ -336,71 +352,138 @@ def legacy_approve_user(current_user_id, user_id):
 @token_required
 @admin_required
 def update_user(current_user_id, user_id):
+    session = Session()
     try:
         data = request.get_json()
-        session = Session()
-        
+
         # Check if user exists
         user = session.execute(
-            text("SELECT * FROM users WHERE user_id = :user_id"),
+            text("""
+                SELECT u.*, up.first_name, up.last_name, up.department, up.position
+                FROM users u
+                LEFT JOIN user_profiles up ON u.user_id = up.user_id
+                WHERE u.user_id = :user_id
+            """),
             {'user_id': user_id}
         ).fetchone()
-        
+
         if not user:
             return jsonify({'error': 'User not found'}), 404
+
+        # Start transaction
+        try:
+            # Update user fields
+            user_updates = {}
             
-        # Update user fields
-        if 'email' in data:
-            session.execute(
-                text("UPDATE users SET email = :email WHERE user_id = :user_id"),
-                {'email': data['email'], 'user_id': user_id}
-            )
-            
-        # Update profile fields
-        profile_fields = ['first_name', 'last_name']
-        profile_updates = {k: v for k, v in data.items() if k in profile_fields}
-        
-        if profile_updates:
-            update_query = "UPDATE user_profiles SET " + \
-                         ", ".join(f"{k} = :{k}" for k in profile_updates.keys()) + \
-                         " WHERE user_id = :user_id"
-            profile_updates['user_id'] = user_id
-            session.execute(text(update_query), profile_updates)
-            
-        # Update roles if provided
-        if 'roles' in data and isinstance(data['roles'], list):
-            # Remove existing roles
-            session.execute(
-                text("DELETE FROM user_roles WHERE user_id = :user_id"),
-                {'user_id': user_id}
-            )
-            
-            # Add new roles
-            for role_name in data['roles']:
-                role = session.execute(
-                    text("SELECT role_id FROM roles WHERE role_name = :role_name"),
-                    {'role_name': role_name}
+            # Handle username update
+            if 'username' in data and data['username'] != user.username:
+                # Check username uniqueness
+                existing_username = session.execute(
+                    text("""
+                        SELECT user_id FROM users 
+                        WHERE username = :username AND user_id != :user_id
+                    """),
+                    {'username': data['username'], 'user_id': user_id}
                 ).fetchone()
-                
-                if role:
+                if existing_username:
+                    return jsonify({'error': 'Username already exists'}), 400
+                user_updates['username'] = data['username']
+
+            # Handle email update
+            if 'email' in data and data['email'] != user.email:
+                # Check email uniqueness
+                existing_email = session.execute(
+                    text("""
+                        SELECT user_id FROM users 
+                        WHERE email = :email AND user_id != :user_id
+                    """),
+                    {'email': data['email'], 'user_id': user_id}
+                ).fetchone()
+                if existing_email:
+                    return jsonify({'error': 'Email already exists'}), 400
+                user_updates['email'] = data['email']
+
+            # Handle is_active update
+            if 'is_active' in data:
+                user_updates['is_active'] = 1 if data['is_active'] else 0
+
+            # Update user table if there are changes
+            if user_updates:
+                update_query = "UPDATE users SET " + \
+                             ", ".join(f"{k} = :{k}" for k in user_updates.keys()) + \
+                             " WHERE user_id = :user_id"
+                user_updates['user_id'] = user_id
+                session.execute(text(update_query), user_updates)
+
+            # Update profile fields
+            profile_updates = {}
+            profile_fields = ['first_name', 'last_name', 'department', 'position']
+            for field in profile_fields:
+                if field in data:
+                    profile_updates[field] = data[field]
+
+            if profile_updates:
+                if user.first_name is None:  # Profile doesn't exist
+                    profile_updates['user_id'] = user_id
                     session.execute(
                         text("""
-                            INSERT INTO user_roles (user_id, role_id, assigned_by)
-                            VALUES (:user_id, :role_id, :assigned_by)
+                            INSERT INTO user_profiles (
+                                user_id, first_name, last_name, department, position
+                            )
+                            VALUES (
+                                :user_id, :first_name, :last_name, :department, :position
+                            )
                         """),
-                        {
-                            'user_id': user_id,
-                            'role_id': role.role_id,
-                            'assigned_by': current_user_id
-                        }
+                        profile_updates
                     )
-        
-        session.commit()
-        return jsonify({'message': 'User updated successfully'})
-        
+                else:  # Profile exists, update it
+                    update_query = "UPDATE user_profiles SET " + \
+                                 ", ".join(f"{k} = :{k}" for k in profile_updates.keys()) + \
+                                 " WHERE user_id = :user_id"
+                    profile_updates['user_id'] = user_id
+                    session.execute(text(update_query), profile_updates)
+
+            # Update role if provided
+            if 'role_id' in data:
+                # Check if role exists
+                role = session.execute(
+                    text("SELECT role_id FROM roles WHERE role_id = :role_id"),
+                    {'role_id': data['role_id']}
+                ).fetchone()
+
+                if not role:
+                    return jsonify({'error': f'Invalid role ID: {data["role_id"]}'}), 400
+
+                # Remove existing roles
+                session.execute(
+                    text("DELETE FROM user_roles WHERE user_id = :user_id"),
+                    {'user_id': user_id}
+                )
+
+                # Add new role
+                session.execute(
+                    text("""
+                        INSERT INTO user_roles (user_id, role_id, assigned_by)
+                        VALUES (:user_id, :role_id, :assigned_by)
+                    """),
+                    {
+                        'user_id': user_id,
+                        'role_id': data['role_id'],
+                        'assigned_by': current_user_id
+                    }
+                )
+
+            session.commit()
+            return jsonify({'message': 'User updated successfully'})
+
+        except Exception as e:
+            session.rollback()
+            print(f"Database error in update_user: {str(e)}")
+            return jsonify({'error': f'Database error: {str(e)}'}), 500
+
     except Exception as e:
-        print(f"Error updating user: {str(e)}")
-        return jsonify({'error': 'Failed to update user'}), 500
+        print(f"Error in update_user: {str(e)}")
+        return jsonify({'error': f'Failed to update user: {str(e)}'}), 500
     finally:
         session.close()
 
@@ -464,13 +547,21 @@ def get_pending_approvals(current_user_id):
         
         result = []
         for user in pending_users:
-            user_dict = dict(user)
-            user_dict['roles'] = user_dict['roles'].split(',') if user_dict['roles'] else []
-            # Don't return sensitive information
-            if 'password_hash' in user_dict:
-                del user_dict['password_hash']
-            if 'salt' in user_dict:
-                del user_dict['salt']
+            # Convert Row object to dictionary by accessing each column
+            user_dict = {
+                'user_id': user.user_id,
+                'username': user.username,
+                'email': user.email,
+                'is_active': user.is_active,
+                'account_status': user.account_status,
+                'created_at': str(user.created_at) if user.created_at else None,
+                'created_by': user.created_by,
+                'approved_by': user.approved_by,
+                'first_name': user.first_name,
+                'last_name': user.last_name,
+                'creator_username': user.creator_username,
+                'roles': user.roles.split(',') if user.roles else []
+            }
             result.append(user_dict)
             
         return jsonify(result)
@@ -486,11 +577,257 @@ def get_pending_approvals(current_user_id):
 def get_roles(current_user_id):
     try:
         session = Session()
-        roles = session.execute(text("SELECT * FROM roles")).fetchall()
-        return jsonify([dict(role) for role in roles])
+        # Get roles with permissions in a single query using LEFT JOIN
+        roles = session.execute(
+            text("""
+                SELECT 
+                    r.role_id,
+                    r.role_name,
+                    r.description,
+                    r.is_system_role,
+                    pm.module_name,
+                    pm.can_view,
+                    pm.can_create,
+                    pm.can_edit,
+                    pm.can_delete
+                FROM roles r
+                LEFT JOIN permission_matrix pm ON r.role_id = pm.role_id
+                ORDER BY r.role_id
+            """)
+        ).fetchall()
+        
+        # Process the results to format roles with their permissions
+        formatted_roles = {}
+        for row in roles:
+            role_id = row.role_id
+            if role_id not in formatted_roles:
+                formatted_roles[role_id] = {
+                    'role_id': role_id,
+                    'role_name': row.role_name,
+                    'description': row.description,
+                    'is_system_role': bool(row.is_system_role),
+                    'permissions': {}
+                }
+            
+            # Add permission if module_name exists
+            if row.module_name:
+                formatted_roles[role_id]['permissions'][row.module_name] = {
+                    'can_view': bool(row.can_view),
+                    'can_create': bool(row.can_create),
+                    'can_edit': bool(row.can_edit),
+                    'can_delete': bool(row.can_delete)
+                }
+        
+        # Convert dictionary to list
+        result = list(formatted_roles.values())
+        
+        return jsonify(result)
+        
     except Exception as e:
         print(f"Error getting roles: {str(e)}")
         return jsonify({'error': 'Failed to retrieve roles'}), 500
+    finally:
+        session.close()
+
+@admin_bp.route('/roles', methods=['POST'])
+@token_required
+@admin_required
+def create_role(current_user_id):
+    try:
+        data = request.get_json()
+        
+        # Validate required fields
+        if not data.get('role_name'):
+            return jsonify({'error': 'Role name is required'}), 400
+            
+        session = Session()
+        
+        # Check if role name already exists
+        existing_role = session.execute(
+            text("SELECT role_id FROM roles WHERE role_name = :role_name"),
+            {'role_name': data['role_name']}
+        ).fetchone()
+        
+        if existing_role:
+            return jsonify({'error': 'Role name already exists'}), 400
+            
+        # Create new role
+        result = session.execute(
+            text("""
+                INSERT INTO roles (role_name, description, is_system_role)
+                VALUES (:role_name, :description, :is_system_role)
+                RETURNING role_id
+            """),
+            {
+                'role_name': data['role_name'],
+                'description': data.get('description'),
+                'is_system_role': data.get('is_system_role', 0)
+            }
+        )
+        
+        role_id = result.fetchone()[0]
+
+        # Handle permissions if provided
+        if 'permissions' in data:
+            for module_name, permissions in data['permissions'].items():
+                session.execute(
+                    text("""
+                        INSERT INTO permission_matrix 
+                        (role_id, module_name, can_view, can_create, can_edit, can_delete)
+                        VALUES 
+                        (:role_id, :module_name, :can_view, :can_create, :can_edit, :can_delete)
+                    """),
+                    {
+                        'role_id': role_id,
+                        'module_name': module_name,
+                        'can_view': 1 if permissions.get('can_view', False) else 0,
+                        'can_create': 1 if permissions.get('can_create', False) else 0,
+                        'can_edit': 1 if permissions.get('can_edit', False) else 0,
+                        'can_delete': 1 if permissions.get('can_delete', False) else 0
+                    }
+                )
+        
+        session.commit()
+        
+        return jsonify({
+            'message': 'Role created successfully',
+            'role_id': role_id
+        }), 201
+        
+    except Exception as e:
+        print(f"Error creating role: {str(e)}")
+        return jsonify({'error': 'Failed to create role'}), 500
+    finally:
+        session.close()
+
+@admin_bp.route('/roles/<int:role_id>', methods=['PUT'])
+@token_required
+@admin_required
+def update_role(current_user_id, role_id):
+    try:
+        data = request.get_json()
+        session = Session()
+        
+        # Check if role exists
+        role = session.execute(
+            text("SELECT * FROM roles WHERE role_id = :role_id"),
+            {'role_id': role_id}
+        ).fetchone()
+        
+        if not role:
+            return jsonify({'error': 'Role not found'}), 404
+            
+        # Check if role is a system role
+        if role.is_system_role:
+            return jsonify({'error': 'Cannot modify system roles'}), 403
+            
+        # Validate role name uniqueness if being updated
+        if 'role_name' in data and data['role_name'] != role.role_name:
+            existing_role = session.execute(
+                text("SELECT role_id FROM roles WHERE role_name = :role_name AND role_id != :role_id"),
+                {'role_name': data['role_name'], 'role_id': role_id}
+            ).fetchone()
+            
+            if existing_role:
+                return jsonify({'error': 'Role name already exists'}), 400
+        
+        # Build update query dynamically based on provided fields
+        update_fields = []
+        update_params = {'role_id': role_id}
+        
+        allowed_fields = ['role_name', 'description']
+        
+        for field in allowed_fields:
+            if field in data:
+                update_fields.append(f"{field} = :{field}")
+                update_params[field] = data[field]
+        
+        if update_fields:
+            update_query = f"""
+                UPDATE roles 
+                SET {', '.join(update_fields)}
+                WHERE role_id = :role_id
+            """
+            session.execute(text(update_query), update_params)
+
+        # Handle permissions update if provided
+        if 'permissions' in data:
+            # First delete existing permissions for this role
+            session.execute(
+                text("DELETE FROM permission_matrix WHERE role_id = :role_id"),
+                {'role_id': role_id}
+            )
+            
+            # Insert new permissions
+            for module_name, permissions in data['permissions'].items():
+                session.execute(
+                    text("""
+                        INSERT INTO permission_matrix 
+                        (role_id, module_name, can_view, can_create, can_edit, can_delete)
+                        VALUES 
+                        (:role_id, :module_name, :can_view, :can_create, :can_edit, :can_delete)
+                    """),
+                    {
+                        'role_id': role_id,
+                        'module_name': module_name,
+                        'can_view': 1 if permissions.get('can_view', False) else 0,
+                        'can_create': 1 if permissions.get('can_create', False) else 0,
+                        'can_edit': 1 if permissions.get('can_edit', False) else 0,
+                        'can_delete': 1 if permissions.get('can_delete', False) else 0
+                    }
+                )
+        
+        session.commit()
+        
+        return jsonify({'message': 'Role updated successfully'})
+        
+    except Exception as e:
+        print(f"Error updating role: {str(e)}")
+        return jsonify({'error': 'Failed to update role'}), 500
+    finally:
+        session.close()
+
+@admin_bp.route('/roles/<int:role_id>', methods=['DELETE'])
+@token_required
+@admin_required
+def delete_role(current_user_id, role_id):
+    try:
+        session = Session()
+        
+        # Check if role exists
+        role = session.execute(
+            text("SELECT * FROM roles WHERE role_id = :role_id"),
+            {'role_id': role_id}
+        ).fetchone()
+        
+        if not role:
+            return jsonify({'error': 'Role not found'}), 404
+            
+        # Check if role is a system role
+        if role.is_system_role:
+            return jsonify({'error': 'Cannot delete system roles'}), 403
+            
+        # Check if role is assigned to any users
+        users_with_role = session.execute(
+            text("SELECT COUNT(*) as count FROM user_roles WHERE role_id = :role_id"),
+            {'role_id': role_id}
+        ).fetchone()
+        
+        if users_with_role.count > 0:
+            return jsonify({'error': 'Cannot delete role that is assigned to users'}), 400
+            
+        # Delete the role
+        session.execute(
+            text("DELETE FROM roles WHERE role_id = :role_id"),
+            {'role_id': role_id}
+        )
+        
+        session.commit()
+        return jsonify({'message': 'Role deleted successfully'})
+        
+    except Exception as e:
+        print(f"Error deleting role: {str(e)}")
+        return jsonify({'error': 'Failed to delete role'}), 500
     finally:
         session.close()
 
@@ -502,17 +839,220 @@ def get_audit_logs(current_user_id):
         session = Session()
         logs = session.execute(
             text("""
-                SELECT l.*, u.username, u2.username as target_username
+                SELECT l.*, u.username
                 FROM login_audit_log l
                 JOIN users u ON l.user_id = u.user_id
-                LEFT JOIN users u2 ON l.target_user_id = u2.user_id
                 ORDER BY login_timestamp DESC
                 LIMIT 1000
             """)
         ).fetchall()
-        return jsonify([dict(log) for log in logs])
+        
+        # Convert SQLAlchemy Row objects to dictionaries properly
+        logs_dict = []
+        for log in logs:
+            log_dict = {
+                'log_id': log.log_id,
+                'user_id': log.user_id,
+                'login_timestamp': str(log.login_timestamp) if log.login_timestamp else None,
+                'ip_address': log.ip_address,
+                'login_status': log.login_status,
+                'login_type': log.login_type,
+                'username': log.username
+            }
+            logs_dict.append(log_dict)
+            
+        return jsonify(logs_dict)
     except Exception as e:
         print(f"Error getting audit logs: {str(e)}")
         return jsonify({'error': 'Failed to retrieve audit logs'}), 500
+    finally:
+        session.close()
+
+@admin_bp.route('/users/<int:user_id>/details', methods=['PUT'])
+@token_required
+@admin_required
+def update_user_details(current_user_id, user_id):
+    try:
+        data = request.get_json()
+        session = Session()
+        
+        # Check if user exists
+        user = session.execute(
+            text("SELECT * FROM users WHERE user_id = :user_id"),
+            {'user_id': user_id}
+        ).fetchone()
+        
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+            
+        # Validate email uniqueness if email is being updated
+        if 'email' in data and data['email'] != user.email:
+            existing_email = session.execute(
+                text("SELECT user_id FROM users WHERE email = :email AND user_id != :user_id"),
+                {'email': data['email'], 'user_id': user_id}
+            ).fetchone()
+            
+            if existing_email:
+                return jsonify({'error': 'Email already exists'}), 400
+        
+        # Validate username uniqueness if username is being updated
+        if 'username' in data and data['username'] != user.username:
+            existing_username = session.execute(
+                text("SELECT user_id FROM users WHERE username = :username AND user_id != :user_id"),
+                {'username': data['username'], 'user_id': user_id}
+            ).fetchone()
+            
+            if existing_username:
+                return jsonify({'error': 'Username already exists'}), 400
+        
+        # Build update query dynamically based on provided fields
+        update_fields = []
+        update_params = {'user_id': user_id}
+        
+        allowed_fields = [
+            'username', 'email', 'is_active'
+        ]
+        
+        for field in allowed_fields:
+            if field in data:
+                update_fields.append(f"{field} = :{field}")
+                update_params[field] = data[field]
+        
+        if not update_fields:
+            return jsonify({'error': 'No valid fields to update'}), 400
+            
+        update_query = f"""
+            UPDATE users 
+            SET {', '.join(update_fields)}
+            WHERE user_id = :user_id
+        """
+        
+        session.execute(text(update_query), update_params)
+        session.commit()
+        
+        return jsonify({'message': 'User details updated successfully'})
+        
+    except Exception as e:
+        print(f"Error updating user details: {str(e)}")
+        return jsonify({'error': 'Failed to update user details'}), 500
+    finally:
+        session.close()
+
+@admin_bp.route('/users/<int:user_id>', methods=['DELETE'])
+@token_required
+@admin_required
+def soft_delete_user(current_user_id, user_id):
+    try:
+        session = Session()
+        
+        # Check if user exists
+        user = session.execute(
+            text("SELECT * FROM users WHERE user_id = :user_id"),
+            {'user_id': user_id}
+        ).fetchone()
+        
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+            
+        # Prevent self-deletion
+        if user_id == current_user_id:
+            return jsonify({'error': 'Cannot delete your own account'}), 403
+            
+        # Soft delete by setting is_active to false
+        session.execute(
+            text("""
+                UPDATE users 
+                SET is_active = 0,
+                    account_status = 'INACTIVE'
+                WHERE user_id = :user_id
+            """),
+            {'user_id': user_id}
+        )
+        
+        session.commit()
+        return jsonify({'message': 'User soft deleted successfully'})
+        
+    except Exception as e:
+        print(f"Error soft deleting user: {str(e)}")
+        return jsonify({'error': 'Failed to soft delete user'}), 500
+    finally:
+        session.close()
+
+@admin_bp.route('/users/<int:user_id>/reset-password', methods=['POST'])
+@token_required
+@admin_required
+def reset_user_password(current_user_id, user_id):
+    try:
+        data = request.get_json()
+        
+        # Validate required fields
+        if not data.get('new_password'):
+            return jsonify({'error': 'New password is required'}), 400
+            
+        # Validate password requirements
+        if not is_valid_password(data['new_password']):
+            return jsonify({
+                'error': 'New password must be at least 8 characters long and contain uppercase, lowercase, numbers, and special characters'
+            }), 400
+            
+        session = Session()
+        
+        # Check if user exists and get their role
+        user = session.execute(
+            text("""
+                SELECT u.*, r.role_name 
+                FROM users u
+                LEFT JOIN user_roles ur ON u.user_id = ur.user_id
+                LEFT JOIN roles r ON ur.role_id = r.role_id
+                WHERE u.user_id = :user_id
+            """),
+            {'user_id': user_id}
+        ).fetchone()
+        
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+            
+        # If user is not admin, they can only change their own password
+        if user_id != current_user_id:
+            # Check if current user is admin
+            admin_check = session.execute(
+                text("""
+                    SELECT r.role_name 
+                    FROM user_roles ur 
+                    JOIN roles r ON ur.role_id = r.role_id 
+                    WHERE ur.user_id = :user_id 
+                    AND r.role_name IN ('SUPER_ADMIN', 'ADMIN')
+                """),
+                {'user_id': current_user_id}
+            ).fetchone()
+            
+            if not admin_check:
+                return jsonify({'error': 'Only administrators can reset other users\' passwords'}), 403
+            
+        # Generate new salt and hash for the new password
+        new_salt = generate_salt()
+        new_password_hash = hash_password(data['new_password'], new_salt)
+        
+        # Update password
+        session.execute(
+            text("""
+                UPDATE users 
+                SET password_hash = :password_hash,
+                    salt = :salt
+                WHERE user_id = :user_id
+            """),
+            {
+                'user_id': user_id,
+                'password_hash': new_password_hash,
+                'salt': new_salt
+            }
+        )
+        
+        session.commit()
+        return jsonify({'message': 'Password reset successfully'})
+        
+    except Exception as e:
+        print(f"Error resetting password: {str(e)}")
+        return jsonify({'error': 'Failed to reset password'}), 500
     finally:
         session.close() 

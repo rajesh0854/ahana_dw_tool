@@ -114,6 +114,12 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem('user', JSON.stringify({
         id: data.user_id,
         username: data.username,
+        email: data.email,
+        first_name: data.first_name,
+        last_name: data.last_name,
+        phone: data.phone,
+        department: data.department,
+        role: data.role
       }));
 
       // Set cookie for middleware
@@ -122,6 +128,12 @@ export const AuthProvider = ({ children }) => {
       setUser({
         id: data.user_id,
         username: data.username,
+        email: data.email,
+        first_name: data.first_name,
+        last_name: data.last_name,
+        phone: data.phone,
+        department: data.department,
+        role: data.role
       });
 
       return { success: true };
@@ -188,6 +200,19 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const updateUserProfile = (profileData) => {
+    const updatedUser = {
+      ...user,
+      ...profileData
+    };
+    
+    // Update localStorage
+    localStorage.setItem('user', JSON.stringify(updatedUser));
+    
+    // Update context state
+    setUser(updatedUser);
+  };
+
   const value = {
     user,
     loading,
@@ -197,6 +222,7 @@ export const AuthProvider = ({ children }) => {
     handleTokenExpiration,
     forgotPassword,
     resetPassword,
+    updateUserProfile,
     isAuthenticated: !!user,
   };
 

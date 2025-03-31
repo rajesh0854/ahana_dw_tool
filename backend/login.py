@@ -151,10 +151,29 @@ def login():
         
         session.commit()
         
+        # Get user profile data
+        user_profile = session.execute(
+            text("""
+                SELECT u.email, up.first_name, up.last_name, up.phone_number as phone, up.department, r.role_name
+                FROM users u
+                LEFT JOIN user_profiles up ON u.user_id = up.user_id
+                LEFT JOIN user_roles ur ON u.user_id = ur.user_id
+                LEFT JOIN roles r ON r.role_id = ur.role_id
+                WHERE u.user_id = :user_id
+            """),
+            {'user_id': user.user_id}
+        ).fetchone()
+        
         return jsonify({
             'token': token,
             'user_id': user.user_id,
-            'username': user.username
+            'username': user.username,
+            'email': user.email,
+            'first_name': user_profile.first_name if user_profile and user_profile.first_name else None,
+            'last_name': user_profile.last_name if user_profile and user_profile.last_name else None,
+            'phone': user_profile.phone if user_profile and user_profile.phone else None,
+            'department': user_profile.department if user_profile and user_profile.department else None,
+            'role': user_profile.role_name if user_profile and user_profile.role_name else 'User'
         })
         
     except Exception as e:
