@@ -315,7 +315,7 @@ const MapperModule = () => {
     return value.replace(/\s/g, '')
   }
 
-  // Modify handleFormChange to reset activation state when changes are made
+  // Modify handleFormChange to prevent spaces in certain fields
   const handleFormChange = (field, value) => {
     // Fields that should not allow spaces
     const noSpaceFields = ['targetSchema', 'tableName', 'sourceSystem']
@@ -435,8 +435,6 @@ const MapperModule = () => {
     setShowValidateButton(false)
     setHasBeenValidated(false)
     setAllRowsValidated(false)
-    setIsActivated(false)
-    setIsActivationSuccessful(false) // Reset activation success state when changes are made
   }
 
   // Add new function to handle search trigger
@@ -484,7 +482,7 @@ const MapperModule = () => {
     return { hasDuplicates, keySeqValues };
   };
 
-  // Modify handleRowChange to reset activation state when changes are made
+  // Modify handleRowChange to better handle primary key changes
   const handleRowChange = (index, field, value) => {
     // Fields that should not allow spaces
     const noSpaceFields = ['fieldName', 'dataType', 'keyColumn', 'valColumn', 'mapCombineCode']
@@ -591,8 +589,6 @@ const MapperModule = () => {
     setShowValidateButton(false);
     setHasBeenValidated(false);
     setAllRowsValidated(false);
-    setIsActivated(false);
-    setIsActivationSuccessful(false); // Reset activation success state when changes are made
   }
 
   // Modify addRow to check for duplicates after adding a row
@@ -894,7 +890,6 @@ const MapperModule = () => {
 
         const formData = new FormData();
         formData.append('file', file);
-        console.log(formData);
 
         const response = await fetch('http://localhost:5000/mapper/upload', {
             method: 'POST',
@@ -920,30 +915,6 @@ const MapperModule = () => {
         setRows(cleanedRows);
         console.log(cleanedRows);
         console.log(cleanedFormData); 
-
-        // Reset all validation and workflow states
-        setHasUnsavedChanges(true); // Make save button visible
-        setShowValidateButton(false);
-        setHasBeenValidated(false);
-        setAllRowsValidated(false);
-        setIsActivated(false);
-        setIsActivationSuccessful(false);
-        
-        // Reset validation status and errors
-        setValidationStatus({});
-        setErrorMessages({});
-        setRowWarnings({});
-        setPkSeqErrors({});
-        setHasDuplicateKeys(false);
-        
-        // Reset modification tracking
-        setModifiedFields({});
-        setModifiedRows([]);
-        
-        // Reset original data since this is a new upload
-        setOriginalFormData(null);
-        setOriginalRows(null);
-        
         message.success('File uploaded successfully');
     } catch (error) {
         console.error('Error uploading file:', error);
@@ -1354,9 +1325,6 @@ const MapperModule = () => {
         // Set validation workflow states
         setHasBeenValidated(true)
         setAllRowsValidated(true)
-        // Reset activation state when validation is performed
-        setIsActivated(false)
-        setIsActivationSuccessful(false)
       } else {
         message.error({ 
           content: (
@@ -1373,9 +1341,6 @@ const MapperModule = () => {
         // Set validation workflow states
         setHasBeenValidated(true)
         setAllRowsValidated(false)
-        // Reset activation state when validation fails
-        setIsActivated(false)
-        setIsActivationSuccessful(false)
       }
     } catch (error) {
       message.error({ 
@@ -1387,9 +1352,6 @@ const MapperModule = () => {
       // Set validation workflow states on error
       setHasBeenValidated(true)
       setAllRowsValidated(false)
-      // Reset activation state on error
-      setIsActivated(false)
-      setIsActivationSuccessful(false)
     } finally {
       // Set validating state to false when done
       setIsValidating(false)
@@ -1754,7 +1716,7 @@ const MapperModule = () => {
                     </Button>
                   )}
 
-                  {/* Activate Button - Show if validated, regardless of activation status */}
+                  {/* Activate Button */}
                   {hasBeenValidated && allRowsValidated && (
                     <Button
                       variant="contained"
@@ -1776,8 +1738,8 @@ const MapperModule = () => {
                     </Button>
                   )}
 
-                  {/* Create Job Button - Show if activated successfully */}
-                  {isActivationSuccessful && (
+                  {/* Create Job Button */}
+                  {hasBeenValidated && allRowsValidated && isActivationSuccessful && (
                     <Button
                       variant="contained"
                       onClick={handleCreateJob}

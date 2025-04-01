@@ -19,6 +19,10 @@ from admin import admin_bp, admin_required
 from dotenv import load_dotenv
 from sqlalchemy.orm import Session
 from license_manager import LicenseManager
+from openpyxl import Workbook, load_workbook
+from openpyxl.styles import PatternFill, Font, Alignment, Border, Side
+from openpyxl.utils import get_column_letter
+ 
 
 # Initialize license manager at module level
 license_manager = LicenseManager()
@@ -71,134 +75,209 @@ def create_oracle_connection():
 os.makedirs('data/drafts', exist_ok=True)
 os.makedirs('data/templates', exist_ok=True)
 
-# Template structure for the mapper
-FORM_FIELDS = ["bulkProcessRows","description","freqCode","reference","sourceSystem","tableName","tableType","targetSchema"]
- 
-TABLE_FIELDS = ["dataType","execSequence","fieldDesc","fieldName","keyColumn","logic","mapCombineCode","pkSeq","primaryKey","scdType","valColumn"]
- 
+FORM_FIELDS = ["reference","description","sourceSystem","tableName","tableType","targetSchema","freqCode","bulkProcessRows"]
+TABLE_FIELDS = ["primaryKey","pkSeq","fieldName","dataType","fieldDesc","scdType","keyColumn","valColumn","logic","mapCombineCode","execSequence"]
 
+from openpyxl import Workbook, load_workbook
+from openpyxl.styles import PatternFill, Font, Alignment, Border, Side
+from openpyxl.utils import get_column_letter
+ 
+FORM_FIELDS = ["reference","description","sourceSystem","tableName","tableType","targetSchema","freqCode","bulkProcessRows"]
+ 
+TABLE_FIELDS = ["primaryKey","pkSeq","fieldName","dataType","fieldDesc","scdType","keyColumn","valColumn","logic","mapCombineCode","execSequence"]
+ 
+ 
 @app.route('/mapper/download-template', methods=['GET'])
 def download_template():
     try:
-        # Create a template DataFrame with form fields (one row)
-        form_data = {field: '' for field in FORM_FIELDS}
-        form_df = pd.DataFrame([form_data])
-       
-        # Create a template DataFrame with table fields (multiple rows)
-        table_data = {field: '' for field in TABLE_FIELDS}
-        table_df = pd.DataFrame([table_data] * 10)  # 10 empty rows by default
-       
-        # Create a buffer to store the CSV
-        buffer = io.StringIO()
-       
-        # Write form fields section with header
-        buffer.write("# Form Fields\n")
-        form_df.to_csv(buffer, index=False)
-       
-        # Add a separator
-        buffer.write("\n# Table Fields\n")
-       
-        # Write table fields
-        table_df.to_csv(buffer, index=False)
-       
-        # Get the CSV content
-        csv_content = buffer.getvalue()
-        buffer.close()
-       
-        # Create a new buffer for the final CSV file
-        final_buffer = io.BytesIO()
-        final_buffer.write(csv_content.encode())
-        final_buffer.seek(0)
-       
+        # Create a new workbook
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "Mapping Template"
+ 
+        # Define styles
+        header_fill = PatternFill(start_color="00B050", end_color="00B050", fill_type="solid")
+        header_font = Font(bold=True, color="FFFFFF")
+        header_alignment = Alignment(horizontal="center", vertical="center")
+        border = Border(
+            left=Side(style='thin'),
+            right=Side(style='thin'),
+            top=Side(style='thin'),
+            bottom=Side(style='thin')
+        )
+ 
+        # Write Form Fields section
+        ws['A1'] = "Form Fields"
+        ws.merge_cells('A1:H1')
+        ws['A1'].fill = header_fill
+        ws['A1'].font = header_font
+        ws['A1'].alignment = header_alignment
+ 
+        # Write Form Fields headers
+        for col, field in enumerate(FORM_FIELDS, 1):
+            cell = ws.cell(row=2, column=col)
+            cell.value = field
+            cell.fill = header_fill
+            cell.font = header_font
+            cell.alignment = header_alignment
+            cell.border = border
+ 
+        # Add empty row for form data
+        for col in range(1, len(FORM_FIELDS) + 1):
+            cell = ws.cell(row=3, column=col)
+            cell.border = border
+ 
+        # Add space between sections
+        ws.append([])
+ 
+        # Write Table Fields section
+        current_row = 5
+        ws.cell(row=current_row, column=1, value="Table Fields")
+        ws.merge_cells(f'A{current_row}:K{current_row}')
+        ws.cell(row=current_row, column=1).fill = header_fill
+        ws.cell(row=current_row, column=1).font = header_font
+        ws.cell(row=current_row, column=1).alignment = header_alignment
+ 
+        # Write Table Fields headers
+        current_row += 1
+        for col, field in enumerate(TABLE_FIELDS, 1):
+            cell = ws.cell(row=current_row, column=col)
+            cell.value = field
+            cell.fill = header_fill
+            cell.font = header_font
+            cell.alignment = header_alignment
+            cell.border = border
+ 
+        # Add empty rows for table data
+        for row in range(current_row + 1, current_row + 11):  # 10 empty rows
+            for col in range(1, len(TABLE_FIELDS) + 1):
+                cell = ws.cell(row=row, column=col)
+                cell.border = border
+ 
+        # Adjust column widths (FIXED LOGIC)
+        for col_idx in range(1, max(len(FORM_FIELDS), len(TABLE_FIELDS)) + 1):
+            max_length = 0
+            column_letter = get_column_letter(col_idx)  # Use get_column_letter directly instead of cell attribute
+ 
+            # Check form headers (row 2)
+            if col_idx <= len(FORM_FIELDS):
+                header_value = ws.cell(row=2, column=col_idx).value
+                if header_value:
+                    max_length = max(max_length, len(str(header_value)))
+ 
+            # Check table headers (row 6)
+            if col_idx <= len(TABLE_FIELDS):
+                header_value = ws.cell(row=current_row, column=col_idx).value
+                if header_value:
+                    max_length = max(max_length, len(str(header_value)))
+ 
+            # Set the column width
+            adjusted_width = (max_length + 2)
+            ws.column_dimensions[column_letter].width = adjusted_width
+ 
+        # Save to BytesIO buffer
+        excel_buffer = io.BytesIO()
+        wb.save(excel_buffer)
+        excel_buffer.seek(0)
+ 
         return send_file(
-            final_buffer,
-            mimetype='text/csv',
+            excel_buffer,
+            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
             as_attachment=True,
-            download_name='mapper_template.csv'
+            download_name='mapper_template.xlsx'
         )
     except Exception as e:
-        print(f"Error in download_template: {str(e)}")  # Add logging
+        print(f"Error in download_template: {str(e)}")
+        traceback.print_exc()
         return jsonify({'error': str(e)}), 500
-
+   
+ 
 @app.route('/mapper/upload', methods=['POST'])
 def upload_file():
     try:
         if 'file' not in request.files:
             return jsonify({'error': 'No file provided'}), 400
-
+ 
         file = request.files['file']
+        print(file)
         if file.filename == '':
             return jsonify({'error': 'No file selected'}), 400
-
-        if not file.filename.endswith('.csv'):
-            return jsonify({'error': 'Only CSV files are allowed'}), 400
-
-        # Read the CSV content
-        content = file.read().decode('utf-8').splitlines()
-       
-        # Find the sections
-        form_start = -1
-        table_start = -1
-       
-        for i, line in enumerate(content):
-            if '# Form Fields' in line:
-                form_start = i
-            elif '# Table Fields' in line:
-                table_start = i
-                break
-       
-        if form_start == -1 or table_start == -1:
-            return jsonify({'error': 'Invalid template format: Missing section headers'}), 400
-       
+ 
+        # if not file.filename.endswith('.xlsx'):
+        #     return jsonify({'error': 'Only Excel (.xlsx) files are allowed'}), 400
+ 
+        # Read the Excel file
+        wb = load_workbook(io.BytesIO(file.read()))
+        ws = wb.active
+ 
         # Process form fields
-        form_section = '\n'.join(content[form_start + 1:table_start]).strip()
-        form_buffer = io.StringIO(form_section)
-        form_df = pd.read_csv(form_buffer)
-       
-        # Get the first row of form data (skip empty rows)
         form_data = {}
-        for _, row in form_df.iterrows():
-            if any(str(value).strip() != '' for value in row):
-                form_data = row.to_dict()
-                break
-       
+        form_headers = [cell.value for cell in ws[2] if cell.value]  # Get headers from row 2
+        form_values = [cell.value for cell in ws[3] if cell.column <= len(form_headers)]  # Get values from row 3
+ 
+        for header, value in zip(form_headers, form_values):
+            form_data[header] = str(value) if value is not None else ''
+ 
         # Process table fields
-        table_section = '\n'.join(content[table_start + 1:]).strip()
-        table_buffer = io.StringIO(table_section)
-        table_df = pd.read_csv(table_buffer)
-       
-        # Convert table data to list of dictionaries
+        table_start_row = 6  # Table headers start at row 6
+        table_headers = [cell.value for cell in ws[table_start_row] if cell.value]
         rows = []
-        for _, row in table_df.iterrows():
-            # Skip completely empty rows
-            if not any(str(value).strip() != '' for value in row):
-                continue
+ 
+        for row in ws.iter_rows(min_row=table_start_row + 1, max_col=len(table_headers)):
+            row_data = {}
+            has_data = False
+           
+            for header, cell in zip(table_headers, row):
+                value = cell.value
                
-            row_dict = {}
-            for field in TABLE_FIELDS:
-                value = row.get(field, '')
                 # Handle boolean fields
-                if field == 'primaryKey':
-                    # Convert various true/false representations
+                if header == 'primaryKey':
                     if isinstance(value, bool):
                         value = value
                     elif isinstance(value, (int, float)):
                         value = bool(value)
                     else:
-                        value = str(value).lower().strip() in ['true', '1', 'yes', 'y']
-                elif isinstance(value, float) and pd.isna(value):
+                        value = str(value).lower().strip() in ['true', '1', 'yes', 'y'] if value else False
+                elif value is None:
                     value = ''
                 else:
                     value = str(value).strip()
-                row_dict[field] = value
-            rows.append(row_dict)
-       
-        # Prepare response data with proper type conversion
+                    if value:
+                        has_data = True
+               
+                row_data[header] = value
+ 
+            if has_data:
+                rows.append(row_data)
+ 
+        # Map the data to the required format
+        mapped_rows = []
+        for row in rows:
+            mapped_row = {
+                'mapdtlid': '',  # This will be empty for new rows
+                'fieldName': row.get('fieldName', ''),
+                'dataType': row.get('dataType', ''),
+                'primaryKey': row.get('primaryKey', False),
+                'pkSeq': row.get('pkSeq', ''),
+                'nulls': False,  # Default value, modify if your Excel has this field
+                'logic': row.get('logic', ''),
+                'validator': 'N',  # Default value
+                'keyColumn': row.get('keyColumn', ''),
+                'valColumn': row.get('valColumn', ''),
+                'mapCombineCode': row.get('mapCombineCode', ''),
+                'LogicVerFlag': 'N',  # Default value
+                'scdType': row.get('scdType', ''),
+                'fieldDesc': row.get('fieldDesc', ''),
+                'execSequence': row.get('execSequence', '')
+            }
+            mapped_rows.append(mapped_row)
+ 
+        # Prepare response data
         response_data = {
             'formData': {
                 'reference': str(form_data.get('reference', '')).strip(),
                 'description': str(form_data.get('description', '')).strip(),
-                'mapperId': str(form_data.get('mapperId', '')).strip(),
+                'mapperId': '',  # This might need to be generated or extracted
                 'targetSchema': str(form_data.get('targetSchema', '')).strip(),
                 'tableName': str(form_data.get('tableName', '')).strip(),
                 'tableType': str(form_data.get('tableType', '')).strip(),
@@ -206,13 +285,139 @@ def upload_file():
                 'sourceSystem': str(form_data.get('sourceSystem', '')).strip(),
                 'bulkProcessRows': form_data.get('bulkProcessRows', '')
             },
-            'rows': rows
+            'rows': mapped_rows
         }
-
-        print("Processed data:", response_data)  # Debug logging
+        # print(response_data)
+ 
         return jsonify(response_data)
     except Exception as e:
-        print(f"Error in upload_file: {str(e)}")  # Add logging
+        print(f"Error in upload_file: {str(e)}")
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+   
+ 
+@app.route('/mapper/download-current', methods=['POST'])
+def download_current():
+    try:
+        data = request.json
+        form_data = data.get('formData', {})
+        rows = data.get('rows', [])
+ 
+        # Create a new workbook
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "Current Mapping"
+ 
+        # Define styles
+        header_fill = PatternFill(start_color="00B050", end_color="00B050", fill_type="solid")
+        header_font = Font(bold=True, color="FFFFFF")
+        header_alignment = Alignment(horizontal="center", vertical="center")
+        border = Border(
+            left=Side(style='thin'),
+            right=Side(style='thin'),
+            top=Side(style='thin'),
+            bottom=Side(style='thin')
+        )
+ 
+        # Write Form Fields section
+        ws['A1'] = "Form Fields"
+        ws.merge_cells('A1:H1')
+        ws['A1'].fill = header_fill
+        ws['A1'].font = header_font
+        ws['A1'].alignment = header_alignment
+ 
+        # Write Form Fields headers
+        for col, field in enumerate(FORM_FIELDS, 1):
+            cell = ws.cell(row=2, column=col)
+            cell.value = field
+            cell.fill = header_fill
+            cell.font = header_font
+            cell.alignment = header_alignment
+            cell.border = border
+ 
+        # Write form data
+        for col, field in enumerate(FORM_FIELDS, 1):
+            cell = ws.cell(row=3, column=col)
+            cell.value = form_data.get(field, '')
+            cell.border = border
+ 
+        # Add space between sections
+        ws.append([])
+ 
+        # Write Table Fields section
+        current_row = 5
+        ws.cell(row=current_row, column=1, value="Table Fields")
+        ws.merge_cells(f'A{current_row}:K{current_row}')
+        ws.cell(row=current_row, column=1).fill = header_fill
+        ws.cell(row=current_row, column=1).font = header_font
+        ws.cell(row=current_row, column=1).alignment = header_alignment
+ 
+        # Write Table Fields headers
+        current_row += 1
+        for col, field in enumerate(TABLE_FIELDS, 1):
+            cell = ws.cell(row=current_row, column=col)
+            cell.value = field
+            cell.fill = header_fill
+            cell.font = header_font
+            cell.alignment = header_alignment
+            cell.border = border
+ 
+        # Write table data
+        for row_idx, row_data in enumerate(rows, current_row + 1):
+            for col, field in enumerate(TABLE_FIELDS, 1):
+                cell = ws.cell(row=row_idx, column=col)
+                value = row_data.get(field, '')
+                if field == 'primaryKey':
+                    value = 'TRUE' if value else 'FALSE'
+                cell.value = value
+                cell.border = border
+ 
+        # Adjust column widths (FIXED LOGIC)
+        for col_idx in range(1, max(len(FORM_FIELDS), len(TABLE_FIELDS)) + 1):
+            max_length = 0
+            column_letter = get_column_letter(col_idx)  # Use get_column_letter directly instead of cell attribute
+ 
+            # Check form headers (row 2)
+            if col_idx <= len(FORM_FIELDS):
+                header_value = ws.cell(row=2, column=col_idx).value
+                if header_value:
+                    max_length = max(max_length, len(str(header_value)))
+               
+                # Check form data (row 3)
+                data_value = ws.cell(row=3, column=col_idx).value
+                if data_value:
+                    max_length = max(max_length, len(str(data_value)))
+ 
+            # Check table headers (row 6)
+            if col_idx <= len(TABLE_FIELDS):
+                header_value = ws.cell(row=current_row, column=col_idx).value
+                if header_value:
+                    max_length = max(max_length, len(str(header_value)))
+               
+                # Check table data
+                for row_idx in range(current_row + 1, current_row + 1 + len(rows)):
+                    data_value = ws.cell(row=row_idx, column=col_idx).value
+                    if data_value:
+                        max_length = max(max_length, len(str(data_value)))
+ 
+            # Set the column width
+            adjusted_width = (max_length + 2)
+            ws.column_dimensions[column_letter].width = adjusted_width
+ 
+        # Save to BytesIO buffer
+        excel_buffer = io.BytesIO()
+        wb.save(excel_buffer)
+        excel_buffer.seek(0)
+ 
+        return send_file(
+            excel_buffer,
+            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            as_attachment=True,
+            download_name='current_values.xlsx'
+        )
+    except Exception as e:
+        print(f"Error in download_current: {str(e)}")
+        traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
 @app.route('/mapper/save', methods=['POST'])
@@ -564,53 +769,7 @@ def validate_logic():
             'status': 'error',
             'message': f'Error processing request: {str(e)}'
         }), 500
- 
-@app.route('/mapper/download-current', methods=['POST'])
-def download_current():
-    try:
-        data = request.json
-       
-        # Extract form data and rows from the request
-        form_data = data.get('formData', {})
-        rows = data.get('rows', [])
-       
-        # Create form data DataFrame
-        form_df = pd.DataFrame([form_data])
-       
-        # Create table data DataFrame
-        table_df = pd.DataFrame(rows)
-       
-        # Create a buffer to store the CSV
-        buffer = io.StringIO()
-       
-        # Write form fields section with header
-        buffer.write("# Form Fields\n")
-        form_df.to_csv(buffer, index=False)
-       
-        # Add a separator
-        buffer.write("\n# Table Fields\n")
-       
-        # Write table fields
-        table_df.to_csv(buffer, index=False)
-       
-        # Get the CSV content
-        csv_content = buffer.getvalue()
-        buffer.close()
-       
-        # Create a new buffer for the final CSV file
-        final_buffer = io.BytesIO()
-        final_buffer.write(csv_content.encode())
-        final_buffer.seek(0)
-       
-        return send_file(
-            final_buffer,
-            mimetype='text/csv',
-            as_attachment=True,
-            download_name='current_values.csv'
-        )
-    except Exception as e:
-        print(f"Error in download_current: {str(e)}")  # Add logging
-        return jsonify({'error': str(e)}), 500
+
  
 @app.route("/job/jobs_list", methods=["GET"])
 def jobs():
