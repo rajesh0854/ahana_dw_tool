@@ -4,6 +4,7 @@ import { createContext, useContext, useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Cookies from 'js-cookie';
 import { API_BASE_URL } from '../config';
+import axios from 'axios';
 
 const AuthContext = createContext();
 
@@ -87,7 +88,7 @@ export const AuthProvider = ({ children }) => {
             if (storedLicenseStatus) {
               setLicenseStatus(JSON.parse(storedLicenseStatus));
             }
-            Cookies.set('token', token, { expires: 7 });
+            // Cookies.set('token', token);
           } else {
             handleTokenExpiration();
           }
@@ -120,17 +121,19 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (username, password) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ username, password }),
-      });
+      const response = await axios.post(`${API_BASE_URL}/auth/login`, 
+        { username, password },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          withCredentials: true
+        }
+      );
 
-      const data = await response.json();
+      const data = response.data;
 
-      if (!response.ok) {
+      if (!response.status === 200) {
         throw new Error(data.error || 'Login failed');
       }
 
@@ -147,7 +150,7 @@ export const AuthProvider = ({ children }) => {
       }));
 
       // Set cookie for middleware
-      Cookies.set('token', data.token, { expires: 7 });
+      // Cookies.set('token', data.token);
 
       setUser({
         id: data.user_id,
@@ -165,7 +168,7 @@ export const AuthProvider = ({ children }) => {
 
       return { success: true };
     } catch (error) {
-      return { success: false, error: error.message };
+      return { success: false, error: error.response?.data?.error || error.message };
     }
   };
 

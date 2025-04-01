@@ -9,11 +9,25 @@ const LicenseManager = () => {
 
     const fetchLicenseStatus = async () => {
         try {
+            setLoading(true);
             const response = await axios.get('/api/license/status');
-            setLicenseStatus(response.data);
+            
+            if (!response.data.success) {
+                throw new Error(response.data.message || 'Failed to get license status');
+            }
+            
+            setLicenseStatus(response.data.data);
         } catch (error) {
             console.error('Error fetching license status:', error);
-            message.error('Failed to fetch license status');
+            const errorMessage = error.response?.data?.message || error.message || 'Failed to fetch license status';
+            message.error(errorMessage);
+            setLicenseStatus({
+                valid: false,
+                message: errorMessage,
+                error: error.response?.data?.error || 'License status fetch failed'
+            });
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -21,19 +35,41 @@ const LicenseManager = () => {
         fetchLicenseStatus();
     }, []);
 
-    const handleDeactivate = async () => {
-        setLoading(true);
+    const handleActivateLicense = async (licenseKey) => {
         try {
-            const response = await axios.post('/api/admin/license/deactivate');
-            if (response.data.success) {
-                message.success('License deactivated successfully');
-                fetchLicenseStatus();
-            } else {
-                message.error(response.data.message);
+            setLoading(true);
+            const response = await axios.post('/api/admin/license/activate', { license_key: licenseKey });
+            
+            if (!response.data.success) {
+                throw new Error(response.data.message || 'Failed to activate license');
             }
+            
+            message.success(response.data.message);
+            await fetchLicenseStatus();
+        } catch (error) {
+            console.error('Error activating license:', error);
+            const errorMessage = error.response?.data?.message || error.message || 'Failed to activate license';
+            message.error(errorMessage);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleDeactivateLicense = async () => {
+        try {
+            setLoading(true);
+            const response = await axios.post('/api/admin/license/deactivate');
+            
+            if (!response.data.success) {
+                throw new Error(response.data.message || 'Failed to deactivate license');
+            }
+            
+            message.success(response.data.message);
+            await fetchLicenseStatus();
         } catch (error) {
             console.error('Error deactivating license:', error);
-            message.error(error.response?.data?.message || 'Failed to deactivate license');
+            const errorMessage = error.response?.data?.message || error.message || 'Failed to deactivate license';
+            message.error(errorMessage);
         } finally {
             setLoading(false);
         }
@@ -74,7 +110,7 @@ const LicenseManager = () => {
                         <div className="mt-4 pt-4 border-t">
                             <Button
                                 danger
-                                onClick={handleDeactivate}
+                                onClick={handleDeactivateLicense}
                                 loading={loading}
                             >
                                 Deactivate License
