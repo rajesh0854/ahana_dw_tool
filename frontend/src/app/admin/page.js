@@ -2143,6 +2143,7 @@ const AdminDashboard = () => {
                           <TableRow sx={{ backgroundColor: alpha(theme.palette.primary.main, 0.03) }}>
                             <TableCell sx={{ fontWeight: 600, py: 1.5 }}>Name</TableCell>
                             <TableCell sx={{ fontWeight: 600, py: 1.5 }}>Email</TableCell>
+                            <TableCell sx={{ fontWeight: 600, py: 1.5 }}>Created By</TableCell>
                             <TableCell sx={{ fontWeight: 600, py: 1.5 }}>Created At</TableCell>
                             <TableCell align="center" sx={{ fontWeight: 600, py: 1.5 }}>Actions</TableCell>
                           </TableRow>
@@ -2175,6 +2176,11 @@ const AdminDashboard = () => {
                               </TableCell>
                               <TableCell>
                                 <Typography variant="body2">{pending.email}</Typography>
+                              </TableCell>
+                              <TableCell>
+                                <Typography variant="body2" color="text.secondary">
+                                  {pending.created_by || 'System'}
+                                </Typography>
                               </TableCell>
                               <TableCell>
                                 <Typography variant="body2" color="text.secondary" fontSize="0.8rem">
@@ -2252,6 +2258,7 @@ const AdminDashboard = () => {
                 </TableHead>
                 <TableBody>
                   {users
+                    .filter(user => user.account_status !== 'PENDING' || user.account_status !== 'REJECTED')
                     .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                     .map((userRow, index) => (
                       <UserTableRow

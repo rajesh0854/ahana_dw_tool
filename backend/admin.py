@@ -550,7 +550,6 @@ def get_pending_approvals(current_user_id):
         
         result = []
         for user in pending_users:
-            # Convert Row object to dictionary by accessing each column
             user_dict = {
                 'user_id': user.user_id,
                 'username': user.username,
@@ -558,7 +557,7 @@ def get_pending_approvals(current_user_id):
                 'is_active': user.is_active,
                 'account_status': user.account_status,
                 'created_at': str(user.created_at) if user.created_at else None,
-                'created_by': user.created_by,
+                'created_by': user.creator_username,
                 'approved_by': user.approved_by,
                 'first_name': user.first_name,
                 'last_name': user.last_name,
