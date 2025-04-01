@@ -55,9 +55,9 @@ const LicenseValidation = ({ children }) => {
             setActivating(false);
         }
     };
-
+    
     // If no user or license is valid, just render children
-    if (!user || (licenseStatus && licenseStatus.valid)) {
+    if (!user || (licenseStatus && licenseStatus.data.valid)) {
         return children;
     }
 

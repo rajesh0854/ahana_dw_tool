@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, make_response
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 from datetime import datetime, timedelta
@@ -75,39 +75,39 @@ def login():
         data = request.get_json()
         username = data.get('username')
         password = data.get('password')
-       
+        
         if not username or not password:
             return jsonify({'error': 'Username and password are required'}), 400
-       
+        
         session = Session()
-       
+        
         # Get user from database
         user = session.execute(
             text("SELECT * FROM users WHERE username = :username AND is_active = 1"),
             {'username': username}
         ).fetchone()
-       
+        
         if not user:
             return jsonify({'error': 'Invalid credentials'}), 401
-           
+            
         # Add check for PENDING status
         if user.account_status == 'PENDING':
             return jsonify({'error': 'Account is pending approval'}), 403
-       
+        
         # Check if account is locked
         login_attempts = session.execute(
             text("""
-                SELECT COUNT(*) FROM login_audit_log
-                WHERE user_id = :user_id
-                AND login_status = 'FAILED'
+                SELECT COUNT(*) FROM login_audit_log 
+                WHERE user_id = :user_id 
+                AND login_status = 'FAILED' 
                 AND login_timestamp > datetime('now', '-15 minutes')
             """),
             {'user_id': user.user_id}
         ).scalar()
-       
+        
         if login_attempts >= 5:
             return jsonify({'error': 'Account locked. Please try again after 15 minutes'}), 403
-       
+        
         # Verify password
         hashed_password = hash_password(password, user.salt)
         if hashed_password != user.password_hash:
@@ -124,17 +124,17 @@ def login():
             )
             session.commit()
             return jsonify({'error': 'Invalid credentials'}), 401
-       
-        # Generate JWT token
+        
+        # Generate JWT token with 2 minutes expiry
         token = jwt.encode(
             {
                 'user_id': user.user_id,
-                'exp': datetime.utcnow() + timedelta(seconds=int(os.getenv('JWT_ACCESS_TOKEN_EXPIRES')))
+                'exp': datetime.utcnow() + timedelta(minutes=2)
             },
             os.getenv('JWT_SECRET_KEY'),
             algorithm='HS256'
         )
-       
+        
         # Log successful login
         session.execute(
             text("""
@@ -146,15 +146,15 @@ def login():
                 'ip_address': request.remote_addr
             }
         )
-       
+        
         # Update last login
         session.execute(
             text("UPDATE users SET last_login = datetime('now') WHERE user_id = :user_id"),
             {'user_id': user.user_id}
         )
-       
+        
         session.commit()
-       
+        
         # Get user profile data
         user_profile = session.execute(
             text("""
@@ -167,8 +167,9 @@ def login():
             """),
             {'user_id': user.user_id}
         ).fetchone()
-       
-        return jsonify({
+        
+        # Create response with user data
+        response_data = {
             'token': token,
             'user_id': user.user_id,
             'username': user.username,
@@ -178,8 +179,14 @@ def login():
             'phone': user_profile.phone if user_profile and user_profile.phone else None,
             'department': user_profile.department if user_profile and user_profile.department else None,
             'role': user_profile.role_name if user_profile and user_profile.role_name else 'User'
-        })
-       
+        }
+        
+        # Create response and set cookie
+        response = make_response(jsonify(response_data))
+        response.set_cookie('token', token, max_age=int(os.getenv('JWT_ACCESS_TOKEN_EXPIRES')), secure=True, path='/', samesite='Lax')
+        
+        return response
+        
     except Exception as e:
         print(f"Login error: {str(e)}")
         return jsonify({'error': 'An error occurred during login'}), 500

@@ -2258,7 +2258,7 @@ const AdminDashboard = () => {
                 </TableHead>
                 <TableBody>
                   {users
-                    .filter(user => user.account_status !== 'PENDING' || user.account_status !== 'REJECTED')
+                    .filter(user => user.account_status !== 'PENDING' && user.account_status !== 'REJECTED')
                     .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                     .map((userRow, index) => (
                       <UserTableRow
