@@ -26,6 +26,16 @@ import {
   ListItemIcon,
   ListItemText,
   Autocomplete,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+  Box,
+  Typography,
+  useTheme as useMuiTheme,
+  alpha,
+  Chip,
 } from '@mui/material'
 import {
   Add as AddIcon,
@@ -51,6 +61,8 @@ import {
   HelpOutline as HelpOutlineIcon,
   CheckCircle as CheckCircleIcon,
   Error as ErrorIcon,
+  Edit as EditIcon,
+  Delete as DeleteIcon,
 } from '@mui/icons-material'
 import { message } from 'antd'
 import { useTheme } from '@/context/ThemeContext'
@@ -58,9 +70,27 @@ import Editor from '@monaco-editor/react'
 import { format } from 'sql-formatter'
 import { z } from 'zod'
 import axios from 'axios'
+import { motion } from 'framer-motion'
 
 const MapperModule = () => {
   const { darkMode } = useTheme()
+  const muiTheme = useMuiTheme()
+  
+  // New state variables for the table view
+  const [showReferenceTable, setShowReferenceTable] = useState(true)
+  const [showMapperForm, setShowMapperForm] = useState(false)
+  const [allReferences, setAllReferences] = useState([])
+  const [loadingReferences, setLoadingReferences] = useState(false)
+  const [referenceTablePage, setReferenceTablePage] = useState(0)
+  const [referenceRowsPerPage, setReferenceRowsPerPage] = useState(10)
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [selectedReference, setSelectedReference] = useState(null)
+  
+  // Add search state for references table
+  const [searchQuery, setSearchQuery] = useState('')
+  const [filteredReferences, setFilteredReferences] = useState([])
+  
+  // Existing state variables
   const [rows, setRows] = useState(
     [...Array(10)].map(() => ({
       mapdtlid: '',
@@ -196,6 +226,28 @@ const MapperModule = () => {
   const [templateAnchorEl, setTemplateAnchorEl] = useState(null)
   const [downloadAnchorEl, setDownloadAnchorEl] = useState(null)
   const [uploadAnchorEl, setUploadAnchorEl] = useState(null)
+
+  // Fetch all mapper references
+  const fetchAllReferences = async () => {
+    setLoadingReferences(true)
+    try {
+      const response = await axios.get('http://localhost:5000/mapper/get-all-mapper-reference')
+      if (response.data) {
+        setAllReferences(response.data)
+        setFilteredReferences(response.data) // Initialize filtered references with all references
+      }
+    } catch (error) {
+      console.error('Error fetching mapper references:', error)
+      message.error('Failed to load mapper references')
+    } finally {
+      setLoadingReferences(false)
+    }
+  }
+
+  // Use effect to fetch all references on component mount
+  useEffect(() => {
+    fetchAllReferences()
+  }, [])
 
   // Add this useEffect to initialize SQL editor content
   useEffect(() => {
@@ -719,134 +771,129 @@ const MapperModule = () => {
     setIsActivated(false)
   }
 
-  // Modify handleSave to prevent saving with warnings
+  // Modified handleSave to return to reference table after successful save
   const handleSave = async () => {
-    if (isSaving) return;
+    // Validate form fields
+    try {
+      // Create a schema using zod for form validation
+      const formSchema = z.object({
+        reference: z.string().min(1, 'Reference is required').max(30, 'Reference cannot exceed 30 characters'),
+        description: z.string().min(1, 'Description is required').max(255, 'Description cannot exceed 255 characters'),
+        targetSchema: z.string().min(1, 'Target Schema is required').max(30, 'Target Schema cannot exceed 30 characters'),
+        tableName: z.string().min(1, 'Table Name is required').max(30, 'Table Name cannot exceed 30 characters'),
+        tableType: z.string().min(1, 'Table Type is required'),
+        freqCode: z.string().min(1, 'Frequency Code is required'),
+        sourceSystem: z.string().min(1, 'Source System is required').max(30, 'Source System cannot exceed 30 characters'),
+        bulkProcessRows: z.string().regex(/^\d*$/, 'Must be a number').transform(val => val === '' ? '0' : val),
+      })
 
-    // Check for validation errors in targetSchema and tableName
-    if (schemaError || tableNameError) {
-      message.error('Please fix all validation errors before saving.');
-      return;
+      // Validate form data
+      formSchema.parse(formData)
+    } catch (error) {
+      // Handle validation errors
+      if (error instanceof z.ZodError) {
+        error.errors.forEach(err => {
+          message.error(`${err.path}: ${err.message}`)
+        })
+        return
+      }
     }
 
-    // Check if there are any warnings
-    if (Object.keys(rowWarnings).length > 0) {
-      message.error('Please resolve all warnings before saving.');
-      return;
+    // Check if there are any rows added
+    if (!rows.some(row => row.fieldName)) {
+      message.error('At least one row must be added to the table')
+      return
     }
 
-    // Check if any row has required fields empty (except for the checkbox)
-    const hasEmptyRequiredFields = rows.some(row => 
-      (
-        !row.mapCombineCode.trim() || 
-        !row.fieldName.trim() || 
-        !row.dataType.trim() || 
-        !row.keyColumn.trim() || 
-        !row.valColumn.trim() || 
-        !row.mapCombineCode.trim()   
-      ) && 
-      !(
-        !row.mapdtlid.trim() && 
-        !row.fieldName.trim() && 
-        !row.dataType.trim() && 
-        !row.keyColumn.trim() && 
-        !row.valColumn.trim() && 
-        !row.mapCombineCode.trim() 
-      )
-    );
-
-    if (hasEmptyRequiredFields) {
-      message.error('Please ensure all required fields are filled in for each row before saving.');
-      return;
+    // Ensure no rows with duplicate field names
+    const fieldNames = rows.filter(row => row.fieldName).map(row => row.fieldName.toLowerCase())
+    const uniqueFieldNames = new Set(fieldNames)
+    if (fieldNames.length !== uniqueFieldNames.size) {
+      message.error('Field names must be unique')
+      return
     }
+
+    // Check if all required fields are filled for all rows with a field name
+    const rowsWithFieldName = rows.filter(row => row.fieldName)
+    const incompleteRows = rowsWithFieldName.filter(row => !row.dataType)
+    if (incompleteRows.length > 0) {
+      message.error('All rows with a field name must have a data type')
+      return
+    }
+
+    // Check if we have any duplicate key sequences
+    if (hasDuplicateKeys) {
+      message.error('Duplicate key sequence values are not allowed')
+      return
+    }
+
+    // Check if all rows have been validated
+    if (!areAllRowsValid()) {
+      message.warning('Not all rows have been validated. Please validate before saving.')
+      return
+    }
+
+    setIsSaving(true)
 
     try {
-      setIsSaving(true);
-      // Filter out rows where fieldName is empty
-      const nonEmptyRows = rows.filter((row) => row.fieldName.trim() !== '');
-
-      if (nonEmptyRows.length === 0) {
-        message.warning({
-          content: 'Please add at least one field before saving',
-          className: 'custom-notification',
-        });
-        return;
+      // Prepare the data to be sent
+      const dataToSend = {
+        formData: {
+          ...formData,
+          bulkProcessRows: formData.bulkProcessRows || '0', // Default to 0 if empty
+        },
+        rows: rows.filter(row => row.fieldName), // Only send rows with a field name
+        modifiedRows: modifiedRows, // Send the list of modified row indices
       }
 
-      const data = {
-        formData,
-        rows: nonEmptyRows,
-        modifiedFields,
-        modifiedRows,
-      };
+      // Make the API call to save
+      const response = await axios.post('http://localhost:5000/mapper/save-to-db', dataToSend)
 
-      const response = await fetch('http://localhost:5000/mapper/save-to-db', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
+      // Handle successful response
+      message.success('Mapper configuration saved successfully')
 
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || result.details || 'Failed to save data');
-      }
-
-      // Update mapperId from the response
-      if (result.mapperId) {
+      // Update mapperId if it was a new mapping
+      if (!isUpdateMode && response.data.mapperId) {
         setFormData(prev => ({
           ...prev,
-          mapperId: result.mapperId
-        }));
+          mapperId: response.data.mapperId,
+        }))
       }
 
-      // Update mapdtlid for processed rows
-      if (result.processedRows && result.processedRows.length > 0) {
-        const updatedRows = [...rows];
-        result.processedRows.forEach(processedRow => {
-          if (processedRow.index >= 0 && processedRow.index < updatedRows.length) {
-            updatedRows[processedRow.index] = {
-              ...updatedRows[processedRow.index],
-              mapdtlid: processedRow.mapdtlid
-            };
+      // Update mapdtlids for new rows
+      if (response.data.processedRows) {
+        const updatedRows = [...rows]
+        response.data.processedRows.forEach(processedRow => {
+          if (updatedRows[processedRow.index]) {
+            updatedRows[processedRow.index].mapdtlid = processedRow.mapdtlid
           }
-        });
-        setRows(updatedRows);
+        })
+        setRows(updatedRows)
       }
 
-      // Update original data after successful save
-      setOriginalFormData(formData);
-      setOriginalRows(rows);
-      setModifiedFields({});
-      setModifiedRows([]);
-      setRowWarnings({}); // Clear warnings after successful save
-
-      message.success({
-        content: result.message || `Data ${isUpdateMode ? 'updated' : 'saved'} successfully`,
-        className: 'custom-notification',
-      });
-      
-      // Update workflow states after successful save
+      // Reset state
       setHasUnsavedChanges(false)
-      setShowValidateButton(true)
-      setHasBeenValidated(false)
-      setAllRowsValidated(false)
-      setIsActivated(false)
-
-      // Reset if it was a new entry
-      if (!isUpdateMode) {
-        resetAllFields();
-      }
+      setModifiedRows([])
+      setModifiedFields({})
+      
+      // Set as update mode since we now have IDs
+      setIsUpdateMode(true)
+      
+      // Store the current state as the original
+      setOriginalFormData({...formData})
+      setOriginalRows([...rows])
+      
+      // After saving, navigate back to the reference table
+      setTimeout(() => {
+        handleReturnToReferenceTable()
+      }, 1500) // Short delay to allow user to see success message
     } catch (error) {
-      message.error({
-        content: error.message || 'Failed to save data',
-        className: 'custom-notification',
-      });
-      console.error('Save error:', error);
+      console.error('Error saving mapper:', error)
+      message.error(error.response?.data?.error || 'Failed to save mapper configuration')
     } finally {
-      setIsSaving(false);
+      setIsSaving(false)
     }
-  };
+  }
 
   // Add these handler functions
   const handleOpenSqlEditor = (index) => {
@@ -971,8 +1018,11 @@ const MapperModule = () => {
 
   // Modify fetchReferenceDetails to clear warnings when changing mapping ID
   const fetchReferenceDetails = async (reference) => {
-    // Don't proceed if reference is empty, already searched, or contains invalid characters
-    if (!reference || reference === lastSearchedRef || !/^[a-zA-Z0-9_]+$/.test(reference)) return
+    // Don't proceed if reference is empty or contains invalid characters
+    if (!reference || !/^[a-zA-Z0-9_]+$/.test(reference)) {
+      message.error('Reference can only contain letters, numbers, and underscores')
+      return
+    }
 
     setIsSearching(true)
     try {
@@ -1030,6 +1080,10 @@ const MapperModule = () => {
       setHasBeenValidated(false)
       setAllRowsValidated(false)
       setIsActivated(false)
+      
+      // Show the mapper form
+      setShowReferenceTable(false)
+      setShowMapperForm(true)
     } catch (error) {
       if (error.response && error.response.status === 404) {
         // Keep the reference but reset other fields
@@ -1076,6 +1130,10 @@ const MapperModule = () => {
         setHasDuplicateKeys(false)
         
         message.info('New reference will be created')
+        
+        // Show the mapper form
+        setShowReferenceTable(false)
+        setShowMapperForm(true)
       } else {
         message.error(error.response?.data?.error || 'Failed to fetch reference details')
         console.error('Error fetching reference:', error)
@@ -1558,30 +1616,580 @@ const MapperModule = () => {
 
   const [error, setError] = useState(''); // Add this line to define the error state
 
+  // Function to handle creating a new reference
+  const handleCreateNewReference = () => {
+    // Reset form data
+    setFormData({
+      reference: '',
+      description: '',
+      mapperId: '',
+      targetSchema: '',
+      tableName: '',
+      tableType: '',
+      freqCode: '',
+      sourceSystem: '',
+      bulkProcessRows: '',
+    })
+    
+    // Reset all state variables
+    setRows(
+      [...Array(10)].map(() => ({
+        mapdtlid: '',
+        fieldName: '',
+        dataType: '',
+        primaryKey: false,
+        pkSeq: '',
+        nulls: false,
+        logic: '',
+        validator: 'N',
+        keyColumn: '',
+        valColumn: '',
+        mapCombineCode: '',
+        LogicVerFlag: '',
+        scdType: '1',
+        fieldDesc: ''
+      }))
+    )
+    
+    setLastSearchedRef('')
+    setIsUpdateMode(false)
+    
+    // Reset workflow states
+    setHasUnsavedChanges(false)
+    setShowValidateButton(false)
+    setHasBeenValidated(false)
+    setAllRowsValidated(false)
+    setIsActivated(false)
+    setValidationStatus({})
+    setErrorMessages({})
+    setPkSeqErrors({})
+    setModifiedRows([])
+    setModifiedFields({})
+    
+    // Show the mapper form and hide the reference table
+    setShowReferenceTable(false)
+    setShowMapperForm(true)
+  }
+  
+  // Function to handle editing an existing reference
+  const handleEditReference = (reference) => {
+    if (reference) {
+      // The existing fetchReferenceDetails function will be called with this reference
+      fetchReferenceDetails(reference)
+      
+      // Show the mapper form and hide the reference table
+      setShowReferenceTable(false)
+      setShowMapperForm(true)
+    }
+  }
+  
+  // Function to handle showing the delete confirmation dialog
+  const handleShowDeleteDialog = (reference) => {
+    setSelectedReference(reference)
+    setShowDeleteDialog(true)
+  }
+  
+  // Function to handle canceling the delete action
+  const handleCancelDelete = () => {
+    setShowDeleteDialog(false)
+    setSelectedReference(null)
+  }
+  
+  // Function to handle confirming the delete action
+  const handleConfirmDelete = () => {
+    // We're not implementing the actual deletion yet, just closing the dialog
+    message.info(`Delete functionality for reference ${selectedReference} will be implemented later`)
+    setShowDeleteDialog(false)
+    setSelectedReference(null)
+  }
+  
+  // Function to return to the reference table view
+  const handleReturnToReferenceTable = () => {
+    setShowMapperForm(false)
+    setShowReferenceTable(true)
+    // Reset search state
+    setSearchQuery('')
+    // Refresh the references list
+    fetchAllReferences()
+  }
+  
+  // Modify the fetchReferenceDetails function to handle navigation
+
+  // Add pagination handler for reference table
+  const handleReferenceTableChangePage = (event, newPage) => {
+    setReferenceTablePage(newPage)
+  }
+
+  // Add rows per page handler for reference table
+  const handleReferenceTableChangeRowsPerPage = (event) => {
+    setReferenceRowsPerPage(parseInt(event.target.value, 10))
+    setReferenceTablePage(0)
+  }
+
+  // Format date for display in the reference table
+  const formatDate = (dateString) => {
+    if (!dateString) return '-'
+    const date = new Date(dateString)
+    return date.toLocaleDateString('en-US', { 
+      year: 'numeric', 
+      month: 'short', 
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    })
+  }
+
+  // Add a new function to handle search in references table
+  const handleReferenceSearch = (event) => {
+    const query = event.target.value
+    setSearchQuery(query)
+    setReferenceTablePage(0) // Reset to first page when searching
+    
+    if (query.trim() === '') {
+      setFilteredReferences(allReferences)
+    } else {
+      const filtered = allReferences.filter(reference => 
+        // Search in reference ID (index 0)
+        reference[0]?.toString().toLowerCase().includes(query.toLowerCase()) || 
+        // Search in description (index 1)
+        reference[1]?.toString().toLowerCase().includes(query.toLowerCase()) || 
+        // Search in schema (index 2)
+        reference[2]?.toString().toLowerCase().includes(query.toLowerCase()) || 
+        // Search in source system (index 5)
+        reference[5]?.toString().toLowerCase().includes(query.toLowerCase())
+      )
+      setFilteredReferences(filtered)
+    }
+  }
+
   return (
     <div className={`p-3 min-h-screen ${darkMode ? 'bg-gray-900 text-white' : 'bg-gray-50'}`}>
-      <Paper
-        elevation={3}
-        className={`relative rounded-lg shadow-xl overflow-hidden transition-all duration-300 ${
-          darkMode ? 'bg-gray-800/90' : 'bg-white/90'
-        }`}
-      >
-        <div className="p-4">
-          {/* Header Section - More compact */}
-          <div className="mb-4">
-            <div className="flex items-center justify-between mb-2">
-              <h1 className={`text-xl font-semibold ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}>
-                Mapper Configuration
-              </h1>
-              <div className="flex items-center gap-3">
-                {/* Template Button - Modernized */}
+      {/* Reference Table View */}
+      {showReferenceTable && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          <Paper
+            elevation={3}
+            className={`rounded-lg shadow-xl overflow-hidden transition-all duration-300 ${
+              darkMode ? 'bg-gray-800/90' : 'bg-white/90'
+            }`}
+          >
+            <Box p={3}>
+              <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+                <Typography 
+                  variant="h5" 
+                  className={`font-semibold ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}
+                >
+                  Mapper References
+                </Typography>
+                
+                <Button
+                  variant="contained"
+                  startIcon={<AddIcon />}
+                  onClick={handleCreateNewReference}
+                  sx={{
+                    textTransform: 'none',
+                    borderRadius: '8px',
+                    background: 'linear-gradient(45deg, #2563EB, #3B82F6)',
+                    '&:hover': {
+                      background: 'linear-gradient(45deg, #1D4ED8, #2563EB)',
+                    },
+                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                    px: 2,
+                    py: 1
+                  }}
+                >
+                  Create New Reference
+                </Button>
+              </Box>
+              
+              {/* Add search field */}
+              <Box mb={2}>
+                <TextField
+                  placeholder="Search references..."
+                  variant="outlined"
+                  size="small"
+                  fullWidth
+                  value={searchQuery}
+                  onChange={handleReferenceSearch}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <SearchIcon fontSize="small" />
+                      </InputAdornment>
+                    ),
+                    endAdornment: searchQuery && (
+                      <InputAdornment position="end">
+                        <IconButton
+                          size="small"
+                          onClick={() => {
+                            setSearchQuery('')
+                            setFilteredReferences(allReferences)
+                          }}
+                          edge="end"
+                        >
+                          <ClearIcon fontSize="small" />
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                    style: { borderRadius: '8px' }
+                  }}
+                  sx={{
+                    maxWidth: '400px',
+                    '& .MuiOutlinedInput-root': {
+                      backgroundColor: darkMode ? 'rgba(31, 41, 55, 0.5)' : 'white',
+                      '&:hover fieldset': {
+                        borderColor: darkMode ? 'rgba(147, 197, 253, 0.5)' : 'rgba(59, 130, 246, 0.5)',
+                      },
+                    }
+                  }}
+                />
+              </Box>
+              
+              <TableContainer 
+                component={Paper} 
+                elevation={0}
+                sx={{ 
+                  maxHeight: 'calc(100vh - 220px)',
+                  backgroundColor: darkMode ? 'rgba(17, 24, 39, 0.7)' : 'rgba(255, 255, 255, 0.7)',
+                  borderRadius: 2,
+                  border: `1px solid ${darkMode ? 'rgba(75, 85, 99, 0.2)' : 'rgba(229, 231, 235, 1)'}`,
+                }}
+              >
+                <Table stickyHeader>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell 
+                        sx={{ 
+                          backgroundColor: darkMode ? '#1F2937' : '#F3F4F6',
+                          color: darkMode ? 'white' : 'black',
+                          fontWeight: 'bold'
+                        }}
+                      >
+                        Reference
+                      </TableCell>
+                      <TableCell 
+                        sx={{ 
+                          backgroundColor: darkMode ? '#1F2937' : '#F3F4F6',
+                          color: darkMode ? 'white' : 'black',
+                          fontWeight: 'bold'
+                        }}
+                      >
+                        Description
+                      </TableCell>
+                      <TableCell 
+                        sx={{ 
+                          backgroundColor: darkMode ? '#1F2937' : '#F3F4F6',
+                          color: darkMode ? 'white' : 'black',
+                          fontWeight: 'bold'
+                        }}
+                      >
+                        Target Schema
+                      </TableCell>
+                      <TableCell 
+                        sx={{ 
+                          backgroundColor: darkMode ? '#1F2937' : '#F3F4F6',
+                          color: darkMode ? 'white' : 'black',
+                          fontWeight: 'bold'
+                        }}
+                      >
+                        Table Type
+                      </TableCell>
+                      <TableCell 
+                        sx={{ 
+                          backgroundColor: darkMode ? '#1F2937' : '#F3F4F6',
+                          color: darkMode ? 'white' : 'black',
+                          fontWeight: 'bold'
+                        }}
+                      >
+                        Frequency
+                      </TableCell>
+                      <TableCell 
+                        sx={{ 
+                          backgroundColor: darkMode ? '#1F2937' : '#F3F4F6',
+                          color: darkMode ? 'white' : 'black',
+                          fontWeight: 'bold'
+                        }}
+                      >
+                        Source System
+                      </TableCell>
+                      <TableCell 
+                        sx={{ 
+                          backgroundColor: darkMode ? '#1F2937' : '#F3F4F6',
+                          color: darkMode ? 'white' : 'black',
+                          fontWeight: 'bold'
+                        }}
+                      >
+                        Status
+                      </TableCell>
+                      <TableCell 
+                        sx={{ 
+                          backgroundColor: darkMode ? '#1F2937' : '#F3F4F6',
+                          color: darkMode ? 'white' : 'black',
+                          fontWeight: 'bold'
+                        }}
+                      >
+                        Logic Verification
+                      </TableCell>
+                      <TableCell 
+                        sx={{ 
+                          backgroundColor: darkMode ? '#1F2937' : '#F3F4F6',
+                          color: darkMode ? 'white' : 'black',
+                          fontWeight: 'bold'
+                        }}
+                      >
+                        Actions
+                      </TableCell>
+                    </TableRow>
+                  </TableHead>
+                  
+                  <TableBody>
+                    {loadingReferences ? (
+                      <TableRow>
+                        <TableCell colSpan={9} align="center" sx={{ py: 3 }}>
+                          <CircularProgress size={30} />
+                          <Typography variant="body2" sx={{ mt: 1, color: darkMode ? 'gray.400' : 'gray.600' }}>
+                            Loading references...
+                          </Typography>
+                        </TableCell>
+                      </TableRow>
+                    ) : filteredReferences.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={9} align="center" sx={{ py: 3 }}>
+                          <Typography variant="body1" sx={{ color: darkMode ? 'gray.400' : 'gray.600' }}>
+                            {allReferences.length === 0 
+                              ? "No references found" 
+                              : `No references found matching "${searchQuery}"`}
+                          </Typography>
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      filteredReferences
+                        .slice(
+                          referenceTablePage * referenceRowsPerPage,
+                          referenceTablePage * referenceRowsPerPage + referenceRowsPerPage
+                        )
+                        .map((reference, index) => (
+                          <TableRow 
+                            key={reference[0]}
+                            hover
+                            sx={{ 
+                              cursor: 'pointer',
+                              '&:hover': {
+                                backgroundColor: darkMode 
+                                  ? alpha(muiTheme.palette.primary.main, 0.1)
+                                  : alpha(muiTheme.palette.primary.main, 0.05)
+                              }
+                            }}
+                          >
+                            <TableCell sx={{ color: darkMode ? 'white' : 'inherit' }}>
+                              {reference[0]}
+                            </TableCell>
+                            <TableCell sx={{ color: darkMode ? 'white' : 'inherit' }}>
+                              {reference[1] || '-'}
+                            </TableCell>
+                            <TableCell sx={{ color: darkMode ? 'white' : 'inherit' }}>
+                              {reference[2] || '-'}
+                            </TableCell>
+                            <TableCell sx={{ color: darkMode ? 'white' : 'inherit' }}>
+                              {reference[3] || '-'}
+                            </TableCell>
+                            <TableCell sx={{ color: darkMode ? 'white' : 'inherit' }}>
+                              {reference[4] || '-'}
+                            </TableCell>
+                            <TableCell sx={{ color: darkMode ? 'white' : 'inherit' }}>
+                              {reference[5] || '-'}
+                            </TableCell>
+                            <TableCell sx={{ color: darkMode ? 'white' : 'inherit' }}>
+                              {reference[7] === 'A' ? 
+                                <Chip 
+                                  label="Active" 
+                                  size="small"
+                                  sx={{
+                                    backgroundColor: darkMode ? 'rgba(16, 185, 129, 0.2)' : 'rgba(16, 185, 129, 0.1)',
+                                    color: darkMode ? 'rgb(16, 185, 129)' : 'rgb(5, 150, 105)',
+                                    borderRadius: '4px',
+                                    fontWeight: '500',
+                                  }}
+                                /> : 
+                                <Chip 
+                                  label="Inactive" 
+                                  size="small"
+                                  sx={{
+                                    backgroundColor: darkMode ? 'rgba(239, 68, 68, 0.2)' : 'rgba(239, 68, 68, 0.1)',
+                                    color: darkMode ? 'rgb(239, 68, 68)' : 'rgb(220, 38, 38)',
+                                    borderRadius: '4px',
+                                    fontWeight: '500',
+                                  }}
+                                />
+                              }
+                            </TableCell>
+                            <TableCell sx={{ color: darkMode ? 'white' : 'inherit' }}>
+                              {reference[6] === 'Y' ? 
+                                <Chip 
+                                  label="Verified" 
+                                  size="small"
+                                  sx={{
+                                    backgroundColor: darkMode ? 'rgba(37, 99, 235, 0.2)' : 'rgba(37, 99, 235, 0.1)',
+                                    color: darkMode ? 'rgb(96, 165, 250)' : 'rgb(37, 99, 235)',
+                                    borderRadius: '4px',
+                                    fontWeight: '500',
+                                  }}
+                                /> : 
+                                <Chip 
+                                  label="Unverified" 
+                                  size="small"
+                                  sx={{
+                                    backgroundColor: darkMode ? 'rgba(245, 158, 11, 0.2)' : 'rgba(245, 158, 11, 0.1)',
+                                    color: darkMode ? 'rgb(251, 191, 36)' : 'rgb(217, 119, 6)',
+                                    borderRadius: '4px',
+                                    fontWeight: '500',
+                                  }}
+                                />
+                              }
+                            </TableCell>
+                            <TableCell>
+                              <Box display="flex" gap={1}>
+                                <Tooltip title="Edit Reference">
+                                  <IconButton 
+                                    size="small"
+                                    onClick={() => handleEditReference(reference[0])}
+                                    sx={{
+                                      backgroundColor: darkMode 
+                                        ? alpha(muiTheme.palette.primary.main, 0.2)
+                                        : alpha(muiTheme.palette.primary.main, 0.1),
+                                      '&:hover': {
+                                        backgroundColor: darkMode 
+                                          ? alpha(muiTheme.palette.primary.main, 0.3)
+                                          : alpha(muiTheme.palette.primary.main, 0.2),
+                                      }
+                                    }}
+                                  >
+                                    <EditIcon fontSize="small" 
+                                      sx={{ color: darkMode ? muiTheme.palette.primary.light : muiTheme.palette.primary.main }} 
+                                    />
+                                  </IconButton>
+                                </Tooltip>
+                                <Tooltip title="Delete Reference">
+                                  <IconButton 
+                                    size="small"
+                                    onClick={() => handleShowDeleteDialog(reference[0])}
+                                    sx={{
+                                      backgroundColor: darkMode 
+                                        ? alpha(muiTheme.palette.error.main, 0.2)
+                                        : alpha(muiTheme.palette.error.main, 0.1),
+                                      '&:hover': {
+                                        backgroundColor: darkMode 
+                                          ? alpha(muiTheme.palette.error.main, 0.3)
+                                          : alpha(muiTheme.palette.error.main, 0.2),
+                                      }
+                                    }}
+                                  >
+                                    <DeleteIcon fontSize="small" 
+                                      sx={{ color: darkMode ? muiTheme.palette.error.light : muiTheme.palette.error.main }} 
+                                    />
+                                  </IconButton>
+                                </Tooltip>
+                              </Box>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                    )}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+              
+              <TablePagination
+                rowsPerPageOptions={[5, 10, 25, 50]}
+                component="div"
+                count={filteredReferences.length}
+                rowsPerPage={referenceRowsPerPage}
+                page={referenceTablePage}
+                onPageChange={handleReferenceTableChangePage}
+                onRowsPerPageChange={handleReferenceTableChangeRowsPerPage}
+                sx={{
+                  '.MuiTablePagination-toolbar': {
+                    minHeight: '48px',
+                  },
+                  '.MuiInputBase-root': {
+                    ml: 1,
+                    mr: 1,
+                  },
+                  color: darkMode ? 'white' : 'inherit'
+                }}
+              />
+            </Box>
+          </Paper>
+          
+          {/* Delete Confirmation Dialog */}
+          <Dialog
+            open={showDeleteDialog}
+            onClose={handleCancelDelete}
+            PaperProps={{
+              style: {
+                backgroundColor: darkMode ? '#1F2937' : 'white',
+                borderRadius: '12px',
+                padding: '8px'
+              }
+            }}
+          >
+            <DialogTitle sx={{ color: darkMode ? 'white' : 'inherit' }}>
+              Confirm Deletion
+            </DialogTitle>
+            <DialogContent>
+              <DialogContentText sx={{ color: darkMode ? '#D1D5DB' : 'inherit' }}>
+                Are you sure you want to delete the reference "{selectedReference}"? This operation cannot be undone.
+              </DialogContentText>
+            </DialogContent>
+            <DialogActions sx={{ padding: '16px' }}>
+              <Button 
+                onClick={handleCancelDelete} 
+                sx={{ 
+                  textTransform: 'none',
+                  color: darkMode ? '#9CA3AF' : 'inherit' 
+                }}
+              >
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleConfirmDelete} 
+                variant="contained" 
+                color="error"
+                sx={{ 
+                  textTransform: 'none',
+                  borderRadius: '8px'
+                }}
+              >
+                Delete
+              </Button>
+            </DialogActions>
+          </Dialog>
+        </motion.div>
+      )}
+      
+      {/* Mapper Configuration Form - Original */}
+      {showMapperForm && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          <Paper
+            elevation={3}
+            className={`relative rounded-lg shadow-xl overflow-hidden transition-all duration-300 ${
+              darkMode ? 'bg-gray-800/90' : 'bg-white/90'
+            }`}
+          >
+            <div className="p-4">
+              {/* Add Back Button to return to reference table */}
+              <Box display="flex" alignItems="center" mb={2}>
                 <Button
                   variant="outlined"
-                  onClick={handleTemplateClick}
-                  className="transition-all duration-200"
+                  onClick={handleReturnToReferenceTable}
                   sx={{
-                    height: '40px',
-                    minWidth: '120px',
                     textTransform: 'none',
                     borderRadius: '8px',
                     borderWidth: '1.5px',
@@ -1591,827 +2199,821 @@ const MapperModule = () => {
                     '&:hover': {
                       borderColor: darkMode ? 'rgb(96, 165, 250)' : 'rgb(37, 99, 235)',
                       backgroundColor: darkMode ? 'rgba(96, 165, 250, 0.08)' : 'rgba(37, 99, 235, 0.04)'
-                    }
+                    },
+                    mb: 2
                   }}
-                  endIcon={<KeyboardArrowDownIcon />}
                 >
-                  Template
+                  Back to References
                 </Button>
+              </Box>
+            
+              {/* Header Section - More compact */}
+              <div className="mb-4">
+                <div className="flex items-center justify-between mb-2">
+                  <h1 className={`text-xl font-semibold ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}>
+                    Mapper Configuration
+                  </h1>
+                  
+                  <div className="flex items-center gap-3">
+                    {/* Template Button - Modernized */}
+                    <Button
+                      variant="outlined"
+                      onClick={handleTemplateClick}
+                      className="transition-all duration-200"
+                      sx={{
+                        height: '40px',
+                        minWidth: '120px',
+                        textTransform: 'none',
+                        borderRadius: '8px',
+                        borderWidth: '1.5px',
+                        fontSize: '0.95rem',
+                        borderColor: darkMode ? 'rgba(96, 165, 250, 0.5)' : 'rgba(37, 99, 235, 0.5)',
+                        color: darkMode ? 'rgb(96, 165, 250)' : 'rgb(37, 99, 235)',
+                        '&:hover': {
+                          borderColor: darkMode ? 'rgb(96, 165, 250)' : 'rgb(37, 99, 235)',
+                          backgroundColor: darkMode ? 'rgba(96, 165, 250, 0.08)' : 'rgba(37, 99, 235, 0.04)'
+                        }
+                      }}
+                      endIcon={<KeyboardArrowDownIcon />}
+                    >
+                      Template
+                    </Button>
 
-                {/* Add Template Menu */}
-                <Menu
-                  anchorEl={templateAnchorEl}
-                  open={Boolean(templateAnchorEl)}
-                  onClose={handleTemplateClose}
-                  anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
-                  transformOrigin={{ vertical: 'top', horizontal: 'left' }}
-                  PaperProps={{
-                    elevation: 3,
-                    sx: {
-                      backgroundColor: darkMode ? 'rgb(31, 41, 55)' : 'white',
-                      minWidth: '200px',
-                      borderRadius: '8px',
-                      mt: 1
-                    }
-                  }}
-                >
-                  <MenuItem 
-                    onClick={(event) => {
-                      event.stopPropagation()
-                      handleDownloadClick(event)
-                    }}
-                    className={darkMode ? 'text-gray-200 hover:bg-gray-700' : 'hover:bg-blue-50'}
-                  >
-                    <ListItemIcon>
-                      <DownloadIcon className={darkMode ? 'text-gray-400' : 'text-gray-600'} fontSize="small" />
-                    </ListItemIcon>
-                    <ListItemText>Download</ListItemText>
-                    <KeyboardArrowRightIcon fontSize="small" className={darkMode ? 'text-gray-400' : 'text-gray-600'} />
-                  </MenuItem>
-                  <MenuItem 
-                    onClick={() => {
-                      handleTemplateClose()
-                      handleUploadClick()
-                    }}
-                    className={darkMode ? 'text-gray-200 hover:bg-gray-700' : 'hover:bg-blue-50'}
-                  >
-                    <ListItemIcon>
-                      <UploadIcon className={darkMode ? 'text-gray-400' : 'text-gray-600'} fontSize="small" />
-                    </ListItemIcon>
-                    <ListItemText>Upload</ListItemText>
-                  </MenuItem>
-                </Menu>
-
-                {/* Add Download Submenu */}
-                <Menu
-                  anchorEl={downloadAnchorEl}
-                  open={Boolean(downloadAnchorEl)}
-                  onClose={handleDownloadClose}
-                  anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
-                  transformOrigin={{ vertical: 'top', horizontal: 'left' }}
-                  PaperProps={{
-                    elevation: 3,
-                    sx: {
-                      backgroundColor: darkMode ? 'rgb(31, 41, 55)' : 'white',
-                      minWidth: '200px',
-                      borderRadius: '8px'
-                    }
-                  }}
-                >
-                  <MenuItem 
-                    onClick={() => {
-                      handleTemplateClose()
-                      handleDownloadTemplate()
-                    }}
-                    className={darkMode ? 'text-gray-200 hover:bg-gray-700' : 'hover:bg-blue-50'}
-                  >
-                    <ListItemIcon>
-                      <DescriptionIcon className={darkMode ? 'text-gray-400' : 'text-gray-600'} fontSize="small" />
-                    </ListItemIcon>
-                    <ListItemText>Download Template</ListItemText>
-                  </MenuItem>
-                  <MenuItem 
-                    onClick={() => {
-                      handleTemplateClose()
-                      handleExistingTemplateDownload()
-                    }}
-                    className={darkMode ? 'text-gray-200 hover:bg-gray-700' : 'hover:bg-blue-50'}
-                  >
-                    <ListItemIcon>
-                      <FileCopyIcon className={darkMode ? 'text-gray-400' : 'text-gray-600'} fontSize="small" />
-                    </ListItemIcon>
-                    <ListItemText>Save Data Template</ListItemText>
-                  </MenuItem>
-                </Menu>
-
-                {/* Add hidden file input for upload */}
-                <input
-                  id="file-upload"
-                  type="file"
-                  hidden
-                  accept=".csv"
-                  onChange={handleFileUpload}
-                />
-
-                {/* Action Buttons Group - Enhanced styling */}
-                <div className="flex items-center gap-2">
-                  {/* Save/Update Button */}
-                  <Tooltip title={
-                    areAllRowsValid()
-                      ? isUpdateMode
-                        ? 'Update Mapper Configuration'
-                        : 'Save Mapper Configuration'
-                      : 'All rows must be validated successfully before saving'
-                  }>
-                    <span>
-                      <Button
-                        variant="contained"
-                        onClick={handleSave}
-                        disabled={isSaving}
-                        sx={{
-                          height: '40px',
-                          minWidth: '120px',
-                          textTransform: 'none',
+                    {/* Add Template Menu */}
+                    <Menu
+                      anchorEl={templateAnchorEl}
+                      open={Boolean(templateAnchorEl)}
+                      onClose={handleTemplateClose}
+                      anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+                      transformOrigin={{ vertical: 'top', horizontal: 'left' }}
+                      PaperProps={{
+                        elevation: 3,
+                        sx: {
+                          backgroundColor: darkMode ? 'rgb(31, 41, 55)' : 'white',
+                          minWidth: '200px',
                           borderRadius: '8px',
-                          fontSize: '0.95rem',
-                          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-                          background: isUpdateMode
-                            ? 'linear-gradient(45deg, #059669, #10B981)'
-                            : 'linear-gradient(45deg, #2563EB, #3B82F6)',
-                          '&:hover': {
-                            background: isUpdateMode
-                              ? 'linear-gradient(45deg, #047857, #059669)'
-                              : 'linear-gradient(45deg, #1D4ED8, #2563EB)',
-                          }
+                          mt: 1
+                        }
+                      }}
+                    >
+                      <MenuItem 
+                        onClick={(event) => {
+                          event.stopPropagation()
+                          handleDownloadClick(event)
                         }}
-                        startIcon={isSaving ? <CircularProgress size={20} color="inherit" /> : <SaveIcon />}
+                        className={darkMode ? 'text-gray-200 hover:bg-gray-700' : 'hover:bg-blue-50'}
                       >
-                        {isUpdateMode ? 'Update' : 'Save'}
-                      </Button>
-                    </span>
-                  </Tooltip>
+                        <ListItemIcon>
+                          <DownloadIcon className={darkMode ? 'text-gray-400' : 'text-gray-600'} fontSize="small" />
+                        </ListItemIcon>
+                        <ListItemText>Download</ListItemText>
+                        <KeyboardArrowRightIcon fontSize="small" className={darkMode ? 'text-gray-400' : 'text-gray-600'} />
+                      </MenuItem>
+                      <MenuItem 
+                        onClick={() => {
+                          handleTemplateClose()
+                          handleUploadClick()
+                        }}
+                        className={darkMode ? 'text-gray-200 hover:bg-gray-700' : 'hover:bg-blue-50'}
+                      >
+                        <ListItemIcon>
+                          <UploadIcon className={darkMode ? 'text-gray-400' : 'text-gray-600'} fontSize="small" />
+                        </ListItemIcon>
+                        <ListItemText>Upload</ListItemText>
+                      </MenuItem>
+                    </Menu>
 
-                  {/* Validate Button */}
-                  {showValidateButton && !hasUnsavedChanges && (
-                    <Button
-                      variant="contained"
-                      onClick={validateAll}
-                      disabled={isValidating}
-                      sx={{
-                        height: '40px',
-                        minWidth: '120px',
-                        textTransform: 'none',
-                        borderRadius: '8px',
-                        fontSize: '0.95rem',
-                        background: 'linear-gradient(45deg, #059669, #10B981)',
-                        '&:hover': {
-                          background: 'linear-gradient(45deg, #047857, #059669)',
+                    {/* Add Download Submenu */}
+                    <Menu
+                      anchorEl={downloadAnchorEl}
+                      open={Boolean(downloadAnchorEl)}
+                      onClose={handleDownloadClose}
+                      anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+                      transformOrigin={{ vertical: 'top', horizontal: 'left' }}
+                      PaperProps={{
+                        elevation: 3,
+                        sx: {
+                          backgroundColor: darkMode ? 'rgb(31, 41, 55)' : 'white',
+                          minWidth: '200px',
+                          borderRadius: '8px'
                         }
                       }}
-                      startIcon={isValidating ? <CircularProgress size={20} color="inherit" /> : <VerifyIcon />}
                     >
-                      {isValidating ? 'Validating...' : 'Validate All'}
-                    </Button>
-                  )}
+                      <MenuItem 
+                        onClick={() => {
+                          handleTemplateClose()
+                          handleDownloadTemplate()
+                        }}
+                        className={darkMode ? 'text-gray-200 hover:bg-gray-700' : 'hover:bg-blue-50'}
+                      >
+                        <ListItemIcon>
+                          <DescriptionIcon className={darkMode ? 'text-gray-400' : 'text-gray-600'} fontSize="small" />
+                        </ListItemIcon>
+                        <ListItemText>Download Template</ListItemText>
+                      </MenuItem>
+                      <MenuItem 
+                        onClick={() => {
+                          handleTemplateClose()
+                          handleExistingTemplateDownload()
+                        }}
+                        className={darkMode ? 'text-gray-200 hover:bg-gray-700' : 'hover:bg-blue-50'}
+                      >
+                        <ListItemIcon>
+                          <FileCopyIcon className={darkMode ? 'text-gray-400' : 'text-gray-600'} fontSize="small" />
+                        </ListItemIcon>
+                        <ListItemText>Save Data Template</ListItemText>
+                      </MenuItem>
+                    </Menu>
 
-                  {/* Activate Button - Show if validated, regardless of activation status */}
-                  {hasBeenValidated && allRowsValidated && (
-                    <Button
-                      variant="contained"
-                      onClick={handleActivate}
-                      sx={{
-                        height: '40px',
-                        minWidth: '120px',
-                        textTransform: 'none',
-                        borderRadius: '8px',
-                        fontSize: '0.95rem',
-                        background: 'linear-gradient(45deg, #7C3AED, #8B5CF6)',
-                        '&:hover': {
-                          background: 'linear-gradient(45deg, #6D28D9, #7C3AED)',
-                        }
-                      }}
-                      startIcon={<CheckIcon />}
-                    >
-                      Activate
-                    </Button>
-                  )}
+                    {/* Add hidden file input for upload */}
+                    <input
+                      id="file-upload"
+                      type="file"
+                      hidden
+                      accept=".csv"
+                      onChange={handleFileUpload}
+                    />
 
-                  {/* Create Job Button - Show if activated successfully */}
-                  {isActivationSuccessful && (
-                    <Button
-                      variant="contained"
-                      onClick={handleCreateJob}
-                      sx={{
-                        height: '40px',
-                        minWidth: '120px',
-                        textTransform: 'none',
-                        borderRadius: '8px',
-                        fontSize: '0.95rem',
-                        background: 'linear-gradient(45deg, #0EA5E9, #38BDF8)',
-                        '&:hover': {
-                          background: 'linear-gradient(45deg, #0284C7, #0EA5E9)',
-                        }
-                      }}
-                      startIcon={<PlayArrowIcon />}
-                    >
-                      Create Job
-                    </Button>
-                  )}
+                    {/* Action Buttons Group - Enhanced styling */}
+                    <div className="flex items-center gap-2">
+                      {/* Save/Update Button */}
+                      <Tooltip title={
+                        areAllRowsValid()
+                          ? isUpdateMode
+                            ? 'Update Mapper Configuration'
+                            : 'Save Mapper Configuration'
+                          : 'All rows must be validated successfully before saving'
+                      }>
+                        <span>
+                          <Button
+                            variant="contained"
+                            onClick={handleSave}
+                            disabled={isSaving}
+                            sx={{
+                              height: '40px',
+                              minWidth: '120px',
+                              textTransform: 'none',
+                              borderRadius: '8px',
+                              fontSize: '0.95rem',
+                              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                              background: isUpdateMode
+                                ? 'linear-gradient(45deg, #059669, #10B981)'
+                                : 'linear-gradient(45deg, #2563EB, #3B82F6)',
+                              '&:hover': {
+                                background: isUpdateMode
+                                  ? 'linear-gradient(45deg, #047857, #059669)'
+                                  : 'linear-gradient(45deg, #1D4ED8, #2563EB)',
+                              }
+                            }}
+                            startIcon={isSaving ? <CircularProgress size={20} color="inherit" /> : <SaveIcon />}
+                          >
+                            {isUpdateMode ? 'Update' : 'Save'}
+                          </Button>
+                        </span>
+                      </Tooltip>
+
+                      {/* Validate Button */}
+                      {showValidateButton && !hasUnsavedChanges && (
+                        <Button
+                          variant="contained"
+                          onClick={validateAll}
+                          disabled={isValidating}
+                          sx={{
+                            height: '40px',
+                            minWidth: '120px',
+                            textTransform: 'none',
+                            borderRadius: '8px',
+                            fontSize: '0.95rem',
+                            background: 'linear-gradient(45deg, #059669, #10B981)',
+                            '&:hover': {
+                              background: 'linear-gradient(45deg, #047857, #059669)',
+                            }
+                          }}
+                          startIcon={isValidating ? <CircularProgress size={20} color="inherit" /> : <VerifyIcon />}
+                        >
+                          {isValidating ? 'Validating...' : 'Validate All'}
+                        </Button>
+                      )}
+
+                      {/* Activate Button - Show if validated, regardless of activation status */}
+                      {hasBeenValidated && allRowsValidated && (
+                        <Button
+                          variant="contained"
+                          onClick={handleActivate}
+                          sx={{
+                            height: '40px',
+                            minWidth: '120px',
+                            textTransform: 'none',
+                            borderRadius: '8px',
+                            fontSize: '0.95rem',
+                            background: 'linear-gradient(45deg, #7C3AED, #8B5CF6)',
+                            '&:hover': {
+                              background: 'linear-gradient(45deg, #6D28D9, #7C3AED)',
+                            }
+                          }}
+                          startIcon={<CheckIcon />}
+                        >
+                          Activate
+                        </Button>
+                      )}
+
+                      {/* Create Job Button - Show if activated successfully */}
+                      {isActivationSuccessful && (
+                        <Button
+                          variant="contained"
+                          onClick={handleCreateJob}
+                          sx={{
+                            height: '40px',
+                            minWidth: '120px',
+                            textTransform: 'none',
+                            borderRadius: '8px',
+                            fontSize: '0.95rem',
+                            background: 'linear-gradient(45deg, #0EA5E9, #38BDF8)',
+                            '&:hover': {
+                              background: 'linear-gradient(45deg, #0284C7, #0EA5E9)',
+                            }
+                          }}
+                          startIcon={<PlayArrowIcon />}
+                        >
+                          Create Job
+                        </Button>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-          </div>
 
-          {/* Form Section - Adjusted grid spacing */}
-          <div className="grid grid-cols-12 gap-4 mb-4">
-            {/* Reference Information Card */}
-            <div className="col-span-5">
-              <Paper
-                elevation={2}
-                className={`h-full p-4 rounded-lg transition-all duration-300 ${
-                  darkMode ? 'bg-gray-750/50' : 'bg-white'
-                }`}
-              >
-                <h2 className={`text-base font-medium mb-2 ${
-                  darkMode ? 'text-gray-200' : 'text-gray-700'
-                }`}>
-                  Reference Information
-                </h2>
-                <div className="flex flex-col gap-2">
-                  <div className="flex gap-2">
-                    <TextField
-                      label="Reference"
-                      value={formData.reference}
-                      onChange={(e) => handleFormChange('reference', e.target.value)}
-                      onKeyDown={handleKeyDown}
-                      size="small"
-                      fullWidth
-                      variant="outlined"
-                      sx={{
-                        flex: 1,
-                        '& .MuiOutlinedInput-root': {
-                          height: '32px',
-                          borderRadius: '6px',
-                          backgroundColor: darkMode ? 'rgba(31, 41, 55, 0.5)' : 'white',
-                        },
-                        '& .MuiInputLabel-root': {
-                          fontSize: '0.75rem',
-                          transform: 'translate(14px, 8px) scale(1)',
-                          '&.MuiInputLabel-shrink': {
-                            transform: 'translate(14px, -6px) scale(0.75)',
-                          }
-                        }
-                      }}
-                      InputProps={{
-                        style: { fontSize: '0.875rem' },
-                        endAdornment: (
-                          <InputAdornment position="end">
-                            {isSearching ? (
-                              <CircularProgress size={16} className={darkMode ? 'text-blue-400' : 'text-blue-500'} />
-                            ) : (
-                              <IconButton 
-                                onClick={handleSearchTrigger}
-                                size="small"
-                                sx={{ padding: '4px' }}
-                              >
-                                <SearchIcon fontSize="small" className={darkMode ? 'text-gray-400' : 'text-gray-500'} />
-                              </IconButton>
-                            )}
-                          </InputAdornment>
-                        ),
-                      }}
-                    />
-                    <TextField
-                      label="Mapper ID"
-                      value={formData.mapperId}
-                      disabled
-                      size="small"
-                      sx={{
-                        width: '90px',
-                        '& .MuiOutlinedInput-root': {
-                          height: '32px',
-                          borderRadius: '6px',
-                          backgroundColor: darkMode ? 'rgba(31, 41, 55, 0.3)' : 'rgba(229, 231, 235, 0.5)',
-                          fontSize: '0.875rem'
-                        },
-                        '& .MuiInputLabel-root': {
-                          fontSize: '0.75rem',
-                          transform: 'translate(14px, 8px) scale(1)',
-                          '&.MuiInputLabel-shrink': {
-                            transform: 'translate(14px, -6px) scale(0.75)',
-                          }
-                        }
-                      }}
-                    />
-                  </div>
-                  <TextField
-                    label="Description"
-                    value={formData.description}
-                    onChange={(e) => handleFormChange('description', e.target.value)}
-                    multiline
-                    rows={2}
-                    size="small"
-                    fullWidth
-                    variant="outlined"
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        borderRadius: '6px',
-                        backgroundColor: darkMode ? 'rgba(31, 41, 55, 0.5)' : 'white',
-                        fontSize: '0.875rem',
-                        padding: '6px 10px',
-                        minHeight: '32px',
-                        '& textarea': {
-                          lineHeight: '1.25',
-                        }
-                      },
-                      '& .MuiInputLabel-root': {
-                        fontSize: '0.75rem',
-                        transform: 'translate(14px, 8px) scale(1)',
-                        '&.MuiInputLabel-shrink': {
-                          transform: 'translate(14px, -6px) scale(0.75)',
-                        }
-                      }
-                    }}
-                  />
-                </div>
-              </Paper>
-            </div>
-
-            {/* Target Configuration Card */}
-            <div className="col-span-7">
-              <Paper
-                elevation={2}
-                className={`h-full p-4 rounded-lg transition-all duration-300 ${
-                  darkMode ? 'bg-gray-750/50' : 'bg-white'
-                }`}
-              >
-                <h2 className={`text-base font-medium mb-2 ${
-                  darkMode ? 'text-gray-200' : 'text-gray-700'
-                }`}>
-                  Target Configuration
-                </h2>
-                <div className="grid grid-cols-12 gap-2">
-                  {/* Adjust the Target Configuration fields with tighter spacing */}
-                  <TextField
-                    label="Target Schema"
-                    value={formData.targetSchema}
-                    onChange={(e) => handleFormChange('targetSchema', e.target.value)}
-                    size="small"
-                    variant="outlined"
-                    className="col-span-4"
-                    fullWidth
-                    error={!!schemaError}
-                    helperText={schemaError ? "Must start with a letter, only A-Z, 0-9, _" : ""}
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        height: '32px',
-                        borderRadius: '6px',
-                        backgroundColor: darkMode ? 'rgba(31, 41, 55, 0.5)' : 'white',
-                      },
-                      '& .MuiInputLabel-root': {
-                        fontSize: '0.75rem',
-                        transform: 'translate(14px, 8px) scale(1)',
-                        '&.MuiInputLabel-shrink': {
-                          transform: 'translate(14px, -6px) scale(0.75)',
-                        }
-                      },
-                      '& .MuiFormHelperText-root': {
-                        position: 'absolute',
-                        bottom: '-16px',
-                        margin: 0,
-                        fontSize: '0.625rem',
-                        lineHeight: '1',
-                      }
-                    }}
-                    InputProps={{
-                      style: { fontSize: '0.875rem' }
-                    }}
-                  />
-                  <TextField
-                    label="Target Table"
-                    value={formData.tableName}
-                    onChange={(e) => handleFormChange('tableName', e.target.value)}
-                    size="small"
-                    variant="outlined"
-                    className="col-span-4"
-                    fullWidth
-                    error={!!tableNameError}
-                    helperText={tableNameError ? "Must start with a letter, only A-Z, 0-9, _" : ""}
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        height: '32px',
-                        borderRadius: '6px',
-                        backgroundColor: darkMode ? 'rgba(31, 41, 55, 0.5)' : 'white',
-                      },
-                      '& .MuiInputLabel-root': {
-                        fontSize: '0.75rem',
-                        transform: 'translate(14px, 8px) scale(1)',
-                        '&.MuiInputLabel-shrink': {
-                          transform: 'translate(14px, -6px) scale(0.75)',
-                        }
-                      },
-                      '& .MuiFormHelperText-root': {
-                        position: 'absolute',
-                        bottom: '-16px',
-                        margin: 0,
-                        fontSize: '0.625rem',
-                        lineHeight: '1',
-                      }
-                    }}
-                    InputProps={{
-                      style: { fontSize: '0.875rem' }
-                    }}
-                  />
-                  <FormControl size="small" variant="outlined" className="col-span-4" fullWidth sx={{ '& .MuiOutlinedInput-root': { height: '32px' } }}>
-                    <InputLabel id="table-type-label" className={`${darkMode ? 'text-gray-400' : ''}`} sx={{ fontSize: '0.75rem' }}>
-                      Table Type
-                    </InputLabel>
-                    <Select
-                      labelId="table-type-label"
-                      value={formData.tableType}
-                      onChange={(e) => handleFormChange('tableType', e.target.value)}
-                      label="Table Type"
-                      className={`${darkMode ? 'text-gray-200' : ''}`}
-                      sx={{ fontSize: '0.875rem' }}
-                    >
-                      {TABLE_TYPES.map((type) => (
-                        <MenuItem key={type.value} value={type.value}>
-                          {type.label}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                  <FormControl size="small" variant="outlined" className="col-span-4" fullWidth sx={{ '& .MuiOutlinedInput-root': { height: '32px' } }}>
-                    <InputLabel id="freq-code-label" className={`${darkMode ? 'text-gray-400' : ''}`} sx={{ fontSize: '0.75rem' }}>
-                      Frequency
-                    </InputLabel>
-                    <Select
-                      labelId="freq-code-label"
-                      value={formData.freqCode}
-                      onChange={(e) => handleFormChange('freqCode', e.target.value)}
-                      label="Frequency"
-                      className={`${darkMode ? 'text-gray-200' : ''}`}
-                      sx={{ fontSize: '0.875rem' }}
-                    >
-                      {FREQ_CODES.map((code) => (
-                        <MenuItem key={code.value} value={code.value}>
-                          {code.label}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                  <TextField
-                    label="Source System"
-                    value={formData.sourceSystem}
-                    onChange={(e) => handleFormChange('sourceSystem', e.target.value)}
-                    size="small"
-                    variant="outlined"
-                    className="col-span-4"
-                    fullWidth
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        height: '32px',
-                        borderRadius: '6px',
-                        backgroundColor: darkMode ? 'rgba(31, 41, 55, 0.5)' : 'white',
-                      },
-                      '& .MuiInputLabel-root': {
-                        fontSize: '0.75rem',
-                        transform: 'translate(14px, 8px) scale(1)',
-                        '&.MuiInputLabel-shrink': {
-                          transform: 'translate(14px, -6px) scale(0.75)',
-                        }
-                      }
-                    }}
-                    InputProps={{
-                      style: { fontSize: '0.875rem' }
-                    }}
-                  />
-                  <TextField
-                    label="Bulk Process Rows"
-                    value={formData.bulkProcessRows}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      // Only allow positive integers
-                      if (value === '' || (/^\d+$/.test(value) && parseInt(value) > 0)) {
-                        handleFormChange('bulkProcessRows', value);
-                      }
-                    }}
-                    size="small"
-                    variant="outlined"
-                    className="col-span-4"
-                    fullWidth
-                    type="number"
-                    inputProps={{ min: "1" }}
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        height: '32px',
-                        borderRadius: '6px',
-                        backgroundColor: darkMode ? 'rgba(31, 41, 55, 0.5)' : 'white',
-                      },
-                      '& .MuiInputLabel-root': {
-                        fontSize: '0.75rem',
-                        transform: 'translate(14px, 8px) scale(1)',
-                        '&.MuiInputLabel-shrink': {
-                          transform: 'translate(14px, -6px) scale(0.75)',
-                        }
-                      },
-                      '& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button': {
-                        '-webkit-appearance': 'none',
-                        margin: 0
-                      },
-                      '& input[type=number]': {
-                        '-moz-appearance': 'textfield'
-                      }
-                    }}
-                    InputProps={{
-                      style: { fontSize: '0.875rem' }
-                    }}
-                  />
-                </div>
-              </Paper>
-            </div>
-          </div>
-
-          {/* Table Section - Adjusted height and styling */}
-          <Paper
-            elevation={2}
-            className={`rounded-lg overflow-hidden transition-all duration-300 ${
-              darkMode ? 'bg-gray-750/50' : 'bg-white'
-            }`}
-          >
-            <TableContainer className="max-h-[calc(100vh-20rem)]"> {/* Adjusted from 22rem to 20rem */}
-              <Table stickyHeader size="small">
-                <TableHead>
-                  <TableRow>
-                    <TableCell
-                      align="center"
-                      className={`
-                        font-medium text-xs py-2 px-2 w-16
-                        ${darkMode ? 'bg-gray-800 text-gray-200' : 'bg-gray-50/90'}
-                        sticky top-0 z-10
-                      `}
-                    >
-                      Key?
-                    </TableCell>
-                    <TableCell
-                      align="center"
-                      className={`
-                        font-medium text-xs py-2 px-2 w-16
-                        ${hasDuplicateKeys 
-                          ? (darkMode ? 'bg-red-900/80 text-red-100' : 'bg-red-100 text-red-800') 
-                          : (darkMode ? 'bg-gray-800 text-gray-200' : 'bg-gray-50/90')}
-                        sticky top-0 z-10
-                        transition-colors duration-300
-                      `}
-                    >
-                      {hasDuplicateKeys ? (
-                        <Tooltip title="Duplicate key sequences detected. Each primary key must have a unique sequence number.">
-                          <div className="flex items-center justify-center">
-                            KeySeq
-                            <span className="ml-1 text-red-500 animate-pulse">⚠️</span>
-                          </div>
-                        </Tooltip>
-                      ) : 'KeySeq'}
-                    </TableCell>
-                    <TableCell
-                      className={`
-                        font-medium text-xs py-2 px-2
-                        ${
-                          darkMode
-                            ? 'bg-gray-800 text-gray-200'
-                            : 'bg-gray-50/90'
-                        }
-                        sticky top-0 z-10
-                      `}
-                    >
-                      Target Column Name
-                    </TableCell>
-                    <TableCell
-                      className={`
-                        font-medium text-xs py-2 px-2
-                        ${
-                          darkMode
-                            ? 'bg-gray-800 text-gray-200'
-                            : 'bg-gray-50/90'
-                        }
-                        sticky top-0 z-10
-                      `}
-                    >
-                      Data Type
-                    </TableCell>
-                    {/* Add Description column header */}
-                    <TableCell
-                      className={`
-                        font-medium text-xs py-2 px-2
-                        ${
-                          darkMode
-                            ? 'bg-gray-800 text-gray-200'
-                            : 'bg-gray-50/90'
-                        }
-                        sticky top-0 z-10
-                      `}
-                    >
-                      Description
-                    </TableCell>
-                    {formData.tableType === 'DIM' && (
-                      <TableCell
-                        className={`
-                          font-medium text-xs py-2 px-2
-                          ${
-                            darkMode
-                              ? 'bg-gray-800 text-gray-200'
-                              : 'bg-gray-50/90'
-                          }
-                          sticky top-0 z-10
-                        `}
-                      >
-                        SCD Type
-                      </TableCell>
-                    )}
-                    {/* Remove Not Null column header */}
-                    <TableCell
-                      className={`
-                        font-medium text-xs py-2 px-2
-                        ${
-                          darkMode
-                            ? 'bg-gray-800 text-gray-200'
-                            : 'bg-gray-50/90'
-                        }
-                        sticky top-0 z-10
-                      `}
-                    >
-                      Key Column
-                    </TableCell>
-                    <TableCell
-                      className={`
-                        font-medium text-xs py-2 px-2
-                        ${
-                          darkMode
-                            ? 'bg-gray-800 text-gray-200'
-                            : 'bg-gray-50/90'
-                        }
-                        sticky top-0 z-10
-                      `}
-                    >
-                      Value Column
-                    </TableCell>
-                    <TableCell
-                      className={`
-                        font-medium text-xs py-2 px-2
-                        ${
-                          darkMode
-                            ? 'bg-gray-800 text-gray-200'
-                            : 'bg-gray-50/90'
-                        }
-                        sticky top-0 z-10
-                      `}
-                    >
-                      Mapping Combine Code
-                    </TableCell>
-                    <TableCell
-                      align="center"
-                      className={`
-                        font-medium text-xs py-2 px-2 w-16
-                        ${
-                          darkMode
-                            ? 'bg-gray-800 text-gray-200'
-                            : 'bg-gray-50/90'
-                        }
-                        sticky top-0 z-10
-                      `}
-                    >
-                      Valid
-                    </TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {rows.slice(page * 8, page * 8 + 8).map((row, index) => (
-                    <TableRow
-                      key={index}
-                      onClick={() => handleRowClick(index + page * 8)}
-                      className={`
-                        transition-colors duration-150 cursor-pointer h-9
-                        ${
-                          modifiedRows.includes(index + page * 8)
-                            ? darkMode
-                              ? 'bg-green-900/20 hover:bg-green-900/30'
-                              : 'bg-green-50 hover:bg-green-100/70'
-                            : darkMode
-                            ? `hover:bg-gray-700/50 ${
-                                selectedRowIndex === index + page * 8
-                                  ? 'bg-gray-700/70'
-                                  : ''
-                              }`
-                            : `hover:bg-blue-50/30 ${
-                                selectedRowIndex === index + page * 8
-                                  ? 'bg-blue-50/50'
-                                  : ''
-                              }`
-                        }
-                      `}
-                    >
-                      <TableCell className="py-0 px-1">
-                        <Checkbox
-                          checked={row.primaryKey}
-                          onChange={(e) =>
-                            handleRowChange(
-                              index + page * 8,
-                              'primaryKey',
-                              e.target.checked
-                            )
-                          }
-                          className={`${
-                            darkMode ? 'text-blue-400' : 'text-blue-500'
-                          }`}
-                          size="small"
-                        />
-                      </TableCell>
-                      <TableCell className="py-0 px-1">
+              {/* Form Section - Adjusted grid spacing */}
+              <div className="grid grid-cols-12 gap-4 mb-4">
+                {/* Reference Information Card */}
+                <div className="col-span-5">
+                  <Paper
+                    elevation={2}
+                    className={`h-full p-4 rounded-lg transition-all duration-300 ${
+                      darkMode ? 'bg-gray-750/50' : 'bg-white'
+                    }`}
+                  >
+                    <h2 className={`text-base font-medium mb-2 ${
+                      darkMode ? 'text-gray-200' : 'text-gray-700'
+                    }`}>
+                      Reference Information
+                    </h2>
+                    <div className="flex flex-col gap-2">
+                      <div className="flex gap-2">
                         <TextField
-                          value={row.pkSeq}
-                          onChange={(e) =>
-                            handleNumberChange(e, index + page * 8, 'pkSeq')
-                          }
-                          disabled={!row.primaryKey}
+                          label="Reference"
+                          value={formData.reference}
+                          onChange={(e) => handleFormChange('reference', e.target.value)}
+                          onKeyDown={handleKeyDown}
                           size="small"
                           fullWidth
                           variant="outlined"
-                          type="number"
-                          error={!!pkSeqErrors[index + page * 8]}
-                          helperText={pkSeqErrors[index + page * 8]}
-                          inputProps={{
-                            min: 0,
-                            max: 999,
-                            step: 1,
-                            className: 'px-2 py-1 text-center',
-                          }}
-                          className={`${
-                            darkMode ? 'bg-gray-800/50' : 'bg-white'
-                          } rounded-md ${!row.primaryKey ? 'opacity-50' : ''}`}
-                          sx={{
+                          sx={{ 
+                            flex: 1,
                             '& .MuiOutlinedInput-root': {
-                              '& fieldset': {
-                                borderColor: pkSeqErrors[index + page * 8] 
-                                  ? (darkMode ? 'rgba(239,68,68,0.7)' : 'rgba(239,68,68,0.7)') 
-                                  : (darkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'),
-                              },
-                              '&:hover fieldset': {
-                                borderColor: pkSeqErrors[index + page * 8]
-                                  ? (darkMode ? 'rgba(239,68,68,0.9)' : 'rgba(239,68,68,0.9)')
-                                  : (darkMode ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)'),
-                              },
-                              '&.Mui-focused fieldset': {
-                                borderColor: pkSeqErrors[index + page * 8]
-                                  ? (darkMode ? 'rgba(239,68,68,1)' : 'rgba(239,68,68,1)')
-                                  : '#3b82f6',
-                              },
+                              height: '32px',
+                              borderRadius: '6px',
+                              backgroundColor: darkMode ? 'rgba(31, 41, 55, 0.5)' : 'white',
                             },
-                            '& .MuiFormHelperText-root': {
-                              color: darkMode ? 'rgba(239,68,68,0.9)' : 'rgba(239,68,68,0.9)',
-                              position: 'absolute',
-                              bottom: '-20px',
-                              margin: 0,
-                              fontSize: '0.625rem',
-                            },
+                            '& .MuiInputLabel-root': {
+                              fontSize: '0.75rem',
+                              transform: 'translate(14px, 8px) scale(1)',
+                              '&.MuiInputLabel-shrink': {
+                                transform: 'translate(14px, -6px) scale(0.75)',
+                              }
+                            }
+                          }}
+                          InputProps={{
+                            style: { fontSize: '0.875rem' },
+                            endAdornment: (
+                              <InputAdornment position="end">
+                                {isSearching ? (
+                                  <CircularProgress size={16} className={darkMode ? 'text-blue-400' : 'text-blue-500'} />
+                                ) : (
+                                  <IconButton 
+                                    onClick={handleSearchTrigger}
+                                    size="small"
+                                    sx={{ padding: '4px' }}
+                                  >
+                                    <SearchIcon fontSize="small" className={darkMode ? 'text-gray-400' : 'text-gray-500'} />
+                                  </IconButton>
+                                )}
+                              </InputAdornment>
+                            ),
                           }}
                         />
-                      </TableCell>
-                      <TableCell className="py-0 px-1">
                         <TextField
-                          value={row.fieldName}
-                          disabled={!!row.mapdtlid} // Only disable if mapdtlid exists
-                          onChange={(e) => {
-                            const value = e.target.value
-                              .toUpperCase()
-                              .slice(0, 30);
-                            handleRowChange(index + page * 8, 'fieldName', value);
-                          }}
+                          label="Mapper ID"
+                          value={formData.mapperId}
+                          disabled
                           size="small"
-                          fullWidth
-                          variant="outlined"
-                          inputProps={{
-                            maxLength: 30,
-                            className: 'px-2 py-1',
-                          }}
-                          className={`${
-                            darkMode ? 'bg-gray-800/50' : row.mapdtlid ? 'bg-gray-100' : 'bg-white'
-                          } rounded-md`}
                           sx={{
+                            width: '90px',
                             '& .MuiOutlinedInput-root': {
-                              '& fieldset': {
-                                borderColor: darkMode
-                                  ? 'rgba(255,255,255,0.1)'
-                                  : 'rgba(0,0,0,0.1)',
-                              },
-                              '&.Mui-disabled': {
-                                backgroundColor: darkMode ? 'rgba(31, 41, 55, 0.5)' : 'rgba(229, 231, 235, 0.5)',
-                                '& fieldset': {
-                                  borderColor: darkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.08)',
-                                },
-                                '& input': {
-                                  color: darkMode ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)',
-                                },
-                              },
+                              height: '32px',
+                              borderRadius: '6px',
+                              backgroundColor: darkMode ? 'rgba(31, 41, 55, 0.3)' : 'rgba(229, 231, 235, 0.5)',
+                              fontSize: '0.875rem'
                             },
+                            '& .MuiInputLabel-root': {
+                              fontSize: '0.75rem',
+                              transform: 'translate(14px, 8px) scale(1)',
+                              '&.MuiInputLabel-shrink': {
+                                transform: 'translate(14px, -6px) scale(0.75)',
+                              }
+                            }
                           }}
                         />
-                      </TableCell>
-                      <TableCell className="py-0 px-1" style={{ width: '150px' }} // Increase width for Data Type
-                      >
-                        <Autocomplete
-                          value={dataTypeOptions.find(option => option.PRCD === row.dataType) || null}
-                          disabled={!!row.mapdtlid} // Only disable if mapdtlid exists
-                          onChange={(event, newValue) => {
-                            handleRowChange(index + page * 8, 'dataType', newValue ? newValue.PRCD : '')
-                          }}
-                          options={dataTypeOptions}
-                          getOptionLabel={(option) => option.PRCD}
-                          renderInput={(params) => (
+                      </div>
+                      <TextField
+                        label="Description"
+                        value={formData.description}
+                        onChange={(e) => handleFormChange('description', e.target.value)}
+                        multiline
+                        rows={2}
+                        size="small"
+                        fullWidth
+                        variant="outlined"
+                        sx={{
+                          '& .MuiOutlinedInput-root': {
+                            borderRadius: '6px',
+                            backgroundColor: darkMode ? 'rgba(31, 41, 55, 0.5)' : 'white',
+                            fontSize: '0.875rem',
+                            padding: '6px 10px',
+                            minHeight: '32px',
+                            '& textarea': {
+                              lineHeight: '1.25',
+                            }
+                          },
+                          '& .MuiInputLabel-root': {
+                            fontSize: '0.75rem',
+                            transform: 'translate(14px, 8px) scale(1)',
+                            '&.MuiInputLabel-shrink': {
+                              transform: 'translate(14px, -6px) scale(0.75)',
+                            }
+                          }
+                        }}
+                      />
+                    </div>
+                  </Paper>
+                </div>
+
+                {/* Target Configuration Card */}
+                <div className="col-span-7">
+                  <Paper
+                    elevation={2}
+                    className={`h-full p-4 rounded-lg transition-all duration-300 ${
+                      darkMode ? 'bg-gray-750/50' : 'bg-white'
+                    }`}
+                  >
+                    <h2 className={`text-base font-medium mb-2 ${
+                      darkMode ? 'text-gray-200' : 'text-gray-700'
+                    }`}>
+                      Target Configuration
+                    </h2>
+                    <div className="grid grid-cols-12 gap-2">
+                      {/* Adjust the Target Configuration fields with tighter spacing */}
+                      <TextField
+                        label="Target Schema"
+                        value={formData.targetSchema}
+                        onChange={(e) => handleFormChange('targetSchema', e.target.value)}
+                        size="small"
+                        variant="outlined"
+                        className="col-span-4"
+                        fullWidth
+                        error={!!schemaError}
+                        helperText={schemaError ? "Must start with a letter, only A-Z, 0-9, _" : ""}
+                        sx={{
+                          '& .MuiOutlinedInput-root': {
+                            height: '32px',
+                            borderRadius: '6px',
+                            backgroundColor: darkMode ? 'rgba(31, 41, 55, 0.5)' : 'white',
+                          },
+                          '& .MuiInputLabel-root': {
+                            fontSize: '0.75rem',
+                            transform: 'translate(14px, 8px) scale(1)',
+                            '&.MuiInputLabel-shrink': {
+                              transform: 'translate(14px, -6px) scale(0.75)',
+                            }
+                          },
+                          '& .MuiFormHelperText-root': {
+                            position: 'absolute',
+                            bottom: '-16px',
+                            margin: 0,
+                            fontSize: '0.625rem',
+                            lineHeight: '1',
+                          }
+                        }}
+                        InputProps={{
+                          style: { fontSize: '0.875rem' }
+                        }}
+                      />
+                      <TextField
+                        label="Target Table"
+                        value={formData.tableName}
+                        onChange={(e) => handleFormChange('tableName', e.target.value)}
+                        size="small"
+                        variant="outlined"
+                        className="col-span-4"
+                        fullWidth
+                        error={!!tableNameError}
+                        helperText={tableNameError ? "Must start with a letter, only A-Z, 0-9, _" : ""}
+                        sx={{
+                          '& .MuiOutlinedInput-root': {
+                            height: '32px',
+                            borderRadius: '6px',
+                            backgroundColor: darkMode ? 'rgba(31, 41, 55, 0.5)' : 'white',
+                          },
+                          '& .MuiInputLabel-root': {
+                            fontSize: '0.75rem',
+                            transform: 'translate(14px, 8px) scale(1)',
+                            '&.MuiInputLabel-shrink': {
+                              transform: 'translate(14px, -6px) scale(0.75)',
+                            }
+                          },
+                          '& .MuiFormHelperText-root': {
+                            position: 'absolute',
+                            bottom: '-16px',
+                            margin: 0,
+                            fontSize: '0.625rem',
+                            lineHeight: '1',
+                          }
+                        }}
+                        InputProps={{
+                          style: { fontSize: '0.875rem' }
+                        }}
+                      />
+                      <FormControl size="small" variant="outlined" className="col-span-4" fullWidth sx={{ '& .MuiOutlinedInput-root': { height: '32px' } }}>
+                        <InputLabel id="table-type-label" className={`${darkMode ? 'text-gray-400' : ''}`} sx={{ fontSize: '0.75rem' }}>
+                          Table Type
+                        </InputLabel>
+                        <Select
+                          labelId="table-type-label"
+                          value={formData.tableType}
+                          onChange={(e) => handleFormChange('tableType', e.target.value)}
+                          label="Table Type"
+                          className={`${darkMode ? 'text-gray-200' : ''}`}
+                          sx={{ fontSize: '0.875rem' }}
+                        >
+                          {TABLE_TYPES.map((type) => (
+                            <MenuItem key={type.value} value={type.value}>
+                              {type.label}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                      <FormControl size="small" variant="outlined" className="col-span-4" fullWidth sx={{ '& .MuiOutlinedInput-root': { height: '32px' } }}>
+                        <InputLabel id="freq-code-label" className={`${darkMode ? 'text-gray-400' : ''}`} sx={{ fontSize: '0.75rem' }}>
+                          Frequency
+                        </InputLabel>
+                        <Select
+                          labelId="freq-code-label"
+                          value={formData.freqCode}
+                          onChange={(e) => handleFormChange('freqCode', e.target.value)}
+                          label="Frequency"
+                          className={`${darkMode ? 'text-gray-200' : ''}`}
+                          sx={{ fontSize: '0.875rem' }}
+                        >
+                          {FREQ_CODES.map((code) => (
+                            <MenuItem key={code.value} value={code.value}>
+                              {code.label}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                      <TextField
+                        label="Source System"
+                        value={formData.sourceSystem}
+                        onChange={(e) => handleFormChange('sourceSystem', e.target.value)}
+                        size="small"
+                        variant="outlined"
+                        className="col-span-4"
+                        fullWidth
+                        sx={{
+                          '& .MuiOutlinedInput-root': {
+                            height: '32px',
+                            borderRadius: '6px',
+                            backgroundColor: darkMode ? 'rgba(31, 41, 55, 0.5)' : 'white',
+                          },
+                          '& .MuiInputLabel-root': {
+                            fontSize: '0.75rem',
+                            transform: 'translate(14px, 8px) scale(1)',
+                            '&.MuiInputLabel-shrink': {
+                              transform: 'translate(14px, -6px) scale(0.75)',
+                            }
+                          }
+                        }}
+                        InputProps={{
+                          style: { fontSize: '0.875rem' }
+                        }}
+                      />
+                      <TextField
+                        label="Bulk Process Rows"
+                        value={formData.bulkProcessRows}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          // Only allow positive integers
+                          if (value === '' || (/^\d+$/.test(value) && parseInt(value) > 0)) {
+                            handleFormChange('bulkProcessRows', value);
+                          }
+                        }}
+                        size="small"
+                        variant="outlined"
+                        className="col-span-4"
+                        fullWidth
+                        type="number"
+                        inputProps={{ min: "1" }}
+                        sx={{
+                          '& .MuiOutlinedInput-root': {
+                            height: '32px',
+                            borderRadius: '6px',
+                            backgroundColor: darkMode ? 'rgba(31, 41, 55, 0.5)' : 'white',
+                          },
+                          '& .MuiInputLabel-root': {
+                            fontSize: '0.75rem',
+                            transform: 'translate(14px, 8px) scale(1)',
+                            '&.MuiInputLabel-shrink': {
+                              transform: 'translate(14px, -6px) scale(0.75)',
+                            }
+                          },
+                          '& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button': {
+                            '-webkit-appearance': 'none',
+                            margin: 0
+                          },
+                          '& input[type=number]': {
+                            '-moz-appearance': 'textfield'
+                          }
+                        }}
+                        InputProps={{
+                          style: { fontSize: '0.875rem' }
+                        }}
+                      />
+                    </div>
+                  </Paper>
+                </div>
+              </div>
+              
+              {/* Table Section - Adjusted height and styling */}
+              <Paper
+                elevation={2}
+                className={`rounded-lg overflow-hidden transition-all duration-300 ${
+                  darkMode ? 'bg-gray-750/50' : 'bg-white'
+                }`}
+              >
+                <TableContainer className="max-h-[calc(100vh-20rem)]"> {/* Adjusted from 22rem to 20rem */}
+                  <Table stickyHeader size="small">
+                    <TableHead>
+                      <TableRow>
+                        <TableCell 
+                          align="center"
+                          className={`
+                            font-medium text-xs py-2 px-2 w-16
+                            ${darkMode ? 'bg-gray-800 text-gray-200' : 'bg-gray-50/90'}
+                            sticky top-0 z-10
+                          `}
+                        >
+                          Key?
+                        </TableCell>
+                        <TableCell 
+                          align="center"
+                          className={`
+                            font-medium text-xs py-2 px-2 w-16
+                            ${hasDuplicateKeys 
+                              ? (darkMode ? 'bg-red-900/80 text-red-100' : 'bg-red-100 text-red-800') 
+                              : (darkMode ? 'bg-gray-800 text-gray-200' : 'bg-gray-50/90')}
+                            sticky top-0 z-10
+                            transition-colors duration-300
+                          `}
+                        >
+                          {hasDuplicateKeys ? (
+                            <Tooltip title="Duplicate key sequences detected. Each primary key must have a unique sequence number.">
+                              <div className="flex items-center justify-center">
+                                KeySeq
+                                <span className="ml-1 text-red-500 animate-pulse">⚠️</span>
+                              </div>
+                            </Tooltip>
+                          ) : 'KeySeq'}
+                        </TableCell>
+                        <TableCell 
+                          className={`
+                            font-medium text-xs py-2 px-2
+                            ${
+                              darkMode
+                                ? 'bg-gray-800 text-gray-200'
+                                : 'bg-gray-50/90'
+                            }
+                            sticky top-0 z-10
+                          `}
+                        >
+                          Target Column Name
+                        </TableCell>
+                        <TableCell 
+                          className={`
+                            font-medium text-xs py-2 px-2
+                            ${
+                              darkMode
+                                ? 'bg-gray-800 text-gray-200'
+                                : 'bg-gray-50/90'
+                            }
+                            sticky top-0 z-10
+                          `}
+                        >
+                          Data Type
+                        </TableCell>
+                        {/* Add Description column header */}
+                        <TableCell 
+                          className={`
+                            font-medium text-xs py-2 px-2
+                            ${
+                              darkMode
+                                ? 'bg-gray-800 text-gray-200'
+                                : 'bg-gray-50/90'
+                            }
+                            sticky top-0 z-10
+                          `}
+                        >
+                          Description
+                        </TableCell>
+                        {formData.tableType === 'DIM' && (
+                          <TableCell 
+                            className={`
+                              font-medium text-xs py-2 px-2
+                              ${
+                                darkMode
+                                  ? 'bg-gray-800 text-gray-200'
+                                  : 'bg-gray-50/90'
+                              }
+                              sticky top-0 z-10
+                            `}
+                          >
+                            SCD Type
+                          </TableCell>
+                        )}
+                        {/* Remove Not Null column header */}
+                        <TableCell 
+                          className={`
+                            font-medium text-xs py-2 px-2
+                            ${
+                              darkMode
+                                ? 'bg-gray-800 text-gray-200'
+                                : 'bg-gray-50/90'
+                            }
+                            sticky top-0 z-10
+                          `}
+                        >
+                          Key Column
+                        </TableCell>
+                        <TableCell 
+                          className={`
+                            font-medium text-xs py-2 px-2
+                            ${
+                              darkMode
+                                ? 'bg-gray-800 text-gray-200'
+                                : 'bg-gray-50/90'
+                            }
+                            sticky top-0 z-10
+                          `}
+                        >
+                          Value Column
+                        </TableCell>
+                        <TableCell 
+                          className={`
+                            font-medium text-xs py-2 px-2
+                            ${
+                              darkMode
+                                ? 'bg-gray-800 text-gray-200'
+                                : 'bg-gray-50/90'
+                            }
+                            sticky top-0 z-10
+                          `}
+                        >
+                          Mapping Combine Code
+                        </TableCell>
+                        <TableCell
+                          align="center"
+                          className={`
+                            font-medium text-xs py-2 px-2 w-16
+                            ${
+                              darkMode
+                                ? 'bg-gray-800 text-gray-200'
+                                : 'bg-gray-50/90'
+                            }
+                            sticky top-0 z-10
+                          `}
+                        >
+                          Valid
+                        </TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {rows.slice(page * 8, page * 8 + 8).map((row, index) => (
+                        <TableRow 
+                          key={index}
+                          onClick={() => handleRowClick(index + page * 8)}
+                          className={`
+                            transition-colors duration-150 cursor-pointer h-9
+                            ${
+                              modifiedRows.includes(index + page * 8)
+                                ? darkMode
+                                  ? 'bg-green-900/20 hover:bg-green-900/30'
+                                  : 'bg-green-50 hover:bg-green-100/70'
+                                : darkMode
+                                ? `hover:bg-gray-700/50 ${
+                                    selectedRowIndex === index + page * 8
+                                      ? 'bg-gray-700/70'
+                                      : ''
+                                  }`
+                                : `hover:bg-blue-50/30 ${
+                                    selectedRowIndex === index + page * 8
+                                      ? 'bg-blue-50/50'
+                                      : ''
+                                  }`
+                            }
+                          `}
+                        >
+                          <TableCell className="py-0 px-1">
+                            <Checkbox
+                              checked={row.primaryKey}
+                              onChange={(e) =>
+                                handleRowChange(
+                                  index + page * 8,
+                                  'primaryKey',
+                                  e.target.checked
+                                )
+                              }
+                              className={`${
+                                darkMode ? 'text-blue-400' : 'text-blue-500'
+                              }`}
+                              size="small"
+                            />
+                          </TableCell>
+                          <TableCell className="py-0 px-1">
                             <TextField
-                              {...params}
+                              value={row.pkSeq}
+                              onChange={(e) =>
+                                handleNumberChange(e, index + page * 8, 'pkSeq')
+                              }
+                              disabled={!row.primaryKey}
                               size="small"
                               fullWidth
                               variant="outlined"
+                              type="number"
+                              error={!!pkSeqErrors[index + page * 8]}
+                              helperText={pkSeqErrors[index + page * 8]}
+                              inputProps={{
+                                min: 0,
+                                max: 999,
+                                step: 1,
+                                className: 'px-2 py-1 text-center',
+                              }}
+                              className={`${
+                                darkMode ? 'bg-gray-800/50' : 'bg-white'
+                              } rounded-md ${!row.primaryKey ? 'opacity-50' : ''}`}
+                              sx={{
+                                '& .MuiOutlinedInput-root': {
+                                  '& fieldset': {
+                                    borderColor: pkSeqErrors[index + page * 8] 
+                                      ? (darkMode ? 'rgba(239,68,68,0.7)' : 'rgba(239,68,68,0.7)') 
+                                      : (darkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'),
+                                  },
+                                  '&:hover fieldset': {
+                                    borderColor: pkSeqErrors[index + page * 8]
+                                      ? (darkMode ? 'rgba(239,68,68,0.9)' : 'rgba(239,68,68,0.9)')
+                                      : (darkMode ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)'),
+                                  },
+                                  '&.Mui-focused fieldset': {
+                                    borderColor: pkSeqErrors[index + page * 8]
+                                      ? (darkMode ? 'rgba(239,68,68,1)' : 'rgba(239,68,68,1)')
+                                      : '#3b82f6',
+                                  },
+                                },
+                                '& .MuiFormHelperText-root': {
+                                  color: darkMode ? 'rgba(239,68,68,0.9)' : 'rgba(239,68,68,0.9)',
+                                  position: 'absolute',
+                                  bottom: '-20px',
+                                  margin: 0,
+                                  fontSize: '0.625rem',
+                                },
+                              }}
+                            />
+                          </TableCell>
+                          <TableCell className="py-0 px-1">
+                            <TextField
+                              value={row.fieldName}
+                              disabled={!!row.mapdtlid} // Only disable if mapdtlid exists
+                              onChange={(e) => {
+                                const value = e.target.value
+                                  .toUpperCase()
+                                  .slice(0, 30);
+                                handleRowChange(index + page * 8, 'fieldName', value);
+                              }}
+                              size="small"
+                              fullWidth
+                              variant="outlined"
+                              inputProps={{
+                                maxLength: 30,
+                                className: 'px-2 py-1',
+                              }}
                               className={`${
                                 darkMode ? 'bg-gray-800/50' : row.mapdtlid ? 'bg-gray-100' : 'bg-white'
                               } rounded-md`}
@@ -2434,420 +3036,424 @@ const MapperModule = () => {
                                 },
                               }}
                             />
-                          )}
-                          renderOption={(props, option) => (
-                            <li {...props}>
-                              <Tooltip 
-                                title={option.PRDESC}
-                                placement="right"
-                                arrow
-                              >
-                                <span>{option.PRCD}</span>
-                              </Tooltip>
-                            </li>
-                          )}
-                          isOptionEqualToValue={(option, value) => option.PRCD === value.PRCD}
-                          className={darkMode ? 'text-gray-200' : ''}
-                          disableClearable
-                        />
-                      </TableCell>
-                      {/* Add Description field cell */}
-                      <TableCell className="py-0 px-1">
-                        <TextField
-                          value={row.fieldDesc}
-                          onChange={(e) => {
-                            const value = e.target.value.slice(0, 100)
-                            handleRowChange(index + page * 8, 'fieldDesc', value)
-                          }}
-                          size="small"
-                          fullWidth
-                          variant="outlined"
-                          inputProps={{
-                            maxLength: 100,
-                            className: 'px-2 py-1',
-                          }}
-                          className={`${
-                            darkMode ? 'bg-gray-800/50' : 'bg-white'
-                          } rounded-md`}
-                          sx={{
-                            '& .MuiOutlinedInput-root': {
-                              '& fieldset': {
-                                borderColor: darkMode
-                                  ? 'rgba(255,255,255,0.1)'
-                                  : 'rgba(0,0,0,0.1)',
-                              },
-                              '&:hover fieldset': {
-                                borderColor: darkMode
-                                  ? 'rgba(255,255,255,0.2)'
-                                  : 'rgba(0,0,0,0.2)',
-                              },
-                              '&.Mui-focused fieldset': {
-                                borderColor: '#3b82f6',
-                              },
-                            },
-                          }}
-                        />
-                      </TableCell>
-                      {formData.tableType === 'DIM' && (
-                        <TableCell className="py-0 px-1">
-                          <FormControl
-                            fullWidth
-                            size="small"
-                            variant="outlined"
-                            className={`${
-                              darkMode ? 'bg-gray-800/50' : 'bg-white'
-                            } rounded-md`}
+                          </TableCell>
+                          <TableCell className="py-0 px-1" style={{ width: '150px' }} // Increase width for Data Type
                           >
-                            <Select
-                              value={row.scdType}
-                              onChange={(e) =>
-                                handleRowChange(index + page * 8, 'scdType', e.target.value)
-                              }
-                              renderValue={(value) => {
-                                // Find the option with matching PRCD and display its PRCD
-                                const option = scdTypeOptions.find(opt => opt.PRCD === value);
-                                return option ? option.PRCD : value;
+                            <Autocomplete
+                              value={dataTypeOptions.find(option => option.PRCD === row.dataType) || null}
+                              disabled={!!row.mapdtlid} // Only disable if mapdtlid exists
+                              onChange={(event, newValue) => {
+                                handleRowChange(index + page * 8, 'dataType', newValue ? newValue.PRCD : '')
                               }}
-                              className={darkMode ? 'text-gray-200' : ''}
-                              sx={{
-                                '& .MuiOutlinedInput-notchedOutline': {
-                                  borderColor: darkMode
-                                    ? 'rgba(255,255,255,0.1)'
-                                    : 'rgba(0,0,0,0.1)',
-                                },
-                                '&:hover .MuiOutlinedInput-notchedOutline': {
-                                  borderColor: darkMode
-                                    ? 'rgba(255,255,255,0.2)'
-                                    : 'rgba(0,0,0,0.2)',
-                                },
-                                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                  borderColor: '#3b82f6',
-                                },
-                              }}
-                            >
-                              {scdTypeOptions.map((option) => (
-                                <MenuItem key={option.PRCD} value={option.PRCD}>
-                                  {option.PRCD}
-                                </MenuItem>
-                              ))}
-                              {/* Fallback option if API hasn't loaded yet */}
-                              {scdTypeOptions.length === 0 && (
-                                <>
-                                  <MenuItem value="1">Type 1</MenuItem>
-                                  <MenuItem value="2">Type 2</MenuItem>
-                                </>
+                              options={dataTypeOptions}
+                              getOptionLabel={(option) => option.PRCD}
+                              renderInput={(params) => (
+                                <TextField
+                                  {...params}
+                                  size="small"
+                                  fullWidth
+                                  variant="outlined"
+                                  className={`${
+                                    darkMode ? 'bg-gray-800/50' : row.mapdtlid ? 'bg-gray-100' : 'bg-white'
+                                  } rounded-md`}
+                                  sx={{
+                                    '& .MuiOutlinedInput-root': {
+                                      '& fieldset': {
+                                        borderColor: darkMode
+                                          ? 'rgba(255,255,255,0.1)'
+                                          : 'rgba(0,0,0,0.1)',
+                                      },
+                                      '&.Mui-disabled': {
+                                        backgroundColor: darkMode ? 'rgba(31, 41, 55, 0.5)' : 'rgba(229, 231, 235, 0.5)',
+                                        '& fieldset': {
+                                          borderColor: darkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.08)',
+                                        },
+                                        '& input': {
+                                          color: darkMode ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)',
+                                        },
+                                      },
+                                    },
+                                  }}
+                                />
                               )}
-                            </Select>
-                          </FormControl>
-                        </TableCell>
-                      )}
-                      {/* Remove Not Null cell */}
-                      <TableCell className="py-0 px-1">
-                        <TextField
-                          value={row.keyColumn}
-                          onChange={(e) => {
-                            const value = e.target.value.slice(0, 30)
-                            handleRowChange(index + page * 8, 'keyColumn', value)
-                          }}
-                          size="small"
-                          fullWidth
-                          variant="outlined"
-                          inputProps={{
-                            maxLength: 30,
-                            className: 'px-2 py-1',
-                          }}
-                          className={`${
-                            darkMode ? 'bg-gray-800/50' : 'bg-white'
-                          } rounded-md`}
-                          sx={{
-                            '& .MuiOutlinedInput-root': {
-                              '& fieldset': {
-                                borderColor: darkMode
-                                  ? 'rgba(255,255,255,0.1)'
-                                  : 'rgba(0,0,0,0.1)',
-                              },
-                              '&:hover fieldset': {
-                                borderColor: darkMode
-                                  ? 'rgba(255,255,255,0.2)'
-                                  : 'rgba(0,0,0,0.2)',
-                              },
-                              '&.Mui-focused fieldset': {
-                                borderColor: '#3b82f6',
-                              },
-                            },
-                          }}
-                        />
-                      </TableCell>
-                      <TableCell className="py-0 px-1">
-                        <TextField
-                          value={row.valColumn}
-                          onChange={(e) => {
-                            const value = e.target.value.slice(0, 30)
-                            handleRowChange(index + page * 8, 'valColumn', value)
-                          }}
-                          size="small"
-                          fullWidth
-                          variant="outlined"
-                          inputProps={{
-                            maxLength: 30,
-                            className: 'px-2 py-1',
-                          }}
-                          className={`${
-                            darkMode ? 'bg-gray-800/50' : 'bg-white'
-                          } rounded-md`}
-                          sx={{
-                            '& .MuiOutlinedInput-root': {
-                              '& fieldset': {
-                                borderColor: darkMode
-                                  ? 'rgba(255,255,255,0.1)'
-                                  : 'rgba(0,0,0,0.1)',
-                              },
-                              '&:hover fieldset': {
-                                borderColor: darkMode
-                                  ? 'rgba(255,255,255,0.2)'
-                                  : 'rgba(0,0,0,0.2)',
-                              },
-                              '&.Mui-focused fieldset': {
-                                borderColor: '#3b82f6',
-                              },
-                            },
-                          }}
-                        />
-                      </TableCell>
-                      <TableCell className="py-0 px-1">
-                        <TextField
-                          value={row.mapCombineCode}
-                          onChange={(e) => {
-                            const value = e.target.value.slice(0, 30)
-                            handleRowChange(index + page * 8, 'mapCombineCode', value)
-                          }}
-                          size="small"
-                          fullWidth
-                          variant="outlined"
-                          inputProps={{
-                            maxLength: 30,
-                            className: 'px-2 py-1',
-                          }}
-                          className={`${
-                            darkMode ? 'bg-gray-800/50' : 'bg-white'
-                          } rounded-md`}
-                          sx={{
-                            '& .MuiOutlinedInput-root': {
-                              '& fieldset': {
-                                borderColor: darkMode
-                                  ? 'rgba(255,255,255,0.1)'
-                                  : 'rgba(0,0,0,0.1)',
-                              },
-                              '&:hover fieldset': {
-                                borderColor: darkMode
-                                  ? 'rgba(255,255,255,0.2)'
-                                  : 'rgba(0,0,0,0.2)',
-                              },
-                              '&.Mui-focused fieldset': {
-                                borderColor: '#3b82f6',
-                              },
-                            },
-                          }}
-                        />
-                      </TableCell>
-                      <TableCell className="py-0 px-1">
-                        <Tooltip title={
-                          row.LogicVerFlag === '' ? "Validate this row" : 
-                          row.LogicVerFlag === 'Y' ? "Logic is valid" : 
-                          errorMessages[index + page * 8] || "Logic is invalid"
-                        }>
-                          <IconButton
-                            onClick={(e) => {
-                              e.stopPropagation(); // Prevent row selection
-                              handleValidateRow(index + page * 8);
-                            }}
-                            size="small"
-                            sx={{
-                              color: row.LogicVerFlag === ''
-                                ? (darkMode ? 'rgba(156, 163, 175, 0.9)' : 'rgba(75, 85, 99, 0.9)')
-                                : row.LogicVerFlag === 'Y'
-                                ? (darkMode ? 'rgba(34, 197, 94, 0.9)' : 'rgba(22, 163, 74, 0.9)')
-                                : (darkMode ? 'rgba(239, 68, 68, 0.9)' : 'rgba(220, 38, 38, 0.9)'),
-                              '&:hover': {
-                                color: row.LogicVerFlag === ''
-                                  ? (darkMode ? 'rgba(156, 163, 175, 1)' : 'rgba(75, 85, 99, 1)')
-                                  : row.LogicVerFlag === 'Y'
-                                  ? (darkMode ? 'rgba(34, 197, 94, 1)' : 'rgba(22, 163, 74, 1)')
-                                  : (darkMode ? 'rgba(239, 68, 68, 1)' : 'rgba(220, 38, 38, 1)'),
-                              }
-                            }}
-                          >
-                            {row.LogicVerFlag === '' ? (
-                              <HelpOutlineIcon fontSize="small" />
-                            ) : row.LogicVerFlag === 'Y' ? (
-                              <CheckCircleIcon fontSize="small" />
-                            ) : (
-                              <ErrorIcon fontSize="small" />
-                            )}
-                          </IconButton>
-                        </Tooltip>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-
-            {/* Pagination section - More compact */}
-            <div className={`
-              border-t flex justify-between items-center px-3 py-1
-              ${darkMode ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-gray-50'}
-            `}>
-              <Tooltip title="Add New Row">
-                <Button
-                  variant="contained"
-                  startIcon={<AddIcon />}
-                  onClick={addRow}
-                  className={`
-                    shadow-sm hover:shadow-md transition-all duration-200
-                    bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700
-                    ${darkMode ? 'text-white' : ''} text-sm py-1 my-2
-                  `}
-                  size="small"
-                >
-                  Add Row
-                </Button>
-              </Tooltip>
-              <TablePagination
-                component="div"
-                count={rows.length}
-                page={page}
-                onPageChange={handleChangePage}
-                rowsPerPage={8}
-                rowsPerPageOptions={[8]}
-                className={`
-                  ${darkMode ? 'text-gray-300' : ''} 
-                  text-sm border-l ml-4 pl-4 
-                  ${darkMode ? 'border-gray-700' : 'border-gray-200'}
-                `}
-              />
-            </div>
-          </Paper>
-
-          {/* SQL Editor Section - More compact */}
-          {selectedRowIndex !== null && (
-            <Paper
-              elevation={2}
-              className={`mt-3 rounded-lg overflow-hidden transition-all duration-300 ${
-                darkMode ? 'bg-gray-750/50' : 'bg-white'
-              }`}
-            >
-              <div className="p-1.5"> {/* Reduced padding */}
-                <div className="flex justify-between items-center mb-1">
-                  <div className="flex items-center gap-2">
-                    <CodeIcon
-                      className={`text-sm ${
-                        darkMode ? 'text-blue-400' : 'text-blue-500'
-                      }`}
-                    />
-                    <span
-                      className={`font-medium text-sm ${
-                        darkMode ? 'text-gray-200' : 'text-gray-700'
-                      }`}
+                              renderOption={(props, option) => (
+                                <li {...props}>
+                                  <Tooltip 
+                                    title={option.PRDESC}
+                                    placement="right"
+                                    arrow
+                                  >
+                                    <span>{option.PRCD}</span>
+                                  </Tooltip>
+                                </li>
+                              )}
+                              isOptionEqualToValue={(option, value) => option.PRCD === value.PRCD}
+                              className={darkMode ? 'text-gray-200' : ''}
+                              disableClearable
+                            />
+                          </TableCell>
+                          {/* Add Description field cell */}
+                          <TableCell className="py-0 px-1">
+                            <TextField
+                              value={row.fieldDesc}
+                              onChange={(e) => {
+                                const value = e.target.value.slice(0, 100)
+                                handleRowChange(index + page * 8, 'fieldDesc', value)
+                              }}
+                              size="small"
+                              fullWidth
+                              variant="outlined"
+                              inputProps={{
+                                maxLength: 100,
+                                className: 'px-2 py-1',
+                              }}
+                              className={`${
+                                darkMode ? 'bg-gray-800/50' : 'bg-white'
+                              } rounded-md`}
+                              sx={{
+                                '& .MuiOutlinedInput-root': {
+                                  '& fieldset': {
+                                    borderColor: darkMode
+                                      ? 'rgba(255,255,255,0.1)'
+                                      : 'rgba(0,0,0,0.1)',
+                                  },
+                                  '&:hover fieldset': {
+                                    borderColor: darkMode
+                                      ? 'rgba(255,255,255,0.2)'
+                                      : 'rgba(0,0,0,0.2)',
+                                  },
+                                  '&.Mui-focused fieldset': {
+                                    borderColor: '#3b82f6',
+                                  },
+                                },
+                              }}
+                            />
+                          </TableCell>
+                          {formData.tableType === 'DIM' && (
+                            <TableCell className="py-0 px-1">
+                              <FormControl
+                                fullWidth
+                                size="small"
+                                variant="outlined"
+                                className={`${
+                                  darkMode ? 'bg-gray-800/50' : 'bg-white'
+                                } rounded-md`}
+                              >
+                                <Select
+                                  value={row.scdType}
+                                  onChange={(e) =>
+                                    handleRowChange(index + page * 8, 'scdType', e.target.value)
+                                  }
+                                  renderValue={(value) => {
+                                    // Find the option with matching PRCD and display its PRCD
+                                    const option = scdTypeOptions.find(opt => opt.PRCD === value);
+                                    return option ? option.PRCD : value;
+                                  }}
+                                  className={darkMode ? 'text-gray-200' : ''}
+                                  sx={{
+                                    '& .MuiOutlinedInput-notchedOutline': {
+                                      borderColor: darkMode
+                                        ? 'rgba(255,255,255,0.1)'
+                                        : 'rgba(0,0,0,0.1)',
+                                    },
+                                    '&:hover .MuiOutlinedInput-notchedOutline': {
+                                      borderColor: darkMode
+                                        ? 'rgba(255,255,255,0.2)'
+                                        : 'rgba(0,0,0,0.2)',
+                                    },
+                                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                      borderColor: '#3b82f6',
+                                    },
+                                  }}
+                                >
+                                  {scdTypeOptions.map((option) => (
+                                    <MenuItem key={option.PRCD} value={option.PRCD}>
+                                      {option.PRCD}
+                                    </MenuItem>
+                                  ))}
+                                  {/* Fallback option if API hasn't loaded yet */}
+                                  {scdTypeOptions.length === 0 && (
+                                    <>
+                                      <MenuItem value="1">Type 1</MenuItem>
+                                      <MenuItem value="2">Type 2</MenuItem>
+                                    </>
+                                  )}
+                                </Select>
+                              </FormControl>
+                            </TableCell>
+                          )}
+                          <TableCell className="py-0 px-1">
+                            <TextField
+                              value={row.keyColumn}
+                              onChange={(e) => {
+                                const value = e.target.value.slice(0, 30)
+                                handleRowChange(index + page * 8, 'keyColumn', value)
+                              }}
+                              size="small"
+                              fullWidth
+                              variant="outlined"
+                              inputProps={{
+                                maxLength: 30,
+                                className: 'px-2 py-1',
+                              }}
+                              className={`${
+                                darkMode ? 'bg-gray-800/50' : 'bg-white'
+                              } rounded-md`}
+                              sx={{
+                                '& .MuiOutlinedInput-root': {
+                                  '& fieldset': {
+                                    borderColor: darkMode
+                                      ? 'rgba(255,255,255,0.1)'
+                                      : 'rgba(0,0,0,0.1)',
+                                  },
+                                  '&:hover fieldset': {
+                                    borderColor: darkMode
+                                      ? 'rgba(255,255,255,0.2)'
+                                      : 'rgba(0,0,0,0.2)',
+                                  },
+                                  '&.Mui-focused fieldset': {
+                                    borderColor: '#3b82f6',
+                                  },
+                                },
+                              }}
+                            />
+                          </TableCell>
+                          <TableCell className="py-0 px-1">
+                            <TextField
+                              value={row.valColumn}
+                              onChange={(e) => {
+                                const value = e.target.value.slice(0, 30)
+                                handleRowChange(index + page * 8, 'valColumn', value)
+                              }}
+                              size="small"
+                              fullWidth
+                              variant="outlined"
+                              inputProps={{
+                                maxLength: 30,
+                                className: 'px-2 py-1',
+                              }}
+                              className={`${
+                                darkMode ? 'bg-gray-800/50' : 'bg-white'
+                              } rounded-md`}
+                              sx={{
+                                '& .MuiOutlinedInput-root': {
+                                  '& fieldset': {
+                                    borderColor: darkMode
+                                      ? 'rgba(255,255,255,0.1)'
+                                      : 'rgba(0,0,0,0.1)',
+                                  },
+                                  '&:hover fieldset': {
+                                    borderColor: darkMode
+                                      ? 'rgba(255,255,255,0.2)'
+                                      : 'rgba(0,0,0,0.2)',
+                                  },
+                                  '&.Mui-focused fieldset': {
+                                    borderColor: '#3b82f6',
+                                  },
+                                },
+                              }}
+                            />
+                          </TableCell>
+                          <TableCell className="py-0 px-1">
+                            <TextField
+                              value={row.mapCombineCode}
+                              onChange={(e) => {
+                                const value = e.target.value.slice(0, 30)
+                                handleRowChange(index + page * 8, 'mapCombineCode', value)
+                              }}
+                              size="small"
+                              fullWidth
+                              variant="outlined"
+                              inputProps={{
+                                maxLength: 30,
+                                className: 'px-2 py-1',
+                              }}
+                              className={`${
+                                darkMode ? 'bg-gray-800/50' : 'bg-white'
+                              } rounded-md`}
+                              sx={{
+                                '& .MuiOutlinedInput-root': {
+                                  '& fieldset': {
+                                    borderColor: darkMode
+                                      ? 'rgba(255,255,255,0.1)'
+                                      : 'rgba(0,0,0,0.1)',
+                                  },
+                                  '&:hover fieldset': {
+                                    borderColor: darkMode
+                                      ? 'rgba(255,255,255,0.2)'
+                                      : 'rgba(0,0,0,0.2)',
+                                  },
+                                  '&.Mui-focused fieldset': {
+                                    borderColor: '#3b82f6',
+                                  },
+                                },
+                              }}
+                            />
+                          </TableCell>
+                          <TableCell className="py-0 px-1">
+                            <Tooltip title={
+                              row.LogicVerFlag === '' ? "Validate this row" : 
+                              row.LogicVerFlag === 'Y' ? "Logic is valid" : 
+                              errorMessages[index + page * 8] || "Logic is invalid"
+                            }>
+                              <IconButton 
+                                onClick={(e) => {
+                                  e.stopPropagation(); // Prevent row selection
+                                  handleValidateRow(index + page * 8);
+                                }}
+                                size="small"
+                                sx={{
+                                  color: row.LogicVerFlag === ''
+                                    ? (darkMode ? 'rgba(156, 163, 175, 0.9)' : 'rgba(75, 85, 99, 0.9)')
+                                    : row.LogicVerFlag === 'Y'
+                                    ? (darkMode ? 'rgba(34, 197, 94, 0.9)' : 'rgba(22, 163, 74, 0.9)')
+                                    : (darkMode ? 'rgba(239, 68, 68, 0.9)' : 'rgba(220, 38, 38, 0.9)'),
+                                  '&:hover': {
+                                    color: row.LogicVerFlag === ''
+                                      ? (darkMode ? 'rgba(156, 163, 175, 1)' : 'rgba(75, 85, 99, 1)')
+                                      : row.LogicVerFlag === 'Y'
+                                      ? (darkMode ? 'rgba(34, 197, 94, 1)' : 'rgba(22, 163, 74, 1)')
+                                      : (darkMode ? 'rgba(239, 68, 68, 1)' : 'rgba(220, 38, 38, 1)'),
+                                  }
+                                }}
+                              >
+                                {row.LogicVerFlag === '' ? (
+                                  <HelpOutlineIcon fontSize="small" />
+                                ) : row.LogicVerFlag === 'Y' ? (
+                                  <CheckCircleIcon fontSize="small" />
+                                ) : (
+                                  <ErrorIcon fontSize="small" />
+                                )}
+                              </IconButton>
+                            </Tooltip>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+                
+                {/* Pagination section - More compact */}
+                <div className={`
+                  border-t flex justify-between items-center px-3 py-1
+                  ${darkMode ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-gray-50'}
+                `}>
+                  <Tooltip title="Add New Row">
+                    <Button
+                      variant="contained"
+                      startIcon={<AddIcon />}
+                      onClick={addRow}
+                      className={`
+                        shadow-sm hover:shadow-md transition-all duration-200
+                        bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700
+                        ${darkMode ? 'text-white' : ''} text-sm py-1 my-2
+                      `}
+                      size="small"
                     >
-                      SQL Logic{' '}
-                      {selectedRowIndex !== null
-                        ? `- ${rows[selectedRowIndex]?.fieldName ? rows[selectedRowIndex].fieldName : `Row ${selectedRowIndex + 1}`}`
-                        : ''}
-                    </span>
-                  </div>
-                  <div className="flex gap-1">
-                    <Tooltip title="Copy SQL">
-                      <IconButton
-                        size="small"
-                        onClick={handleCopySQL}
-                        className={`p-1 ${
-                          darkMode
-                            ? 'text-gray-300 hover:bg-gray-600/50'
-                            : 'text-gray-600 hover:bg-gray-100'
-                        }`}
-                      >
-                        <CopyIcon fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Format SQL">
-                      <IconButton
-                        size="small"
-                        onClick={handleFormatSQL}
-                        className={`p-1 ${
-                          darkMode
-                            ? 'text-gray-300 hover:bg-gray-600/50'
-                            : 'text-gray-600 hover:bg-gray-100'
-                        }`}
-                      >
-                        <FormatIcon fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
-                  </div>
-                </div>
-                <div className={`rounded overflow-hidden border ${
-                  darkMode ? 'border-gray-600' : 'border-gray-200'
-                }`}>
-                  <Editor
-                    height="48px" // Reduced height to show approximately 2 rows
-                    defaultLanguage="sql"
-                    theme={darkMode ? 'vs-dark' : 'light'}
-                    value={selectedRowLogic}
-                    onChange={handleLogicChange}
-                    options={{
-                      minimap: { enabled: false },
-                      fontSize: 13,
-                      wordWrap: 'on',
-                      lineNumbers: 'on',
-                      padding: { top: 2, bottom: 2 }, // Reduced padding
-                      scrollBeyondLastLine: false,
-                      lineHeight: 20, // Explicit line height
-                      renderLineHighlight: 'none', // Disable line highlighting to save space
-                    }}
+                      Add Row
+                    </Button>
+                  </Tooltip>
+                  <TablePagination
+                    component="div"
+                    count={rows.length}
+                    page={page}
+                    onPageChange={handleChangePage}
+                    rowsPerPage={8}
+                    rowsPerPageOptions={[8]}
+                    className={`
+                      ${darkMode ? 'text-gray-300' : ''} 
+                      text-sm border-l ml-4 pl-4 
+                      ${darkMode ? 'border-gray-700' : 'border-gray-200'}
+                    `}
                   />
                 </div>
-              </div>
-            </Paper>
-          )}
-        </div>
-      </Paper>
-
-      {/* Adjust form field styling globally */}
+              </Paper>
+              
+              {/* SQL Editor Section - More compact */}
+              {selectedRowIndex !== null && (
+                <Paper
+                  elevation={2}
+                  className={`mt-3 rounded-lg overflow-hidden transition-all duration-300 ${
+                    darkMode ? 'bg-gray-750/50' : 'bg-white'
+                  }`}
+                >
+                  <div className="p-1.5"> {/* Reduced padding */}
+                    <div className="flex justify-between items-center mb-1">
+                      <div className="flex items-center gap-2">
+                        <CodeIcon
+                          className={`text-sm ${
+                            darkMode ? 'text-blue-400' : 'text-blue-500'
+                          }`}
+                        />
+                        <span
+                          className={`font-medium text-sm ${
+                            darkMode ? 'text-gray-200' : 'text-gray-700'
+                          }`}
+                        >
+                          SQL Logic{' '}
+                          {selectedRowIndex !== null
+                            ? `- ${rows[selectedRowIndex]?.fieldName ? rows[selectedRowIndex].fieldName : `Row ${selectedRowIndex + 1}`}`
+                            : ''}
+                        </span>
+                      </div>
+                      <div className="flex gap-1">
+                        <Tooltip title="Copy SQL">
+                          <IconButton
+                            size="small"
+                            onClick={handleCopySQL}
+                            className={`p-1 ${
+                              darkMode
+                                ? 'text-gray-300 hover:bg-gray-600/50'
+                                : 'text-gray-600 hover:bg-gray-100'
+                            }`}
+                          >
+                            <CopyIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Format SQL">
+                          <IconButton
+                            size="small"
+                            onClick={handleFormatSQL}
+                            className={`p-1 ${
+                              darkMode
+                                ? 'text-gray-300 hover:bg-gray-600/50'
+                                : 'text-gray-600 hover:bg-gray-100'
+                            }`}
+                          >
+                            <FormatIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                      </div>
+                    </div>
+                    <div className={`rounded overflow-hidden border ${
+                      darkMode ? 'border-gray-600' : 'border-gray-200'
+                    }`}>
+                      <Editor
+                        height="48px" // Reduced height to show approximately 2 rows
+                        defaultLanguage="sql"
+                        theme={darkMode ? 'vs-dark' : 'light'}
+                        value={selectedRowLogic}
+                        onChange={handleLogicChange}
+                        options={{
+                          minimap: { enabled: false },
+                          fontSize: 13,
+                          wordWrap: 'on',
+                          lineNumbers: 'on',
+                          padding: { top: 2, bottom: 2 }, // Reduced padding
+                          scrollBeyondLastLine: false,
+                          lineHeight: 20, // Explicit line height
+                          renderLineHighlight: 'none', // Disable line highlighting to save space
+                        }}
+                      />
+                    </div>
+                  </div>
+                </Paper>
+              )}
+            </div>
+          </Paper>
+        </motion.div>
+      )}
       <style jsx global>{`
-        .MuiTextField-root {
-          .MuiOutlinedInput-root {
-            min-height: 32px;
-            font-size: 0.875rem;
-          }
-          
-          .MuiInputLabel-root {
-            font-size: 0.75rem;
-            transform: translate(14px, 9px) scale(1);
-            
-            &.MuiInputLabel-shrink {
-              transform: translate(14px, -6px) scale(0.75);
-            }
-          }
-        }
-
-        .MuiButton-root {
-          min-height: 32px;
-          font-size: 0.875rem;
-        }
-
-        /* Add smooth transitions */
-        .MuiPaper-root,
-        .MuiButton-root,
-        .MuiTextField-root {
-          transition: all 0.2s ease-in-out !important;
-        }
-
-        /* Enhanced hover effects */
-        .MuiButton-root:hover {
-          transform: translateY(-1px);
-        }
-
-        /* Custom scrollbar */
         ::-webkit-scrollbar {
           width: 8px;
           height: 8px;
@@ -2864,6 +3470,25 @@ const MapperModule = () => {
 
         ::-webkit-scrollbar-thumb:hover {
           background: ${darkMode ? '#6B7280' : '#6B7280'};
+        }
+        
+        /* Add smooth transitions for all elements */
+        * {
+          transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+        
+        /* Enhance table row hover effect */
+        .MuiTableRow-root:hover {
+          transition: background-color 0.15s ease !important;
+        }
+        
+        /* Make buttons more interactive */
+        .MuiButton-root, .MuiIconButton-root {
+          transition: transform 0.1s ease, box-shadow 0.2s ease !important;
+        }
+        
+        .MuiButton-root:active, .MuiIconButton-root:active {
+          transform: scale(0.97);
         }
       `}</style>
     </div>

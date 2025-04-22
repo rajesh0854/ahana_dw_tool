@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 import json
 from cryptography.fernet import Fernet
 import getmac
+import os
 
 def generate_secret_key():
     """Generate a secret key for Fernet encryption"""
@@ -111,15 +112,18 @@ def main():
     print("\nSecret Key (save this securely):")
     print(generator.secret_key.decode())
     
-    # Save the secret key to a file
-    with open('secret.key', 'wb') as f:
-        f.write(generator.secret_key)
-    print("\nSecret key has been saved to 'secret.key' file")
+    # Create directory if it doesn't exist
+    os.makedirs('modules/license', exist_ok=True)
     
-    # Save the license key to a file
-    with open('license.key', 'w') as f:
+    # Save the secret key to a file in modules/license directory
+    with open('modules/license/secret.key', 'wb') as f:
+        f.write(generator.secret_key)
+    print("\nSecret key has been saved to 'modules/license/secret.key' file")
+    
+    # Save the license key to a file in modules/license directory
+    with open('modules/license/license.key', 'w') as f:
         f.write(license_key)
-    print("\nLicense key has been saved to 'license.key' file")
+    print("\nLicense key has been saved to 'modules/license/license.key' file")
     
     # Validate the license key
     print("\nTesting validation...")
