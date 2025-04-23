@@ -19,7 +19,7 @@ def get_license_status():
             'success': True,
             'data': status
         })
-        response.headers.add('Access-Control-Allow-Origin', '*')
+        
         return response
     except Exception as e:
         print(f"Error getting license status: {str(e)}")
@@ -82,8 +82,8 @@ def deactivate_license(current_user_id):
         }), 500
 
 # Add CORS preflight handler
-@license_bp.route('/license/status', methods=['OPTIONS'])
-def handle_license_status_preflight():
+# @license_bp.route('/license/status', methods=['OPTIONS'])
+# def handle_license_status_preflight():
     try:
         response = jsonify({
             'success': True,

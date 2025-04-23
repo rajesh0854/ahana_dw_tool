@@ -1696,11 +1696,32 @@ const MapperModule = () => {
   }
   
   // Function to handle confirming the delete action
-  const handleConfirmDelete = () => {
-    // We're not implementing the actual deletion yet, just closing the dialog
-    message.info(`Delete functionality for reference ${selectedReference} will be implemented later`)
-    setShowDeleteDialog(false)
-    setSelectedReference(null)
+  const handleConfirmDelete = async () => {
+    try {
+      setLoadingReferences(true)
+      const response = await axios.post('http://localhost:5000/mapper/delete-mapper-reference', {
+        mapref: selectedReference
+      })
+      
+      if (response.data.success) {
+        message.success(response.data.message || 'Mapper reference deleted successfully')
+        setShowDeleteDialog(false)
+        setSelectedReference(null)
+        // Refresh the references list
+        fetchAllReferences()
+      } else {
+        message.error(response.data.message || 'Failed to delete mapper reference')
+      }
+    } catch (error) {
+      console.error('Error deleting mapper reference:', error)
+      if (error.response && error.response.data && error.response.data.message) {
+        message.error(error.response.data.message)
+      } else {
+        message.error('Failed to delete mapper reference. Please try again.')
+      }
+    } finally {
+      setLoadingReferences(false)
+    }
   }
   
   // Function to return to the reference table view
@@ -2151,6 +2172,7 @@ const MapperModule = () => {
                   textTransform: 'none',
                   color: darkMode ? '#9CA3AF' : 'inherit' 
                 }}
+                disabled={loadingReferences}
               >
                 Cancel
               </Button>
@@ -2158,12 +2180,14 @@ const MapperModule = () => {
                 onClick={handleConfirmDelete} 
                 variant="contained" 
                 color="error"
+                disabled={loadingReferences}
+                startIcon={loadingReferences ? <CircularProgress size={20} color="inherit" /> : null}
                 sx={{ 
                   textTransform: 'none',
                   borderRadius: '8px'
                 }}
               >
-                Delete
+                {loadingReferences ? 'Deleting...' : 'Delete'}
               </Button>
             </DialogActions>
           </Dialog>

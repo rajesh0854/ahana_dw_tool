@@ -1,434 +1,630 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import MappingDetailsDialog from '../../components/MappingDetailsDialog';
+import { 
+  Typography, 
+  Box, 
+  Paper, 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableContainer, 
+  TableHead, 
+  TableRow,
+  Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  IconButton,
+  CircularProgress,
+  Tooltip,
+  useMediaQuery,
+  Alert
+} from '@mui/material';
+import { styled, useTheme as useMuiTheme } from '@mui/material/styles';
+import { VisibilityOutlined, Schedule, Close } from '@mui/icons-material';
+import { motion } from 'framer-motion';
+import { useTheme } from '@/context/ThemeContext';
+import JobScheduleDialog from './JobScheduleDialog';
 
-// Create Axios instance with base URL
-const api = axios.create({
-  baseURL: 'http://localhost:5000',
-  timeout: 10000,
-  headers: {
-    'Content-Type': 'application/json',
-  }
-});
+// Styled components
+const StyledTableContainer = styled(TableContainer)(({ theme, darkMode }) => ({
+  maxHeight: '70vh',
+  '& .MuiTableCell-head': {
+    backgroundColor: darkMode ? '#2D3748' : '#EDF2F7',
+    color: darkMode ? '#F7FAFC' : '#1A202C',
+    fontWeight: 'bold',
+    whiteSpace: 'nowrap',
+  },
+  '& .MuiTableCell-body': {
+    color: darkMode ? '#E2E8F0' : '#2D3748',
+  },
+  '& .MuiTableRow-root:hover': {
+    backgroundColor: darkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.04)',
+  },
+}));
 
-export default function JobsList() {
+const JobsPage = () => {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedJob, setSelectedJob] = useState(null);
-  const [mappingData, setMappingData] = useState(null);
+  const [jobDetails, setJobDetails] = useState(null);
   const [openDialog, setOpenDialog] = useState(false);
-  const [mappingLoading, setMappingLoading] = useState(false);
+  const [loadingDetails, setLoadingDetails] = useState(false);
+  const [openScheduleDialog, setOpenScheduleDialog] = useState(false);
   
-  // Pagination and search states
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filteredJobs, setFilteredJobs] = useState([]);
+  const { darkMode } = useTheme();
+  const muiTheme = useMuiTheme();
+  const fullScreen = useMediaQuery(muiTheme.breakpoints.down('md'));
 
-  // Function to fetch jobs data
+  // Fetch all jobs on component mount
+  useEffect(() => {
+    fetchJobs();
+  }, []);
+
+  // Function to fetch all jobs
   const fetchJobs = async () => {
+    setLoading(true);
     try {
-      setLoading(true);
+      const response = await axios.get('http://localhost:5000/job/get_all_jobs');
+      
+      // Transform the array data into an array of objects with named properties
+      const formattedJobs = response.data.map(job => ({
+        JOBID: job[0],
+        JOBFLWID: job[1],
+        MAPREF: job[2],
+        TRGSCHM: job[3],
+        TRGTBTYP: job[4],
+        TRGTBNM: job[5]
+      }));
+      
+      setJobs(formattedJobs);
       setError(null);
-      const response = await api.get('/job/jobs_list');
-      setJobs(response.data);
-      setFilteredJobs(response.data);
     } catch (err) {
-      setError(err.response?.data?.error || err.message || "Failed to load jobs. Please try again.");
       console.error('Error fetching jobs:', err);
+      setError('Failed to fetch jobs. Please try again later.');
     } finally {
       setLoading(false);
     }
   };
 
-  // Fetch jobs list on component mount
-  useEffect(() => {
-    fetchJobs();
-  }, []);
-  
-  // Filter jobs when search term changes
-  useEffect(() => {
-    if (searchTerm.trim() === '') {
-      setFilteredJobs(jobs);
-    } else {
-      const lowercasedSearch = searchTerm.toLowerCase();
-      const results = jobs.filter(job => 
-        Object.values(job).some(value => 
-          value && value.toString().toLowerCase().includes(lowercasedSearch)
-        )
-      );
-      setFilteredJobs(results);
+  // Function to fetch job details
+  const fetchJobDetails = async (mapref) => {
+    setLoadingDetails(true);
+    try {
+      const response = await axios.get(`http://localhost:5000/job/get_job_details/${mapref}`);
+      
+      // Format the job config data
+      const configData = response.data.mapper_cfg;
+      const formattedConfig = {
+        MAPDESC: configData[0],
+        TRGSCHM: configData[1],
+        TRGTBTYP: configData[2],
+        TRGTBNM: configData[3],
+        FRQCD: configData[4],
+        SRCSYSTM: configData[5],
+        LGVRFYFLG: configData[6],
+        STFLG: configData[7],
+        BLKPRCROWS: configData[8]
+      };
+      
+      // Format the mapper details data
+      const detailsData = response.data.mapper_details;
+      const formattedDetails = detailsData.map(detail => ({
+        MAPREF: detail[0],
+        TRGCLNM: detail[1],
+        TRGCLDTYP: detail[2],
+        TRGKEYFLG: detail[3],
+        TRGKEYSEQ: detail[4],
+        TRGCLDESC: detail[5],
+        MAPLOGIC: detail[6],
+        KEYCLNM: detail[7],
+        VALCLNM: detail[8],
+        SCDTYP: detail[9]
+      }));
+      
+      setJobDetails({
+        config: formattedConfig,
+        details: formattedDetails
+      });
+    } catch (err) {
+      console.error('Error fetching job details:', err);
+      setError('Failed to fetch job details. Please try again later.');
+    } finally {
+      setLoadingDetails(false);
     }
-    setCurrentPage(1); // Reset to first page on search
-  }, [searchTerm, jobs]);
-  
-  // Calculate pagination
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = filteredJobs.slice(indexOfFirstItem, indexOfLastItem);
-  const totalPages = Math.ceil(filteredJobs.length / itemsPerPage);
-  
-  // Handle pagination
-  const paginate = (pageNumber) => setCurrentPage(pageNumber);
-  
-  // Add retry functionality
-  const handleRetry = () => {
-    fetchJobs();
   };
 
-  // Handle row click to open mapping details
-  const handleRowClick = async (job) => {
-    try {
-      setSelectedJob(job);
-      setOpenDialog(true);
-      setMappingLoading(true);
-      
-      const response = await api.get(`/job/view_mapping/${job.MAPREF}`);
-      setMappingData(response.data);
-    } catch (err) {
-      console.error('Error fetching mapping details:', err);
-      setError(err.response?.data?.error || err.message);
-    } finally {
-      setMappingLoading(false);
-    }
+  // Handle opening of job details dialog
+  const handleViewDetails = (job) => {
+    setSelectedJob(job);
+    fetchJobDetails(job.MAPREF);
+    setOpenDialog(true);
   };
 
   // Handle dialog close
   const handleCloseDialog = () => {
     setOpenDialog(false);
-    setMappingData(null);
+    setJobDetails(null);
+    setSelectedJob(null);
   };
 
-  // Format date strings for display
-  const formatDate = (dateString) => {
-    if (!dateString) return '';
-    return new Date(dateString).toLocaleString();
+  // Handle scheduling
+  const handleScheduleJob = (job) => {
+    setSelectedJob(job);
+    setOpenScheduleDialog(true);
   };
 
-  // Pagination component
-  const Pagination = () => {
-    return (
-      <div className="flex items-center justify-between px-4 py-3 bg-white border-t border-gray-200 sm:px-6">
-        <div className="flex justify-between flex-1 sm:hidden">
-          <button
-            onClick={() => paginate(currentPage > 1 ? currentPage - 1 : 1)}
-            disabled={currentPage === 1}
-            className={`relative inline-flex items-center px-4 py-2 text-sm font-medium rounded-md ${
-              currentPage === 1
-                ? 'text-gray-300 bg-gray-100'
-                : 'text-gray-700 bg-white hover:bg-gray-50'
-            }`}
-          >
-            Previous
-          </button>
-          <button
-            onClick={() => paginate(currentPage < totalPages ? currentPage + 1 : totalPages)}
-            disabled={currentPage === totalPages || totalPages === 0}
-            className={`relative inline-flex items-center px-4 py-2 ml-3 text-sm font-medium rounded-md ${
-              currentPage === totalPages || totalPages === 0
-                ? 'text-gray-300 bg-gray-100'
-                : 'text-gray-700 bg-white hover:bg-gray-50'
-            }`}
-          >
-            Next
-          </button>
-        </div>
-        <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-          <div>
-            <p className="text-sm text-gray-700">
-              Showing <span className="font-medium">{indexOfFirstItem + 1}</span> to{' '}
-              <span className="font-medium">
-                {Math.min(indexOfLastItem, filteredJobs.length)}
-              </span>{' '}
-              of <span className="font-medium">{filteredJobs.length}</span> results
-            </p>
-          </div>
-          <div>
-            <nav className="inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
-              <button
-                onClick={() => paginate(currentPage > 1 ? currentPage - 1 : 1)}
-                disabled={currentPage === 1}
-                className={`relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium ${
-                  currentPage === 1
-                    ? 'text-gray-300 cursor-not-allowed'
-                    : 'text-gray-500 hover:bg-gray-50'
-                }`}
-              >
-                <span className="sr-only">Previous</span>
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
-                </svg>
-              </button>
-              
-              {[...Array(totalPages).keys()].map(number => {
-                // Show limited page numbers with ellipsis for many pages
-                if (
-                  totalPages <= 7 ||
-                  number + 1 === 1 ||
-                  number + 1 === totalPages ||
-                  (number + 1 >= currentPage - 1 && number + 1 <= currentPage + 1)
-                ) {
-                  return (
-                    <button
-                      key={number + 1}
-                      onClick={() => paginate(number + 1)}
-                      className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
-                        currentPage === number + 1
-                          ? 'z-10 bg-blue-50 border-blue-500 text-blue-600'
-                          : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
-                      }`}
-                    >
-                      {number + 1}
-                    </button>
-                  );
-                } else if (
-                  (number + 1 === currentPage - 2 && currentPage > 3) ||
-                  (number + 1 === currentPage + 2 && currentPage < totalPages - 2)
-                ) {
-                  return (
-                    <span
-                      key={number + 1}
-                      className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700"
-                    >
-                      ...
-                    </span>
-                  );
-                }
-                return null;
-              })}
-              
-              <button
-                onClick={() => paginate(currentPage < totalPages ? currentPage + 1 : totalPages)}
-                disabled={currentPage === totalPages || totalPages === 0}
-                className={`relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium ${
-                  currentPage === totalPages || totalPages === 0
-                    ? 'text-gray-300 cursor-not-allowed'
-                    : 'text-gray-500 hover:bg-gray-50'
-                }`}
-              >
-                <span className="sr-only">Next</span>
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
-                </svg>
-              </button>
-            </nav>
-          </div>
-        </div>
-      </div>
-    );
+  // Handle close of job schedule dialog
+  const handleCloseScheduleDialog = () => {
+    setOpenScheduleDialog(false);
+    // Don't reset selectedJob here because it might be needed for the details dialog
   };
+
+  // Table header columns
+  const columns = [
+    { id: 'JOBID', label: 'Job ID' },
+    { id: 'JOBFLWID', label: 'Job Flow ID' },
+    { id: 'MAPREF', label: 'Mapping Reference' },
+    { id: 'TRGSCHM', label: 'Target Schema' },
+    { id: 'TRGTBTYP', label: 'Target Table Type' },
+    { id: 'TRGTBNM', label: 'Target Table Name' },
+    { id: 'actions', label: 'Actions' },
+  ];
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900 p-4 md:p-6">
-      <div className="max-w-full mx-auto">
-        {/* Dashboard cards row */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-          <div className="bg-white rounded-lg shadow-md overflow-hidden p-4 flex items-center">
-            <div className="p-3 rounded-full bg-blue-100 text-blue-600 mr-4">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-              </svg>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-blue-600">Total Jobs</p>
-              <p className="text-2xl font-semibold text-gray-900">{loading ? "-" : jobs.length}</p>
-            </div>
-          </div>
-          
-          <div className="bg-white rounded-lg shadow-md overflow-hidden p-4 flex items-center">
-            <div className="p-3 rounded-full bg-green-100 text-green-600 mr-4">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-green-600">Active Jobs</p>
-              <p className="text-2xl font-semibold text-gray-900">
-                {loading ? "-" : jobs.filter(job => job.STFLG === 'A').length}
-              </p>
-            </div>
-          </div>
-          
-          <div className="bg-white rounded-lg shadow-md overflow-hidden p-4 flex items-center">
-            <div className="p-3 rounded-full bg-purple-100 text-purple-600 mr-4">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-purple-600">Last Updated</p>
-              <p className="text-2xl font-semibold text-gray-900">
-                {loading ? "-" : jobs.length > 0 ? 
-                  new Date(Math.max(...jobs.map(j => new Date(j.RECUPDT || 0)))).toLocaleDateString() : 
-                  "Never"}
-              </p>
-            </div>
-          </div>
-          
-          <div className="bg-white rounded-lg shadow-md overflow-hidden p-4 flex items-center">
-            <div className="p-3 rounded-full bg-yellow-100 text-yellow-600 mr-4">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-yellow-600">System Status</p>
-              <p className="text-2xl font-semibold text-gray-900">
-                {loading ? "-" : error ? "Error" : "Online"}
-              </p>
-            </div>
-          </div>
-        </div>
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+    >
+      <Box mb={4}>
+        <Typography variant="h4" component="h1" gutterBottom color={darkMode ? 'white' : 'text.primary'}>
+          Jobs Management
+        </Typography>
+        <Typography variant="body1" color={darkMode ? 'gray.300' : 'text.secondary'} mb={3}>
+          View and manage all your data warehouse jobs
+        </Typography>
+      </Box>
 
-        {/* Jobs content area */}
-        <div className="bg-white rounded-lg shadow-md overflow-hidden">
-          {/* Title and Search Bar */}
-          <div className="px-6 py-4 border-b border-gray-200 bg-gray-50 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <h2 className="text-xl font-semibold text-gray-800">Jobs Management</h2>
-            <div className="relative max-w-md w-full">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <svg className="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                  <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <input
-                type="text"
-                placeholder="Search jobs..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 text-gray-900"
-              />
-            </div>
-          </div>
+      {error && (
+        <Alert severity="error" sx={{ mb: 3 }}>
+          {error}
+        </Alert>
+      )}
 
-          {error && (
-            <div className="bg-white p-6 border-b border-gray-200">
-              <div className="rounded-md bg-red-50 p-4 mb-4">
-                <div className="flex">
-                  <div className="flex-shrink-0">
-                    <svg className="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                    </svg>
-                  </div>
-                  <div className="ml-3">
-                    <h3 className="text-sm font-medium text-red-800">Failed to load jobs</h3>
-                    <div className="mt-2 text-sm text-red-700">{error}</div>
-                    <div className="mt-4">
-                      <button
-                        onClick={handleRetry}
-                        className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-red-700 bg-red-100 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                        </svg>
-                        Try Again
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
+      <Paper 
+        elevation={darkMode ? 3 : 1} 
+        sx={{ 
+          borderRadius: 2, 
+          overflow: 'hidden',
+          backgroundColor: darkMode ? '#1E293B' : 'white',
+          border: darkMode ? '1px solid #2D3748' : 'none'
+        }}
+      >
+        {loading ? (
+          <Box display="flex" justifyContent="center" alignItems="center" height="300px">
+            <CircularProgress color={darkMode ? 'primary' : 'secondary'} />
+          </Box>
+        ) : (
+          <StyledTableContainer darkMode={darkMode}>
+            <Table stickyHeader aria-label="jobs table">
+              <TableHead>
+                <TableRow>
+                  {columns.map((column) => (
+                    <TableCell
+                      key={column.id}
+                      align={column.id === 'actions' ? 'center' : 'left'}
+                      sx={{ minWidth: column.id === 'actions' ? 150 : 120 }}
+                    >
+                      {column.label}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {jobs.map((job) => (
+                  <TableRow hover key={job.JOBID} sx={{ cursor: 'pointer' }}>
+                    {columns.map((column) => {
+                      if (column.id === 'actions') {
+                        return (
+                          <TableCell key={column.id} align="center">
+                            <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1 }}>
+                              <Tooltip title="View Details">
+                                <IconButton
+                                  size="small"
+                                  color="primary"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleViewDetails(job);
+                                  }}
+                                >
+                                  <VisibilityOutlined />
+                                </IconButton>
+                              </Tooltip>
+                              <Tooltip title="Schedule Job">
+                                <IconButton
+                                  size="small"
+                                  color="secondary"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleScheduleJob(job);
+                                  }}
+                                >
+                                  <Schedule />
+                                </IconButton>
+                              </Tooltip>
+                            </Box>
+                          </TableCell>
+                        );
+                      }
+                      return (
+                        <TableCell key={column.id}>
+                          {job[column.id]}
+                        </TableCell>
+                      );
+                    })}
+                  </TableRow>
+                ))}
+                {jobs.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={columns.length} align="center">
+                      No jobs found
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </StyledTableContainer>
+        )}
+      </Paper>
 
-          {loading ? (
-            <div className="flex flex-col justify-center items-center h-64 bg-white p-8">
-              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mb-4"></div>
-              <p className="text-gray-600">Loading jobs data...</p>
-            </div>
-          ) : filteredJobs.length === 0 ? (
-            <div className="bg-white p-8 text-center">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 text-gray-400 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-              <h3 className="text-lg font-medium text-gray-900 mb-1">
-                {searchTerm ? "No matching jobs found" : "No Jobs Found"}
-              </h3>
-              <p className="text-gray-500">
-                {searchTerm 
-                  ? `No jobs matching "${searchTerm}" were found. Try adjusting your search.` 
-                  : "There are no jobs available to display."}
-              </p>
-              {searchTerm && (
-                <button
-                  onClick={() => setSearchTerm('')}
-                  className="mt-4 inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                >
-                  Clear Search
-                </button>
-              )}
-            </div>
+      {/* Job Details Dialog */}
+      <Dialog
+        open={openDialog}
+        onClose={(event, reason) => {
+          // Only close when the close button is clicked, not on backdrop click or escape key
+          if (reason !== 'backdropClick' && reason !== 'escapeKeyDown') {
+            handleCloseDialog();
+          }
+        }}
+        fullScreen={fullScreen}
+        maxWidth="xl"
+        fullWidth
+        PaperProps={{
+          sx: {
+            backgroundColor: darkMode ? '#1E293B' : 'white',
+            color: darkMode ? 'white' : 'inherit',
+            height: '95vh',
+            maxHeight: '95vh',
+            borderRadius: { xs: 0, sm: 2 },
+            m: { xs: 0, sm: 2 },
+            overflow: 'hidden',
+            backgroundImage: darkMode ? 
+              'linear-gradient(to bottom right, rgba(17, 24, 39, 0.8), rgba(30, 41, 59, 0.8))' : 
+              'linear-gradient(to bottom right, rgba(249, 250, 251, 0.8), rgba(255, 255, 255, 0.8))',
+            backdropFilter: 'blur(8px)',
+            border: darkMode ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(0, 0, 0, 0.1)',
+            boxShadow: darkMode ? 
+              '0 25px 50px -12px rgba(0, 0, 0, 0.7)' : 
+              '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
+          }
+        }}
+      >
+        <DialogTitle 
+          sx={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center', 
+            borderBottom: darkMode ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(0, 0, 0, 0.1)',
+            px: 3,
+            py: 2,
+            backgroundColor: darkMode ? 'rgba(15, 23, 42, 0.9)' : 'rgba(255, 255, 255, 0.9)',
+            backdropFilter: 'blur(8px)'
+          }}
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <VisibilityOutlined 
+              sx={{ 
+                mr: 1.5, 
+                color: darkMode ? 'primary.main' : 'secondary.main'
+              }} 
+            />
+            <Typography variant="h5" fontWeight="500">
+              Job Details: <Box component="span" sx={{ color: darkMode ? 'primary.light' : 'secondary.main' }}>{selectedJob?.MAPREF}</Box>
+            </Typography>
+          </Box>
+          <IconButton 
+            edge="end" 
+            onClick={handleCloseDialog} 
+            aria-label="close"
+            sx={{
+              color: darkMode ? 'gray.400' : 'gray.600',
+              backgroundColor: darkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
+              '&:hover': {
+                backgroundColor: darkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+              }
+            }}
+          >
+            <Close />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent 
+          dividers 
+          sx={{ 
+            p: { xs: 2, sm: 3 },
+            display: 'flex',
+            flexDirection: 'column',
+            overflow: 'hidden',
+            backgroundColor: darkMode ? 'transparent' : 'transparent',
+            borderTop: 'none',
+            borderBottom: 'none'
+          }}
+        >
+          {loadingDetails ? (
+            <Box display="flex" justifyContent="center" alignItems="center" height="100%">
+              <CircularProgress color={darkMode ? 'primary' : 'secondary'} />
+            </Box>
           ) : (
             <>
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead>
-                    <tr className="bg-gray-100">
-                      <th scope="col" className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Job ID</th>
-                      <th scope="col" className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Map ID</th>
-                      <th scope="col" className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Map Reference</th>
-                      <th scope="col" className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Source System</th>
-                      <th scope="col" className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Target Schema</th>
-                      <th scope="col" className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Target Table Name</th>
-                      <th scope="col" className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Target Table Type</th>
-                      <th scope="col" className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Frequency Code</th>
-                      <th scope="col" className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Status Flag</th>
-                      <th scope="col" className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Current Flag</th>
-                      <th scope="col" className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Block Process Rows</th>
-                      <th scope="col" className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Created Date</th>
-                      <th scope="col" className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Updated Date</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-200">
-                    {currentItems.map((job) => (
-                      <tr 
-                        key={job.JOBID} 
-                        onClick={() => handleRowClick(job)}
-                        className="hover:bg-blue-50 transition-colors cursor-pointer"
-                      >
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600">{job.JOBID}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{job.MAPID}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{job.MAPREF}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{job.SRCSYSTM}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{job.TRGSCHM}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{job.TRGTBNM}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{job.TRGTBTYP}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{job.FRQCD}</td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`px-2 py-1 text-xs rounded-full ${job.STFLG === 'A' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
-                            {job.STFLG}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`px-2 py-1 text-xs rounded-full ${job.CURFLG === 'Y' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'}`}>
-                            {job.CURFLG}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{job.BLKPRCROWS}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{formatDate(job.RECCRDT)}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{formatDate(job.RECUPDT)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              
-              {/* Pagination */}
-              <Pagination />
+              {jobDetails && (
+                <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
+                  <Box sx={{ mb: 3 }}>
+                    <Typography 
+                      variant="h6" 
+                      component="h2" 
+                      gutterBottom 
+                      color={darkMode ? 'white' : 'text.primary'}
+                      sx={{ 
+                        borderLeft: darkMode ? '4px solid #3B82F6' : '4px solid #7C3AED',
+                        pl: 2, 
+                        py: 0.5,
+                        fontWeight: 500
+                      }}
+                    >
+                      Job Configuration
+                    </Typography>
+                    <Paper 
+                      elevation={darkMode ? 3 : 1} 
+                      sx={{ 
+                        overflow: 'hidden',
+                        backgroundColor: darkMode ? 'rgba(30, 41, 59, 0.7)' : 'rgba(255, 255, 255, 0.7)',
+                        backdropFilter: 'blur(12px)',
+                        border: darkMode ? '1px solid rgba(255, 255, 255, 0.05)' : '1px solid rgba(0, 0, 0, 0.05)',
+                        borderRadius: 2
+                      }}
+                    >
+                      <TableContainer>
+                        <Table aria-label="job configuration table">
+                          <TableHead>
+                            <TableRow>
+                              {Object.keys(jobDetails.config).map(key => (
+                                <TableCell 
+                                  key={key}
+                                  sx={{ 
+                                    backgroundColor: darkMode ? 'rgba(15, 23, 42, 0.7)' : 'rgba(249, 250, 251, 0.7)',
+                                    fontWeight: 'bold',
+                                    textAlign: 'center'
+                                  }}
+                                >
+                                  {
+                                    key === 'MAPDESC' ? 'Mapper Description' :
+                                    key === 'TRGSCHM' ? 'Target Schema' :
+                                    key === 'TRGTBTYP' ? 'Target Table Type' :
+                                    key === 'TRGTBNM' ? 'Target Table Name' :
+                                    key === 'FRQCD' ? 'Frequency Code' :
+                                    key === 'SRCSYSTM' ? 'Source System' :
+                                    key === 'LGVRFYFLG' ? 'Logic Verification Flag' :
+                                    key === 'STFLG' ? 'STF Flag' :
+                                    key === 'BLKPRCROWS' ? 'Bulk Process Rows' : key
+                                  }
+                                </TableCell>
+                              ))}
+                            </TableRow>
+                          </TableHead>
+                          <TableBody>
+                            <TableRow hover>
+                              {Object.entries(jobDetails.config).map(([key, value]) => (
+                                <TableCell 
+                                  key={key}
+                                  sx={{
+                                    color: darkMode ? 'rgba(255, 255, 255, 0.8)' : 'rgba(0, 0, 0, 0.8)',
+                                    fontFamily: key === 'MAPLOGIC' ? 'monospace' : 'inherit',
+                                    textAlign: 'center',
+                                    fontWeight: key === 'MAPDESC' ? 'medium' : 'normal'
+                                  }}
+                                >
+                                  {value || '-'}
+                                </TableCell>
+                              ))}
+                            </TableRow>
+                          </TableBody>
+                        </Table>
+                      </TableContainer>
+                    </Paper>
+                  </Box>
+
+                  <Box sx={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+                    <Typography 
+                      variant="h6" 
+                      component="h2" 
+                      gutterBottom 
+                      color={darkMode ? 'white' : 'text.primary'}
+                      sx={{ 
+                        borderLeft: darkMode ? '4px solid #3B82F6' : '4px solid #7C3AED',
+                        pl: 2, 
+                        py: 0.5,
+                        fontWeight: 500
+                      }}
+                    >
+                      Mapper Details
+                    </Typography>
+                    <Paper 
+                      elevation={darkMode ? 3 : 1} 
+                      sx={{ 
+                        flex: 1,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        overflow: 'hidden',
+                        backgroundColor: darkMode ? 'rgba(30, 41, 59, 0.7)' : 'rgba(255, 255, 255, 0.7)',
+                        backdropFilter: 'blur(12px)',
+                        border: darkMode ? '1px solid rgba(255, 255, 255, 0.05)' : '1px solid rgba(0, 0, 0, 0.05)',
+                        borderRadius: 2
+                      }}
+                    >
+                      <TableContainer sx={{ flex: 1, overflow: 'auto' }}>
+                        <Table stickyHeader size="small" aria-label="mapper details table">
+                          <TableHead>
+                            <TableRow>
+                              <TableCell sx={{ backgroundColor: darkMode ? 'rgba(15, 23, 42, 0.7)' : 'rgba(249, 250, 251, 0.7)', fontWeight: 'bold' }}>Target Column</TableCell>
+                              <TableCell sx={{ backgroundColor: darkMode ? 'rgba(15, 23, 42, 0.7)' : 'rgba(249, 250, 251, 0.7)', fontWeight: 'bold' }}>Data Type</TableCell>
+                              <TableCell sx={{ backgroundColor: darkMode ? 'rgba(15, 23, 42, 0.7)' : 'rgba(249, 250, 251, 0.7)', fontWeight: 'bold' }}>Key Flag</TableCell>
+                              <TableCell sx={{ backgroundColor: darkMode ? 'rgba(15, 23, 42, 0.7)' : 'rgba(249, 250, 251, 0.7)', fontWeight: 'bold' }}>Key Sequence</TableCell>
+                              <TableCell sx={{ backgroundColor: darkMode ? 'rgba(15, 23, 42, 0.7)' : 'rgba(249, 250, 251, 0.7)', fontWeight: 'bold' }}>Description</TableCell>
+                              <TableCell sx={{ backgroundColor: darkMode ? 'rgba(15, 23, 42, 0.7)' : 'rgba(249, 250, 251, 0.7)', fontWeight: 'bold' }}>Map Logic</TableCell>
+                              <TableCell sx={{ backgroundColor: darkMode ? 'rgba(15, 23, 42, 0.7)' : 'rgba(249, 250, 251, 0.7)', fontWeight: 'bold' }}>Key Column</TableCell>
+                              <TableCell sx={{ backgroundColor: darkMode ? 'rgba(15, 23, 42, 0.7)' : 'rgba(249, 250, 251, 0.7)', fontWeight: 'bold' }}>Value Column</TableCell>
+                              <TableCell sx={{ backgroundColor: darkMode ? 'rgba(15, 23, 42, 0.7)' : 'rgba(249, 250, 251, 0.7)', fontWeight: 'bold' }}>SCD Type</TableCell>
+                            </TableRow>
+                          </TableHead>
+                          <TableBody>
+                            {jobDetails.details.map((detail, index) => (
+                              <TableRow 
+                                key={index} 
+                                hover
+                                sx={{
+                                  backgroundColor: index % 2 === 0 ? 
+                                    (darkMode ? 'rgba(30, 41, 59, 0.4)' : 'rgba(249, 250, 251, 0.4)') : 
+                                    'transparent',
+                                  '&:hover': {
+                                    backgroundColor: darkMode ? 'rgba(30, 41, 59, 0.8)' : 'rgba(243, 244, 246, 0.8)'
+                                  }  
+                                }}
+                              >
+                                <TableCell 
+                                  sx={{ 
+                                    fontWeight: detail.TRGKEYFLG === 'Y' ? 'bold' : 'normal',
+                                    color: detail.TRGKEYFLG === 'Y' ? 
+                                      (darkMode ? '#3B82F6' : '#7C3AED') : 
+                                      (darkMode ? 'rgba(255, 255, 255, 0.9)' : 'rgba(0, 0, 0, 0.9)')
+                                  }}
+                                >
+                                  {detail.TRGCLNM}
+                                </TableCell>
+                                <TableCell>{detail.TRGCLDTYP}</TableCell>
+                                <TableCell>
+                                  {detail.TRGKEYFLG === 'Y' ? 
+                                    <Box 
+                                      component="span" 
+                                      sx={{ 
+                                        display: 'inline-block',
+                                        px: 1.5, 
+                                        py: 0.5, 
+                                        borderRadius: 1, 
+                                        backgroundColor: darkMode ? 'rgba(59, 130, 246, 0.2)' : 'rgba(124, 58, 237, 0.1)',
+                                        color: darkMode ? '#3B82F6' : '#7C3AED',
+                                        fontSize: '0.75rem',
+                                        fontWeight: 'bold'
+                                      }}
+                                    >
+                                      YES
+                                    </Box> : 
+                                    <Box 
+                                      component="span" 
+                                      sx={{ 
+                                        display: 'inline-block',
+                                        px: 1.5, 
+                                        py: 0.5, 
+                                        borderRadius: 1, 
+                                        backgroundColor: 'transparent',
+                                        color: darkMode ? 'rgba(255, 255, 255, 0.5)' : 'rgba(0, 0, 0, 0.4)',
+                                        fontSize: '0.75rem'
+                                      }}
+                                    >
+                                      NO
+                                    </Box>
+                                  }
+                                </TableCell>
+                                <TableCell>{detail.TRGKEYSEQ}</TableCell>
+                                <TableCell>{detail.TRGCLDESC}</TableCell>
+                                <TableCell 
+                                  sx={{ 
+                                    maxWidth: 250, 
+                                    overflow: 'hidden', 
+                                    textOverflow: 'ellipsis', 
+                                    whiteSpace: 'nowrap',
+                                    fontFamily: 'monospace',
+                                    fontSize: '0.875rem'
+                                  }}
+                                >
+                                  <Tooltip title={detail.MAPLOGIC || ""} placement="top">
+                                    <span>{detail.MAPLOGIC || "-"}</span>
+                                  </Tooltip>
+                                </TableCell>
+                                <TableCell>{detail.KEYCLNM || "-"}</TableCell>
+                                <TableCell>{detail.VALCLNM || "-"}</TableCell>
+                                <TableCell>{detail.SCDTYP || "-"}</TableCell>
+                              </TableRow>
+                            ))}
+                            {jobDetails.details.length === 0 && (
+                              <TableRow>
+                                <TableCell colSpan={9} align="center">
+                                  No mapper details found
+                                </TableCell>
+                              </TableRow>
+                            )}
+                          </TableBody>
+                        </Table>
+                      </TableContainer>
+                    </Paper>
+                  </Box>
+                </Box>
+              )}
             </>
           )}
-        </div>
+        </DialogContent>
+        <DialogActions 
+          sx={{ 
+            padding: 2, 
+            borderTop: darkMode ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(0, 0, 0, 0.1)',
+            backgroundColor: darkMode ? 'rgba(15, 23, 42, 0.9)' : 'rgba(255, 255, 255, 0.9)',
+            backdropFilter: 'blur(8px)',
+            justifyContent: 'flex-end',
+            gap: 1
+          }}
+        >
+          <Button 
+            onClick={handleCloseDialog} 
+            variant="contained" 
+            color="primary"
+            startIcon={<Close />}
+            sx={{
+              px: 3,
+              py: 1,
+              borderRadius: 2,
+              boxShadow: darkMode ? '0 4px 12px rgba(59, 130, 246, 0.5)' : '0 4px 12px rgba(124, 58, 237, 0.25)',
+              '&:hover': {
+                boxShadow: darkMode ? '0 6px 16px rgba(59, 130, 246, 0.6)' : '0 6px 16px rgba(124, 58, 237, 0.35)',
+              }
+            }}
+          >
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
 
-        <MappingDetailsDialog 
-          open={openDialog}
-          onClose={handleCloseDialog}
-          selectedJob={selectedJob}
-          mappingData={mappingData}
-          mappingLoading={mappingLoading}
-        />
-      </div>
-    </div>
+      {/* Job Schedule Dialog */}
+      <JobScheduleDialog 
+        open={openScheduleDialog} 
+        onClose={handleCloseScheduleDialog} 
+        job={selectedJob}
+        availableJobs={jobs}
+      />
+    </motion.div>
   );
-}
+};
+
+export default JobsPage;

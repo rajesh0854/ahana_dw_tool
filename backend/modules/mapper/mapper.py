@@ -594,3 +594,50 @@ def get_all_mapper_reference():
 
 
 
+
+# Delete the mapper reference
+
+@mapper_bp.route('/delete-mapper-reference', methods=['POST'])
+def delete_mapper_reference():
+    try:
+        data = request.json
+        p_mapref = data.get('mapref')
+        conn = create_oracle_connection()
+
+        # Check if job is already created for the mapper reference
+        query="""
+        SELECT COUNT(*)
+        FROM DWJOB
+        WHERE MAPREF = :p_mapref
+        """
+        cursor = conn.cursor()
+        cursor.execute(query, (p_mapref,))
+        result = cursor.fetchone()
+        cursor.close()
+
+        if result[0] > 0:
+            return jsonify({
+                'success': False,
+                'message': 'Job is already created for the mapper reference. Please delete the job first.'
+            }), 400
+        
+        # Delete the mapper reference
+        query="""
+        UPDATE DWMAPR
+        SET CURFLG = 'N'
+        WHERE MAPREF = :p_mapref
+        """
+        cursor = conn.cursor()
+        cursor.execute(query, (p_mapref,))
+        conn.commit()
+        cursor.close()
+
+        return jsonify({
+            'success': True,
+            'message': 'Mapper reference deleted successfully.'
+        })
+    except Exception as e:
+        print(f"Error in delete_mapper_reference: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+

@@ -1,12 +1,12 @@
 "use client"
 
-import React, { useState } from 'react';
-import { ChevronLeft, ChevronRight, Home, BarChart2, FileText, Database, Settings, User, Layers, PanelRight } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import Image from 'next/image';
 import { useTheme } from '@/context/ThemeContext';
 import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState } from 'react';
+import { ChevronLeft, ChevronRight, LayoutDashboard, PieChart, FileSpreadsheet, Database, Settings, UserCog, Layers, Briefcase, ActivitySquare, LineChart } from 'lucide-react';
 
 const SidebarItem = ({ icon, text, active = false, expanded = true, href }) => {
   const { darkMode } = useTheme();
@@ -193,7 +193,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
       {/* Main Navigation */}
       <nav className="mt-6 px-2 space-y-1">
         <SidebarItem 
-          icon={<Home />} 
+          icon={<LayoutDashboard />} 
           text="Home" 
           active={pathname === '/home'} 
           expanded={sidebarOpen}
@@ -201,7 +201,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
         />
 
         <SidebarItem 
-          icon={<Layers />} 
+          icon={<Briefcase />} 
           text="Mapper Module" 
           active={pathname === '/mapper_module'} 
           expanded={sidebarOpen}
@@ -209,13 +209,30 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
         /> 
 
         <SidebarItem 
-          icon={<FileText />} 
-          text="All Jobs" 
+          icon={<FileSpreadsheet />} 
+          text="Manage Jobs" 
           active={pathname === '/jobs'} 
           expanded={sidebarOpen}
           href="/jobs"
         /> 
 
+        <SidebarItem 
+          icon={<ActivitySquare />} 
+          text="Logs & Status" 
+          active={pathname === '/logs'} 
+          expanded={sidebarOpen}
+          href="/logs"
+        />
+
+        <SidebarItem 
+          icon={<LineChart />} 
+          text="Dashboard" 
+          active={pathname === '/dashboard'} 
+          expanded={sidebarOpen}
+          href="/dashboard"
+        />
+
+  
         <SidebarItem 
           icon={<Database />} 
           text="Type Mapping" 
@@ -225,7 +242,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
         />
 
         <SidebarItem 
-          icon={<PanelRight />} 
+          icon={<Settings />} 
           text="Admin Module" 
           active={pathname === '/admin'} 
           expanded={sidebarOpen}
@@ -233,12 +250,13 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
         />  
 
         <SidebarItem 
-          icon={<User />} 
+          icon={<UserCog />} 
           text="User Profile" 
           active={pathname === '/profile'} 
           expanded={sidebarOpen}
           href="/profile"
-        />  
+        />
+
       </nav>
 
       {/* Toggle Button */}

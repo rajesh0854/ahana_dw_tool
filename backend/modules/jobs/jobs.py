@@ -82,3 +82,65 @@ def create_update_job():
             'success': False,
             'message': f'An error occurred while processing the request: {str(e)}'
         }), 500 
+
+
+# get all jobs
+@jobs_bp.route('/get_all_jobs', methods=['GET'])
+def get_all_jobs():
+    try:
+        conn = create_oracle_connection()
+        query = """
+        SELECT b.JOBID, b.JOBFLWID, b.MAPREF,b.TRGSCHM,b.TRGTBTYP,b.TRGTBNM from DWJOBFLW b  WHERE b.CURFLG = 'Y' 
+        """
+        cursor = conn.cursor()
+        cursor.execute(query)
+        jobs = cursor.fetchall()
+        return jsonify(jobs)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+
+# get job details
+@jobs_bp.route('/get_job_details/<mapref>', methods=['GET'])
+def get_job_details(mapref):
+    try:
+        conn = create_oracle_connection()
+
+        mapper_cfg_query=""" 
+        SELECT MAPDESC,TRGSCHM,TRGTBTYP,TRGTBNM,FRQCD,SRCSYSTM,LGVRFYFLG,STFLG,BLKPRCROWS FROM DWMAPR WHERE CURFLG = 'Y' and MAPREF = :mapref
+        """
+        mapper_details_query = """
+        SELECT MAPREF,TRGCLNM,TRGCLDTYP,TRGKEYFLG,TRGKEYSEQ,TRGCLDESC,MAPLOGIC,KEYCLNM,VALCLNM,SCDTYP FROM DWMAPRDTL WHERE CURFLG='Y' AND  MAPREF= :mapref
+        """
+        cursor = conn.cursor()
+        cursor.execute(mapper_cfg_query, {'mapref': mapref})
+        mapper_cfg = cursor.fetchone()
+
+        cursor.execute(mapper_details_query, {'mapref': mapref})
+        mapper_details = cursor.fetchall()
+
+        return jsonify({
+            'mapper_cfg': mapper_cfg,
+            'mapper_details': mapper_details
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# get hob schedule details
+@jobs_bp.route('/get_job_schedule_details/<job_flow_id>', methods=['GET'])
+def get_job_schedule_details(job_flow_id):
+    try:
+        conn = create_oracle_connection()
+        query = "SELECT JOBFLWID,MAPREF,FRQCD,FRQDD,FRQHH,FRQMI,STRTDT,ENDDT,STFLG,DPND_JOBSCHID, RECCRDT,RECUPDT FROM DWJOBSCH WHERE CURFLG ='Y' AND JOBFLWID=:job_flow_id"
+        cursor = conn.cursor()
+        cursor.execute(query, {'job_flow_id': job_flow_id})
+        job_schedule_details = cursor.fetchall()
+        return jsonify(job_schedule_details)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+
+
