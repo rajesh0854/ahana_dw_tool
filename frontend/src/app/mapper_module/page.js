@@ -117,7 +117,7 @@ const MapperModule = () => {
   useEffect(() => {
     const fetchDataTypeOptions = async () => {
       try {
-        const response = await fetch('http://localhost:5000/mapper/get-parameter-mapping-datatype')
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/mapper/get-parameter-mapping-datatype`)
         if (!response.ok) {
           throw new Error('Failed to fetch data type options')
         }
@@ -231,7 +231,7 @@ const MapperModule = () => {
   const fetchAllReferences = async () => {
     setLoadingReferences(true)
     try {
-      const response = await axios.get('http://localhost:5000/mapper/get-all-mapper-reference')
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/mapper/get-all-mapper-reference`)
       if (response.data) {
         setAllReferences(response.data)
         setFilteredReferences(response.data) // Initialize filtered references with all references
@@ -329,7 +329,7 @@ const MapperModule = () => {
     
     try {
       // Call the activate-deactivate API
-      const response = await fetch('http://localhost:5000/mapper/activate-deactivate', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/mapper/activate-deactivate`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -847,7 +847,7 @@ const MapperModule = () => {
       }
 
       // Make the API call to save
-      const response = await axios.post('http://localhost:5000/mapper/save-to-db', dataToSend)
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/mapper/save-to-db`, dataToSend)
 
       // Handle successful response
       message.success('Mapper configuration saved successfully')
@@ -915,7 +915,7 @@ const MapperModule = () => {
   // Handler function for downloading template
   const downloadTemplate = async () => {
     try {
-        const response = await fetch('http://localhost:5000/mapper/download-template');
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/mapper/download-template`);
         if (!response.ok) {
             throw new Error('Failed to download template');
         }
@@ -943,7 +943,7 @@ const MapperModule = () => {
         formData.append('file', file);
         console.log(formData);
 
-        const response = await fetch('http://localhost:5000/mapper/upload', {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/mapper/upload`, {
             method: 'POST',
             body: formData
         });
@@ -1026,7 +1026,7 @@ const MapperModule = () => {
 
     setIsSearching(true)
     try {
-      const response = await axios.get(`http://localhost:5000/mapper/get-by-reference/${reference}`)
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/mapper/get-by-reference/${reference}`)
       const data = response.data
 
       setFormData(data.formData)
@@ -1216,7 +1216,7 @@ const MapperModule = () => {
     }
 
     try {
-      const response = await fetch('http://localhost:5000/mapper/validate-logic', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/mapper/validate-logic`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -1328,7 +1328,7 @@ const MapperModule = () => {
 
     try {
       // Call the new batch validation API
-      const response = await fetch('http://localhost:5000/mapper/validate-batch', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/mapper/validate-batch`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -1479,7 +1479,7 @@ const MapperModule = () => {
 
   const handleDownloadTemplate = async () => {
     try {
-        const response = await fetch('http://localhost:5000/mapper/download-template');
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/mapper/download-template`);
         if (!response.ok) {
             throw new Error('Failed to download template');
         }
@@ -1508,7 +1508,7 @@ const MapperModule = () => {
       }
       
       const response = await fetch(
-        'http://localhost:5000/mapper/download-current',
+        `${process.env.NEXT_PUBLIC_API_URL}/mapper/download-current`,
         {
           method: 'POST',
           headers: {
@@ -1547,7 +1547,7 @@ const MapperModule = () => {
       const formData = new FormData()
       formData.append('file', file)
 
-      const response = await fetch('http://localhost:5000/mapper/upload', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/mapper/upload`, {
         method: 'POST',
         body: formData,
       })
@@ -1573,7 +1573,7 @@ const MapperModule = () => {
     }
 
     try {
-      const response = await fetch('http://localhost:5000/job/create-update', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/job/create-update`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -1599,7 +1599,7 @@ const MapperModule = () => {
   useEffect(() => {
     const fetchScdTypeOptions = async () => {
       try {
-        const response = await fetch('http://localhost:5000/mapper/parameter_scd_type')
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/mapper/parameter_scd_type`)
         if (!response.ok) {
           throw new Error('Failed to fetch SCD type options')
         }
@@ -1699,7 +1699,7 @@ const MapperModule = () => {
   const handleConfirmDelete = async () => {
     try {
       setLoadingReferences(true)
-      const response = await axios.post('http://localhost:5000/mapper/delete-mapper-reference', {
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/mapper/delete-mapper-reference`, {
         mapref: selectedReference
       })
       

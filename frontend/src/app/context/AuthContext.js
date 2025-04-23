@@ -190,7 +190,7 @@ export const AuthProvider = ({ children }) => {
 
   const forgotPassword = async (email) => {
     try {
-      const response = await fetch('http://localhost:5000/auth/forgot-password', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/forgot-password`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -212,7 +212,7 @@ export const AuthProvider = ({ children }) => {
 
   const resetPassword = async (token, newPassword) => {
     try {
-      const response = await fetch('http://localhost:5000/auth/reset-password', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/reset-password`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

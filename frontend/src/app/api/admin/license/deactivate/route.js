@@ -5,7 +5,7 @@ import axios from 'axios';
 
 export async function POST() {
     try {
-        const response = await axios.post('http://localhost:5000/admin/license/deactivate');
+        const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/admin/license/deactivate`);
         return NextResponse.json(response.data);
     } catch (error) {
         console.error('Error deactivating license:', error);

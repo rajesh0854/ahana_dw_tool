@@ -69,7 +69,7 @@ const JobsPage = () => {
   const fetchJobs = async () => {
     setLoading(true);
     try {
-      const response = await axios.get('http://localhost:5000/job/get_all_jobs');
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/job/get_all_jobs`);
       
       // Transform the array data into an array of objects with named properties
       const formattedJobs = response.data.map(job => ({
@@ -95,7 +95,7 @@ const JobsPage = () => {
   const fetchJobDetails = async (mapref) => {
     setLoadingDetails(true);
     try {
-      const response = await axios.get(`http://localhost:5000/job/get_job_details/${mapref}`);
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/job/get_job_details/${mapref}`);
       
       // Format the job config data
       const configData = response.data.mapper_cfg;

@@ -120,7 +120,7 @@ const JobScheduleDialog = ({ open, onClose, job, availableJobs }) => {
     
     setLoading(true);
     try {
-      const response = await axios.get(`http://localhost:5000/job/get_job_schedule_details/${job.JOBFLWID}`);
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/job/get_job_schedule_details/${job.JOBFLWID}`);
       
       if (response.data && !response.data.error) {
         setScheduleData(response.data);
@@ -188,9 +188,7 @@ const JobScheduleDialog = ({ open, onClose, job, availableJobs }) => {
         ENDDT: formData.ENDDT ? format(formData.ENDDT, 'yyyy-MM-dd') : null,
       };
       
-      // Simulate API call
-      // In a real app, you would send this data to your backend
-      // const response = await axios.post('http://localhost:5000/job/create_update_job_schedule', formattedData);
+
       
       // For now, we'll just simulate success
       await new Promise(resolve => setTimeout(resolve, 1000));

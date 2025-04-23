@@ -14,7 +14,7 @@ const LicenseManager = () => {
     try {
       setLoading(true)
       const response = await axios.get(
-        'http://localhost:5000/api/license/status',
+        `${process.env.NEXT_PUBLIC_API_URL}/api/license/status`,
         {
           withCredentials: true,
         }

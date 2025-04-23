@@ -72,7 +72,7 @@ export default function ParameterPage() {
     try {
       setLoading(true)
       const response = await axios.get(
-        'http://localhost:5000/mapping/parameter_mapping'
+        `${process.env.NEXT_PUBLIC_API_URL}/mapping/parameter_mapping`
       )
       setParameters(response.data)
 
@@ -95,7 +95,7 @@ export default function ParameterPage() {
     try {
       setLoading(true)
       await axios.post(
-        'http://localhost:5000/mapping/parameter_add',
+        `${process.env.NEXT_PUBLIC_API_URL}/mapping/parameter_add`,
         newParameter
       )
 

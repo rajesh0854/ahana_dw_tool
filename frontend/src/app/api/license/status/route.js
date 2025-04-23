@@ -5,7 +5,7 @@ import axios from 'axios';
 
 export async function GET() {
     try {
-        const response = await axios.get('http://localhost:5000/api/license/status');
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/license/status`);
         return NextResponse.json(response.data);
     } catch (error) {
         console.error('Error fetching license status:', error);
