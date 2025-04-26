@@ -69,7 +69,8 @@ import { API_BASE_URL } from '../config';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
 import { message } from 'antd';
-import LicenseManager from '@/components/LicenseManager';
+import LicenseManager from './components/LicenseManager';
+import { AboutTabContent } from './components';
 
 const mockRoles = [
   { id: 1, name: 'Admin', permissions: ['all'], userCount: 5, description: 'Full system access' },
@@ -3180,10 +3181,8 @@ const AdminDashboard = () => {
 
       case 3: // License Manager
         return <LicenseManager />;
-        
       case 4: // About
         return <AboutTabContent />;
-        
       default:
         return null;
     }
@@ -3558,81 +3557,6 @@ const UserTableRow = memo(({ user, onEdit, onDelete, onResetPassword }) => {
 });
 
 UserTableRow.displayName = 'UserTableRow';
-
-// Define the content for the About tab
-const AboutTabContent = () => {
-    const theme = useTheme();
-    return (
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <Box sx={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                gap: 1.5,
-                p: 1.5,
-                background: alpha(theme.palette.primary.main, 0.05),
-                borderRadius: 1 
-            }}>
-                {/* Placeholder for Logo */}
-                <Avatar sx={{ 
-                    bgcolor: theme.palette.primary.main, 
-                    width: 48, 
-                    height: 48,
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-                }}>L</Avatar>
-                <Box>
-                    <Typography variant="h6" component="h2" fontWeight="bold" sx={{ fontSize: '1rem' }}>
-                        Ahana DW Tool
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
-                        Data Warehouse Management System
-                    </Typography>
-                </Box>
-            </Box>
-            <Divider />
-            <Box sx={{ px: 1.5 }}>
-                <Typography variant="subtitle2" gutterBottom sx={{ fontSize: '0.8rem', color: theme.palette.primary.main }}>
-                    Company Details
-                </Typography>
-                <Typography variant="body1" sx={{ fontSize: '0.85rem', mb: 0.5 }}>Innovate Solutions Inc.</Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
-                    Leading the way in data warehousing innovations.
-                </Typography>
-            </Box>
-            <Box sx={{ px: 1.5 }}>
-                <Typography variant="subtitle2" gutterBottom sx={{ fontSize: '0.8rem', color: theme.palette.primary.main }}>
-                    Development Team
-                </Typography>
-                <Typography variant="body1" sx={{ fontSize: '0.85rem' }}>Innovate Core Development Team</Typography>
-            </Box>
-            <Box sx={{ px: 1.5 }}>
-                <Typography variant="subtitle2" gutterBottom sx={{ fontSize: '0.8rem', color: theme.palette.primary.main }}>
-                    Version
-                </Typography>
-                <Typography variant="body1" sx={{ fontSize: '0.85rem' }}>1.0.0</Typography> { /* Placeholder version */}
-                <Box sx={{ 
-                    mt: 1,
-                    p: 0.75,
-                    background: alpha(theme.palette.success.main, 0.1),
-                    borderRadius: 0.5,
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: 0.5
-                }}>
-                    <CheckIcon sx={{ color: theme.palette.success.main, fontSize: '0.8rem' }} />
-                    <Typography variant="caption" sx={{ color: theme.palette.success.main, fontSize: '0.7rem' }}>
-                        Up to date
-                    </Typography>
-                </Box>
-            </Box>
-            <Divider />
-            <Box sx={{ p: 1.5, bgcolor: alpha(theme.palette.background.paper, 0.5), borderRadius: 1 }}>
-                <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.75rem', textAlign: 'center' }}>
-                    &copy; {new Date().getFullYear()} Innovate Solutions Inc. All rights reserved.
-                </Typography>
-            </Box>
-        </Box>
-    );
-};
 
 // Final exported component with improved layout and styling
 export default function AdminPage() {

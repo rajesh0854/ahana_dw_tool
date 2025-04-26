@@ -7,7 +7,7 @@ import {
   SafetyCertificateOutlined,
   CloseCircleOutlined
 } from '@ant-design/icons'
-import { useTheme } from '../context/ThemeContext'
+import { useTheme } from '../../../context/ThemeContext'
 
 const LicenseManager = () => {
   const [licenseStatus, setLicenseStatus] = useState(null)
