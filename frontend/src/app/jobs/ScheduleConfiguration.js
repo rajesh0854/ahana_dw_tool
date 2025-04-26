@@ -8,12 +8,14 @@ import {
   MenuItem,
   TextField,
   InputLabel,
-  Autocomplete
+  Autocomplete,
+  CircularProgress
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { 
   CalendarMonth as CalendarIcon,
-  Save as SaveIcon
+  Save as SaveIcon,
+  Update as UpdateIcon
 } from '@mui/icons-material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 
@@ -50,8 +52,16 @@ const ScheduleConfiguration = ({
   handleDateChange, 
   handleSaveSchedule,
   jobOptions,
-  darkMode 
+  darkMode,
+  scheduleLoading,
+  scheduleSaving
 }) => {
+  // For debugging
+  console.log(`ScheduleConfiguration for job ${jobId}:`, {
+    scheduleData: scheduleData[jobId],
+    job: jobOptions.find(j => j.JOBFLWID === jobId)
+  });
+
   // Frequency code options
   const frequencyCodes = [
     { value: 'ID', label: 'Intraday (ID)' },
@@ -61,6 +71,8 @@ const ScheduleConfiguration = ({
     { value: 'MN', label: 'Monthly (MN)' },
     { value: 'HY', label: 'Half-yearly (HY)' },
     { value: 'YR', label: 'Yearly (YR)' },
+    // Handle possible value coming from database
+    { value: 'WKL', label: 'Weekly (WKL)' },
   ];
 
   // Generate day options based on frequency
@@ -107,6 +119,19 @@ const ScheduleConfiguration = ({
     return minutes;
   };
 
+  // Find the current job to check if it's scheduled
+  const job = jobOptions.find(j => j.JOBFLWID === jobId);
+  const isScheduled = job?.JOB_SCHEDULE_STATUS === 'Scheduled';
+  const isLoading = scheduleLoading?.[jobId] === true;
+  const isSaving = scheduleSaving?.[jobId] === true;
+
+  // Determine if form has changes compared to initial data
+  const hasRequiredFields = scheduleData[jobId]?.FRQCD && 
+                           scheduleData[jobId]?.FRQDD && 
+                           scheduleData[jobId]?.FRQHH && 
+                           scheduleData[jobId]?.FRQMI && 
+                           scheduleData[jobId]?.STRTDT;
+
   return (
     <Box sx={{ 
       py: 2.5, 
@@ -127,20 +152,43 @@ const ScheduleConfiguration = ({
           mb: 2,
           color: darkMode ? 'primary.light' : 'primary.dark',
           display: 'flex',
+          justifyContent: 'space-between',
           alignItems: 'center',
           fontSize: '0.9rem',
           letterSpacing: '0.01em',
         }}
       >
-        <Box component="span" sx={{ 
-          width: 4, 
-          height: 18, 
-          backgroundColor: darkMode ? 'primary.main' : 'primary.main', 
-          mr: 1.5, 
-          borderRadius: 1,
-          boxShadow: '0 1px 2px rgba(0, 0, 0, 0.1)'
-        }}></Box>
-        Schedule Configuration for {jobId}
+        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          <Box component="span" sx={{ 
+            width: 4, 
+            height: 18, 
+            backgroundColor: isScheduled ? 
+              (darkMode ? 'success.main' : 'success.main') : 
+              (darkMode ? 'primary.main' : 'primary.main'),
+            mr: 1.5, 
+            borderRadius: 1,
+            boxShadow: '0 1px 2px rgba(0, 0, 0, 0.1)'
+          }}></Box>
+          Schedule Configuration for {job?.MAPREF || scheduleData[jobId]?.MAPREF || jobId}
+        </Box>
+        
+        {isLoading && (
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <CircularProgress size={16} sx={{ mr: 1 }} />
+            <Typography variant="caption" sx={{ color: darkMode ? 'gray.400' : 'gray.600' }}>
+              Loading schedule...
+            </Typography>
+          </Box>
+        )}
+        
+        {isSaving && (
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <CircularProgress size={16} sx={{ mr: 1 }} color="success" />
+            <Typography variant="caption" sx={{ color: darkMode ? 'success.light' : 'success.main' }}>
+              Saving schedule...
+            </Typography>
+          </Box>
+        )}
       </Typography>
       
       {/* Single row layout */}
@@ -151,7 +199,9 @@ const ScheduleConfiguration = ({
           alignItems: { xs: 'stretch', md: 'flex-end' },
           gap: 2,
           flexWrap: 'nowrap',
-          width: '100%'
+          width: '100%',
+          opacity: isLoading || isSaving ? 0.7 : 1,
+          pointerEvents: isLoading || isSaving ? 'none' : 'auto',
         }}
       >
         {/* Frequency - 12% */}
@@ -160,7 +210,10 @@ const ScheduleConfiguration = ({
             <InputLabel sx={{ fontSize: '0.8125rem' }}>Frequency</InputLabel>
             <CompactSelect
               value={scheduleData[jobId]?.FRQCD || ''}
-              onChange={(e) => handleScheduleChange(jobId, 'FRQCD', e.target.value)}
+              onChange={(e) => {
+                console.log('Selected frequency:', e.target.value);
+                handleScheduleChange(jobId, 'FRQCD', e.target.value);
+              }}
               label="Frequency"
               darkMode={darkMode}
               MenuProps={{ PaperProps: { sx: { maxHeight: 300 } } }}
@@ -306,10 +359,13 @@ const ScheduleConfiguration = ({
           <Autocomplete
             size="small"
             options={jobOptions.filter(j => j.JOBFLWID !== jobId)}
-            getOptionLabel={(option) => option.JOBFLWID}
-            value={jobOptions.find(j => j.JOBFLWID === scheduleData[jobId]?.DPND_JOBSCHID) || null}
+            getOptionLabel={(option) => `${option.JOBFLWID} (${option.MAPREF})`}
+            isOptionEqualToValue={(option, value) => 
+              option.JOBFLWID.toString() === value.JOBFLWID.toString()
+            }
+            value={jobOptions.find(j => j.JOBFLWID.toString() === scheduleData[jobId]?.DPND_JOBSCHID) || null}
             onChange={(event, newValue) => {
-              handleScheduleChange(jobId, 'DPND_JOBSCHID', newValue ? newValue.JOBFLWID : '');
+              handleScheduleChange(jobId, 'DPND_JOBSCHID', newValue ? newValue.JOBFLWID.toString() : '');
             }}
             sx={{
               '& .MuiInputBase-root': {
@@ -350,15 +406,19 @@ const ScheduleConfiguration = ({
           <Button
             variant="contained"
             color="primary"
-            startIcon={<SaveIcon sx={{ fontSize: 16 }} />}
+            startIcon={isSaving ? (
+              <CircularProgress size={16} color="inherit" />
+            ) : isScheduled ? (
+              <UpdateIcon sx={{ fontSize: 16 }} />
+            ) : (
+              <SaveIcon sx={{ fontSize: 16 }} />
+            )}
             size="small"
             onClick={() => handleSaveSchedule(jobId)}
             disabled={
-              !scheduleData[jobId]?.FRQCD ||
-              !scheduleData[jobId]?.FRQDD ||
-              !scheduleData[jobId]?.FRQHH ||
-              !scheduleData[jobId]?.FRQMI ||
-              !scheduleData[jobId]?.STRTDT
+              !hasRequiredFields ||
+              isLoading ||
+              isSaving
             }
             sx={{ 
               borderRadius: 1.5,
@@ -379,7 +439,7 @@ const ScheduleConfiguration = ({
               }
             }}
           >
-            Save
+            {isSaving ? 'Saving...' : isScheduled ? 'Update' : 'Save'}
           </Button>
         </Box>
       </Box>

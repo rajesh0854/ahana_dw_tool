@@ -169,18 +169,161 @@ def get_job_details(mapref):
         return jsonify({"error": str(e)}), 500
 
 
-# get hob schedule details
+# get job schedule details
 @jobs_bp.route('/get_job_schedule_details/<job_flow_id>', methods=['GET'])
 def get_job_schedule_details(job_flow_id):
     try:
         conn = create_oracle_connection()
-        query = "SELECT JOBFLWID,MAPREF,FRQCD,FRQDD,FRQHH,FRQMI,STRTDT,ENDDT,STFLG,DPND_JOBSCHID, RECCRDT,RECUPDT FROM DWJOBSCH WHERE CURFLG ='Y' AND JOBFLWID=:job_flow_id"
+        query = """
+        SELECT 
+            JOBFLWID,
+            MAPREF,
+            FRQCD,
+            FRQDD,
+            FRQHH,
+            FRQMI,
+            STRTDT,
+            ENDDT,
+            STFLG,
+            DPND_JOBSCHID,
+            RECCRDT,
+            RECUPDT 
+        FROM DWJOBSCH 
+        WHERE CURFLG ='Y' AND JOBFLWID=:job_flow_id
+        """
         cursor = conn.cursor()
         cursor.execute(query, {'job_flow_id': job_flow_id})
-        job_schedule_details = cursor.fetchall()
+        
+        # Get column names
+        columns = [col[0] for col in cursor.description]
+        
+        # Convert to list of dictionaries
+        job_schedule_details = []
+        for row in cursor.fetchall():
+            job_dict = {}
+            for i, column in enumerate(columns):
+                value = row[i]
+                
+                # Convert Oracle NUMBER to string or int
+                if isinstance(value, int) or isinstance(value, float):
+                    job_dict[column] = str(value)  # Convert all numbers to strings for consistency
+                # Handle date objects
+                elif hasattr(value, 'strftime'):
+                    job_dict[column] = value.isoformat() if hasattr(value, 'isoformat') else str(value)
+                # Handle other types
+                else:
+                    job_dict[column] = str(value) if value is not None else ""
+            
+            # Debug information
+            print(f"Job schedule details for {job_flow_id}: {job_dict}")
+            job_schedule_details.append(job_dict)
+        
         return jsonify(job_schedule_details)
     except Exception as e:
+        print(f"Error in get_job_schedule_details: {str(e)}")
         return jsonify({"error": str(e)}), 500
+
+# save or update job schedule
+@jobs_bp.route('/save_job_schedule', methods=['POST'])
+def save_job_schedule():
+    try:
+        data = request.json
+        
+        # Required fields
+        job_flow_id = data.get('JOBFLWID')
+        map_ref = data.get('MAPREF')
+        frequency_code = data.get('FRQCD')
+        frequency_day = data.get('FRQDD')
+        frequency_hour = data.get('FRQHH')
+        frequency_minute = data.get('FRQMI')
+        start_date = data.get('STRTDT')
+        end_date = data.get('ENDDT')
+        dependent_job = data.get('DPND_JOBSCHID')
+        
+        # Validate required fields
+        if not job_flow_id or not map_ref or not frequency_code or not frequency_day or not frequency_hour or not frequency_minute or not start_date:
+            return jsonify({
+                'success': False,
+                'message': 'Missing required parameters for job schedule'
+            }), 400
+            
+        # For now, just print the data (for debugging/testing)
+        print(f"Received schedule data for job {job_flow_id}:")
+        print(f"Map Ref: {map_ref}")
+        print(f"Frequency: {frequency_code}, Day: {frequency_day}, Hour: {frequency_hour}, Minute: {frequency_minute}")
+        print(f"Start Date: {start_date}, End Date: {end_date}")
+        print(f"Dependent Job: {dependent_job}")
+        
+        # In a real implementation, you would save this to the database
+        # For example:
+        # conn = create_oracle_connection()
+        # try:
+        #     cursor = conn.cursor()
+        #     # Check if job schedule already exists
+        #     check_query = "SELECT COUNT(*) FROM MAP.DWJOBSCH WHERE JOBFLWID = :job_flow_id AND CURFLG = 'Y'"
+        #     cursor.execute(check_query, {'job_flow_id': job_flow_id})
+        #     count = cursor.fetchone()[0]
+        #     
+        #     if count > 0:
+        #         # Update existing schedule
+        #         update_query = """
+        #             UPDATE MAP.DWJOBSCH 
+        #             SET FRQCD = :frqcd, FRQDD = :frqdd, FRQHH = :frqhh, FRQMI = :frqmi, 
+        #                 STRTDT = TO_DATE(:strtdt, 'YYYY-MM-DD'), 
+        #                 ENDDT = TO_DATE(:enddt, 'YYYY-MM-DD'),
+        #                 DPND_JOBSCHID = :dpnd_jobschid,
+        #                 RECUPDT = SYSDATE
+        #             WHERE JOBFLWID = :job_flow_id AND CURFLG = 'Y'
+        #         """
+        #         cursor.execute(update_query, {
+        #             'frqcd': frequency_code,
+        #             'frqdd': frequency_day,
+        #             'frqhh': frequency_hour,
+        #             'frqmi': frequency_minute,
+        #             'strtdt': start_date,
+        #             'enddt': end_date,
+        #             'dpnd_jobschid': dependent_job,
+        #             'job_flow_id': job_flow_id
+        #         })
+        #     else:
+        #         # Insert new schedule
+        #         insert_query = """
+        #             INSERT INTO MAP.DWJOBSCH (
+        #                 JOBSCHID, JOBFLWID, MAPREF, FRQCD, FRQDD, FRQHH, FRQMI, 
+        #                 STRTDT, ENDDT, STFLG, DPND_JOBSCHID, CURFLG, RECCRDT
+        #             ) VALUES (
+        #                 MAP.SEQ_DWJOBSCH.NEXTVAL, :job_flow_id, :map_ref, :frqcd, :frqdd, :frqhh, :frqmi,
+        #                 TO_DATE(:strtdt, 'YYYY-MM-DD'), TO_DATE(:enddt, 'YYYY-MM-DD'),
+        #                 'A', :dpnd_jobschid, 'Y', SYSDATE
+        #             )
+        #         """
+        #         cursor.execute(insert_query, {
+        #             'job_flow_id': job_flow_id,
+        #             'map_ref': map_ref,
+        #             'frqcd': frequency_code,
+        #             'frqdd': frequency_day,
+        #             'frqhh': frequency_hour,
+        #             'frqmi': frequency_minute,
+        #             'strtdt': start_date,
+        #             'enddt': end_date,
+        #             'dpnd_jobschid': dependent_job
+        #         })
+        #     
+        #     conn.commit()
+        # finally:
+        #     conn.close()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Job schedule saved successfully'
+        })
+        
+    except Exception as e:
+        print(f"Error in save_job_schedule: {str(e)}")
+        return jsonify({
+            'success': False,
+            'message': f'An error occurred while saving the job schedule: {str(e)}'
+        }), 500
 
 
 

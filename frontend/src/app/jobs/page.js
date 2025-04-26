@@ -109,6 +109,8 @@ const JobsPage = () => {
   const [viewMode, setViewMode] = useState('tree'); // New state for view mode: 'tree' or 'list'
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [scheduleLoading, setScheduleLoading] = useState({});
+  const [scheduleSaving, setScheduleSaving] = useState({});
   
   const contentRef = useRef(null);
   const { darkMode } = useTheme();
@@ -161,13 +163,16 @@ const JobsPage = () => {
       const initialScheduleData = {};
       response.data.forEach(job => {
         initialScheduleData[job.JOBFLWID] = {
+          JOBFLWID: job.JOBFLWID,
+          MAPREF: job.MAPREF || '',
           FRQCD: '',
           FRQDD: '',
           FRQHH: '',
           FRQMI: '',
           STRTDT: null,
           ENDDT: null,
-          DPND_JOBSCHID: job.DPND_JOBSCHID || '',
+          DPND_JOBSCHID: job.DPND_JOBSCHID?.toString() || '',
+          STFLG: 'A' // Default status is Active
         };
       });
       
@@ -178,6 +183,84 @@ const JobsPage = () => {
       setError('Failed to fetch jobs. Please try again later.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Fetch job schedule details when row is expanded
+  const fetchJobScheduleDetails = async (jobId) => {
+    // Only fetch if this is a scheduled job and we haven't loaded data yet
+    const job = jobs.find(j => j.JOBFLWID === jobId);
+    if (!job) return;
+    
+    // Set loading state for this specific job
+    setScheduleLoading(prev => ({ ...prev, [jobId]: true }));
+    
+    try {
+      console.log(`Fetching schedule details for job ${jobId}`);
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/job/get_job_schedule_details/${jobId}`);
+      console.log('API Response:', response.data);
+      
+      // Check if there's schedule data
+      if (response.data && response.data.length > 0) {
+        const scheduleDetails = response.data[0];
+        
+        // Create a date object from the date string if it exists
+        let startDate = null;
+        let endDate = null;
+        
+        if (scheduleDetails.STRTDT) {
+          startDate = new Date(scheduleDetails.STRTDT);
+        }
+        
+        if (scheduleDetails.ENDDT) {
+          endDate = new Date(scheduleDetails.ENDDT);
+        }
+        
+        // Handle dependent job ID (ensure it's a string)
+        let dependentJobId = '';
+        if (scheduleDetails.DPND_JOBSCHID !== null && scheduleDetails.DPND_JOBSCHID !== undefined && scheduleDetails.DPND_JOBSCHID !== '') {
+          dependentJobId = String(scheduleDetails.DPND_JOBSCHID);
+        }
+        
+        // Ensure we have string values for all select fields
+        const frqcd = String(scheduleDetails.FRQCD || '');
+        const frqdd = String(scheduleDetails.FRQDD || '');
+        const frqhh = String(scheduleDetails.FRQHH || '');
+        const frqmi = String(scheduleDetails.FRQMI || '');
+        
+        console.log('Parsed schedule details:', {
+          FRQCD: frqcd,
+          FRQDD: frqdd,
+          FRQHH: frqhh,
+          FRQMI: frqmi,
+          STRTDT: startDate,
+          ENDDT: endDate,
+          DPND_JOBSCHID: dependentJobId
+        });
+        
+        // Update the schedule data with fetched values
+        setScheduleData(prev => ({
+          ...prev,
+          [jobId]: {
+            ...prev[jobId],
+            JOBFLWID: jobId,
+            MAPREF: scheduleDetails.MAPREF || job.MAPREF || '',
+            FRQCD: frqcd,
+            FRQDD: frqdd,
+            FRQHH: frqhh,
+            FRQMI: frqmi,
+            STRTDT: startDate,
+            ENDDT: endDate,
+            DPND_JOBSCHID: dependentJobId,
+            STFLG: scheduleDetails.STFLG || '',
+          }
+        }));
+      }
+    } catch (err) {
+      console.error('Error fetching job schedule details:', err);
+      // Don't show error message to avoid cluttering the UI
+    } finally {
+      setScheduleLoading(prev => ({ ...prev, [jobId]: false }));
     }
   };
 
@@ -206,10 +289,29 @@ const JobsPage = () => {
 
   // Handle row expansion
   const toggleRowExpansion = (jobId) => {
-    setExpandedRows(prev => ({
-      ...prev,
-      [jobId]: !prev[jobId]
-    }));
+    // If this row is already expanded, just close it
+    if (expandedRows[jobId]) {
+      setExpandedRows(prev => ({
+        ...prev,
+        [jobId]: false
+      }));
+      return;
+    }
+    
+    // Close all rows and open only the clicked one
+    const newExpandedRows = {};
+    Object.keys(expandedRows).forEach(id => {
+      newExpandedRows[id] = false;
+    });
+    newExpandedRows[jobId] = true;
+    
+    setExpandedRows(newExpandedRows);
+    
+    // Fetch schedule details for the newly expanded row
+    const job = jobs.find(j => j.JOBFLWID === jobId);
+    if (job) {
+      fetchJobScheduleDetails(jobId);
+    }
   };
 
   // Handle schedule data change
@@ -235,11 +337,68 @@ const JobsPage = () => {
   };
 
   // Handle save schedule
-  const handleSaveSchedule = (jobId) => {
-    // In real implementation, this would call the API
-    console.log('Saving schedule for job:', jobId, scheduleData[jobId]);
-    setSuccessMessage('Schedule created successfully');
-    setTimeout(() => setSuccessMessage(null), 3000);
+  const handleSaveSchedule = async (jobId) => {
+    try {
+      // Set saving state for this specific job
+      setScheduleSaving(prev => ({ ...prev, [jobId]: true }));
+      
+      const jobData = scheduleData[jobId];
+      
+      // Format dates for API
+      let formattedStartDate = null;
+      let formattedEndDate = null;
+      
+      if (jobData.STRTDT) {
+        formattedStartDate = format(jobData.STRTDT, 'yyyy-MM-dd');
+      }
+      
+      if (jobData.ENDDT) {
+        formattedEndDate = format(jobData.ENDDT, 'yyyy-MM-dd');
+      }
+      
+      const requestData = {
+        JOBFLWID: jobId,
+        MAPREF: jobData.MAPREF,
+        FRQCD: jobData.FRQCD,
+        FRQDD: jobData.FRQDD,
+        FRQHH: jobData.FRQHH,
+        FRQMI: jobData.FRQMI,
+        STRTDT: formattedStartDate,
+        ENDDT: formattedEndDate,
+        DPND_JOBSCHID: jobData.DPND_JOBSCHID || null
+      };
+      
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/job/save_job_schedule`, 
+        requestData
+      );
+      
+      if (response.data.success) {
+        setSuccessMessage('Schedule saved successfully');
+        
+        // Update the job status to Scheduled in the jobs list
+        setJobs(prevJobs => 
+          prevJobs.map(job => 
+            job.JOBFLWID === jobId 
+              ? { ...job, JOB_SCHEDULE_STATUS: 'Scheduled' } 
+              : job
+          )
+        );
+      } else {
+        setError(response.data.message || 'Failed to save schedule');
+      }
+    } catch (err) {
+      console.error('Error saving job schedule:', err);
+      setError('Failed to save schedule. Please try again.');
+    } finally {
+      // Clear saving state for this job
+      setScheduleSaving(prev => ({ ...prev, [jobId]: false }));
+      
+      setTimeout(() => {
+        setSuccessMessage(null);
+        setError(null);
+      }, 3000);
+    }
   };
 
   // Handle view mode change
@@ -312,7 +471,19 @@ const JobsPage = () => {
       </Box>
 
       {error && (
-        <Alert severity="error" sx={{ mb: 3 }}>
+        <Alert 
+          severity="error" 
+          sx={{ 
+            mb: 3, 
+            borderRadius: 2,
+            backgroundColor: darkMode ? 'rgba(220, 38, 38, 0.1)' : 'rgba(220, 38, 38, 0.05)',
+            borderLeft: '4px solid',
+            borderLeftColor: 'error.main',
+            '& .MuiAlert-icon': {
+              color: darkMode ? 'error.light' : 'error.main'
+            }
+          }}
+        >
           {error}
         </Alert>
       )}
@@ -323,7 +494,14 @@ const JobsPage = () => {
           onClose={() => setSuccessMessage(null)}
           anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
         >
-          <Alert severity="success" variant="filled">
+          <Alert 
+            severity="success" 
+            variant="filled"
+            sx={{
+              borderRadius: 2,
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)'
+            }}
+          >
             {successMessage}
           </Alert>
         </Snackbar>
@@ -642,6 +820,8 @@ const JobsPage = () => {
                               handleSaveSchedule={handleSaveSchedule}
                               jobOptions={jobs}
                               darkMode={darkMode}
+                              scheduleLoading={scheduleLoading}
+                              scheduleSaving={scheduleSaving}
                             />
                           </Collapse>
                         </TableCell>
