@@ -219,9 +219,9 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
         <SidebarItem 
           icon={<ActivitySquare />} 
           text="Logs & Status" 
-          active={pathname === '/logs'} 
+          active={pathname === '/job_status_and_logs'} 
           expanded={sidebarOpen}
-          href="/logs"
+          href="/job_status_and_logs"
         />
 
         <SidebarItem 

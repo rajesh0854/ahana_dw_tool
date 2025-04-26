@@ -329,3 +329,82 @@ def save_job_schedule():
 
 
 
+####################### Scheduled Jobs and Logs #######################
+
+# get list of scheduled jobs
+@jobs_bp.route('/get_scheduled_jobs', methods=['GET'])
+def get_scheduled_jobs():
+    try:
+        conn = create_oracle_connection()
+        query = """ 
+        SELECT MAPREF as MAP_REFERENCE,
+        STFLG as STATUS from DWJOBSCH 
+        where CURFLG = 'Y' 
+        """
+        cursor = conn.cursor()
+        cursor.execute(query)
+        scheduled_jobs = cursor.fetchall()
+        return jsonify({
+            'scheduled_jobs': scheduled_jobs
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# get job and process log details for a scheduled job
+@jobs_bp.route('/get_job_and_process_log_details/<mapref>', methods=['GET'])
+def get_job_and_process_log_details(mapref):
+    try:
+        conn = create_oracle_connection()
+        query = """ 
+        SELECT 
+            DJL.PRCDT as PROCESS_DATE,
+            DJL.MAPREF as MAP_REFERENCE,
+            DJL.JOBID as JOB_ID,
+            DJL.SRCROWS as SOURCE_ROWS,
+            DJL.TRGROWS as TARGET_ROWS,
+            DJL.ERRROWS as ERROR_ROWS,
+            DPL.STRTDT as START_DATE,
+            DPL.ENDDT as END_DATE,
+            DPL.STATUS as STATUS
+        FROM 
+            MAP.DWJOBLOG DJL
+        INNER JOIN 
+            MAP.DWPRCLOG DPL
+        ON 
+            DJL.JOBID = DPL.JOBID
+        WHERE 
+            DJL.MAPREF = :mapref
+        """
+        cursor = conn.cursor()
+        cursor.execute(query, {'mapref': mapref})
+        job_and_process_log_details = cursor.fetchall()
+        return jsonify({
+            'job_and_process_log_details': job_and_process_log_details
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+# Get error details of a scheduled job
+@jobs_bp.route('/get_error_details/<job_id>', methods=['GET'])
+def get_error_details(job_id):
+    try:
+        conn = create_oracle_connection()
+        query = """ 
+        SELECT ERRID as ERROR_ID,
+        PRCDT as PROCESS_DATE,
+        ERRTYP as ERROR_TYPE,
+        DBERRMSG as DATABASE_ERROR_MESSAGE,
+        ERRMSG as ERROR_MESSAGE,
+        KEYVALUE as KEY_VALUE 
+        FROM DWJOBERR WHERE JOBID = :job_id 
+        """
+        cursor = conn.cursor()
+        cursor.execute(query, {'job_id': job_id})
+        error_details = cursor.fetchall()
+        return jsonify({
+            'error_details': error_details
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
