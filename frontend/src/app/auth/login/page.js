@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   Typography,
@@ -23,6 +23,8 @@ import {
   VisibilityOff,
 } from '@mui/icons-material'
 import { ThemeProvider, createTheme } from '@mui/material/styles'
+import ReCAPTCHA from 'react-google-recaptcha'
+import { RECAPTCHA_SITE_KEY } from '../../config'
 
 // Create a light theme
 const lightTheme = createTheme({
@@ -220,8 +222,14 @@ const LoginPage = () => {
   const [error, setError] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [captchaVerified, setCaptchaVerified] = useState(false)
+  const [recaptchaToken, setRecaptchaToken] = useState('')
+  const recaptchaRef = useRef(null)
   const router = useRouter()
   const { login } = useAuth()
+
+  // Check if using test key (for development warning)
+  const isUsingTestKey = RECAPTCHA_SITE_KEY === '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI';
 
   const handleClickShowPassword = () => {
     setShowPassword(!showPassword)
@@ -229,6 +237,12 @@ const LoginPage = () => {
 
   const handleMouseDownPassword = (event) => {
     event.preventDefault()
+  }
+
+  const handleCaptchaChange = (value) => {
+    // value will be null if the user times out or dismisses the reCAPTCHA
+    setCaptchaVerified(!!value)
+    setRecaptchaToken(value || '')
   }
 
   const handleSubmit = async (e) => {
@@ -240,13 +254,30 @@ const LoginPage = () => {
       return
     }
 
+    // Only verify reCAPTCHA if the site key is available
+    if (RECAPTCHA_SITE_KEY && !captchaVerified) {
+      setError('Please verify that you are not a robot')
+      return
+    }
+
     setIsLoading(true)
     try {
-      const result = await login(username, password)
+      // Only pass recaptchaToken if the site key is available
+      const result = await login(
+        username, 
+        password, 
+        RECAPTCHA_SITE_KEY ? recaptchaToken : undefined
+      )
       if (result.success) {
         router.push('/home')
       } else {
         setError(result.error)
+        // Reset the reCAPTCHA when login fails
+        if (recaptchaRef.current) {
+          recaptchaRef.current.reset()
+          setCaptchaVerified(false)
+          setRecaptchaToken('')
+        }
       }
     } finally {
       setIsLoading(false)
@@ -566,15 +597,48 @@ const LoginPage = () => {
                 </Link>
               </motion.div>
 
+              {/* ReCAPTCHA Component */}
+              <motion.div 
+                variants={itemVariants}
+                style={{ marginBottom: '1rem', display: 'flex', flexDirection: 'column', alignItems: 'center' }}
+              >
+                {RECAPTCHA_SITE_KEY ? (
+                  <>
+                    <ReCAPTCHA
+                      ref={recaptchaRef}
+                      sitekey={RECAPTCHA_SITE_KEY}
+                      onChange={handleCaptchaChange}
+                      size="normal"
+                    />
+                    {isUsingTestKey && (
+                      <Typography 
+                        variant="caption" 
+                        color="warning.main" 
+                        sx={{ mt: 1, fontSize: '0.7rem' }}
+                      >
+                        Using test reCAPTCHA key (for development only)
+                      </Typography>
+                    )}
+                  </>
+                ) : (
+                  <Alert 
+                    severity="warning" 
+                    sx={{ mb: 1, width: '100%', borderRadius: '0.625rem' }}
+                  >
+                    ReCAPTCHA site key is missing. Please configure it in the environment variables.
+                  </Alert>
+                )}
+              </motion.div>
+
               <motion.div variants={itemVariants}>
                 <LoginButton
                   type="submit"
                   as={motion.button}
                   whileHover={{ scale: isLoading ? 1 : 1.03 }}
                   whileTap={{ scale: isLoading ? 1 : 0.97 }}
-                  disabled={isLoading}
+                  disabled={isLoading || (RECAPTCHA_SITE_KEY && !captchaVerified)}
                   sx={{
-                    opacity: isLoading ? 0.7 : 1,
+                    opacity: (isLoading || (RECAPTCHA_SITE_KEY && !captchaVerified)) ? 0.7 : 1,
                     position: 'relative',
                   }}
                 >

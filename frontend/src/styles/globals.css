@@ -5,7 +5,7 @@
 /* Add any additional global styles below */
 
 body {
-  @apply font-aptos; /* Apply the Aptos font globally */
+  @apply font-sans; /* Apply the Inter font globally */
 } 
 
 @keyframes blink {

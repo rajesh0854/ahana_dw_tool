@@ -49,6 +49,7 @@
     "react-chartjs-2": "^5.2.0",
     "react-dom": "^18.3.1",
     "react-dropzone": "^14.2.9",
+    "react-google-recaptcha": "^3.1.0",
     "react-highlight-within-textarea": "^3.2.2",
     "react-quill": "^2.0.0",
     "react-responsive": "^10.0.0",

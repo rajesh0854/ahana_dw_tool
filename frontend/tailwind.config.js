@@ -6,7 +6,7 @@ module.exports = {
   theme: {
     extend: {
       fontFamily: {
-        aptos: ['Aptos', 'sans-serif'],
+        aptos: ['Inter', 'sans-serif'],
       },
     },
   },

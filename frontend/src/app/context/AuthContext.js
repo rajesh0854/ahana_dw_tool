@@ -119,10 +119,14 @@ export const AuthProvider = ({ children }) => {
     }
   }, [loading, pathname, router]);
 
-  const login = async (username, password) => {
+  const login = async (username, password, recaptchaToken) => {
     try {
       const response = await axios.post(`${API_BASE_URL}/auth/login`, 
-        { username, password },
+        { 
+          username, 
+          password,
+          recaptchaToken
+        },
         {
           headers: {
             'Content-Type': 'application/json',
