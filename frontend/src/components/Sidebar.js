@@ -16,13 +16,13 @@ const SidebarItem = ({ icon, text, active = false, expanded = true, href }) => {
     <Link href={href}>
       <motion.div 
         className={`
-          flex items-center py-3.5 cursor-pointer
+          flex items-center py-2.5 cursor-pointer
           ${active 
             ? darkMode 
               ? 'bg-gradient-to-r from-blue-600/30 to-indigo-500/20 text-blue-400' 
               : 'bg-gradient-to-r from-blue-100 to-indigo-100/50 text-blue-600' 
             : 'text-gray-500'}
-          ${expanded ? 'px-6 rounded-xl mx-3' : 'rounded-full justify-center mx-auto w-12 h-12'}
+          ${expanded ? 'px-4 rounded-xl mx-2' : 'rounded-full justify-center mx-auto w-10 h-10'}
           ${darkMode 
             ? 'hover:bg-gray-800/70 hover:text-blue-400' 
             : 'hover:bg-blue-50/70 hover:text-blue-600'}
@@ -41,7 +41,7 @@ const SidebarItem = ({ icon, text, active = false, expanded = true, href }) => {
         }}
       >
         <div className={`
-          flex items-center ${expanded ? 'space-x-4' : 'justify-center'}
+          flex items-center ${expanded ? 'space-x-3' : 'justify-center'}
           ${active && 'font-medium'}
         `}>
           <motion.div
@@ -57,7 +57,7 @@ const SidebarItem = ({ icon, text, active = false, expanded = true, href }) => {
             }}
           >
             {React.cloneElement(icon, { 
-              size: expanded ? 22 : 24,
+              size: expanded ? 18 : 20,
               className: `transition-all duration-200 ${active 
                 ? darkMode ? 'text-blue-400' : 'text-blue-600' 
                 : darkMode ? 'text-gray-400 group-hover:text-blue-400' : 'text-gray-500 group-hover:text-blue-600'}`
@@ -67,7 +67,7 @@ const SidebarItem = ({ icon, text, active = false, expanded = true, href }) => {
           {expanded && (
             <motion.span 
               className={`
-                text-sm font-medium transition-all duration-200
+                text-xs font-medium transition-all duration-200
                 ${active 
                   ? darkMode ? 'text-blue-400 font-semibold' : 'text-blue-600 font-semibold' 
                   : darkMode ? 'text-gray-300' : 'text-gray-600'}
@@ -84,7 +84,7 @@ const SidebarItem = ({ icon, text, active = false, expanded = true, href }) => {
         {active && (
           <motion.div 
             className={`
-              absolute ${expanded ? 'right-0 h-full w-1.5' : 'bottom-0 w-full h-1.5'} 
+              absolute ${expanded ? 'right-0 h-full w-1' : 'bottom-0 w-full h-1'} 
               bg-blue-500 ${expanded ? 'rounded-l-full top-0' : 'rounded-t-full left-0'}
             `}
             initial={{ 
@@ -119,11 +119,11 @@ const SidebarItem = ({ icon, text, active = false, expanded = true, href }) => {
             {isHovered && (
               <motion.div
                 initial={{ opacity: 0, x: 10, scale: 0.8 }}
-                animate={{ opacity: 1, x: 70, scale: 1 }}
+                animate={{ opacity: 1, x: 60, scale: 1 }}
                 exit={{ opacity: 0, x: 10, scale: 0.8 }}
                 transition={{ duration: 0.2 }}
                 className={`
-                  absolute left-0 whitespace-nowrap px-3 py-1.5 rounded-md text-sm font-medium z-50
+                  absolute left-0 whitespace-nowrap px-2 py-1 rounded-md text-xs font-medium z-50
                   ${darkMode ? 'bg-gray-800 text-gray-200' : 'bg-white text-gray-700'} 
                   shadow-lg border ${darkMode ? 'border-gray-700' : 'border-gray-200'}
                 `}
@@ -153,7 +153,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
       `}
       initial={false}
       animate={{ 
-        width: sidebarOpen ? '18rem' : '6rem'
+        width: sidebarOpen ? '15rem' : '5rem'
       }}
       transition={{ 
         type: "spring",
@@ -164,14 +164,14 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
     >
       {/* Logo Section */}
       <div className={`
-        h-16 flex items-center justify-center px-4 border-b
+        h-14 flex items-center justify-center px-3 border-b
         ${darkMode ? 'border-gray-800' : 'border-gray-100'}
       `}>
         <motion.div 
           className="relative"
           animate={{ 
-            width: sidebarOpen ? '12rem' : '4rem',
-            height: '3rem'
+            width: sidebarOpen ? '10rem' : '3.5rem',
+            height: '2.5rem'
           }}
           transition={{ 
             type: "spring",
@@ -191,7 +191,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
       </div>
 
       {/* Main Navigation */}
-      <nav className="mt-6 px-2 space-y-1">
+      <nav className="mt-4 px-1 space-y-0.5">
         <SidebarItem 
           icon={<LayoutDashboard />} 
           text="Home" 
@@ -260,11 +260,11 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
       </nav>
 
       {/* Toggle Button */}
-      <div className="absolute bottom-8 left-0 right-0 flex justify-center">
+      <div className="absolute bottom-6 left-0 right-0 flex justify-center">
         <motion.button
           onClick={() => setSidebarOpen(!sidebarOpen)}
           className={`
-            p-3 rounded-full
+            p-2 rounded-full
             ${darkMode 
               ? 'bg-gradient-to-br from-blue-500/20 to-indigo-600/20 text-blue-400 hover:text-blue-300 border border-blue-800/40' 
               : 'bg-gradient-to-br from-blue-100 to-indigo-100/70 text-blue-600 hover:text-blue-500 border border-blue-200/70'}
@@ -278,8 +278,8 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
           whileTap={{ scale: 0.95 }}
         >
           {sidebarOpen ? 
-            <ChevronLeft size={22} /> : 
-            <ChevronRight size={22} />
+            <ChevronLeft size={18} /> : 
+            <ChevronRight size={18} />
           }
         </motion.button>
       </div>

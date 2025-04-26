@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { 
   Typography, 
@@ -13,37 +13,87 @@ import {
   TableHead, 
   TableRow,
   Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   IconButton,
   CircularProgress,
   Tooltip,
-  useMediaQuery,
-  Alert
+  Alert,
+  Collapse,
+  Snackbar,
+  Tabs,
+  Tab,
+  Fab,
+  TextField,
+  InputAdornment
 } from '@mui/material';
 import { styled, useTheme as useMuiTheme } from '@mui/material/styles';
-import { VisibilityOutlined, Schedule, Close } from '@mui/icons-material';
+import { 
+  Visibility as VisibilityIcon, 
+  Code as CodeIcon, 
+  ExpandMore as ExpandMoreIcon, 
+  ExpandLess as ExpandLessIcon,
+  CheckCircleOutline as CheckCircleIcon,
+  AccessTime as AccessTimeIcon,
+  AccountTree as TreeIcon,
+  ViewList as ListIcon,
+  KeyboardArrowUp as KeyboardArrowUpIcon,
+  Search as SearchIcon,
+  FilterList as FilterListIcon
+} from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import { useTheme } from '@/context/ThemeContext';
-import JobScheduleDialog from './JobScheduleDialog';
+import JobDetailsDialog from './JobDetailsDialog';
+import ScheduleConfiguration from './ScheduleConfiguration';
+import JobDependencyTree from './JobDependencyTree';
+import { Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { format } from 'date-fns';
 
 // Styled components
 const StyledTableContainer = styled(TableContainer)(({ theme, darkMode }) => ({
   maxHeight: '70vh',
   '& .MuiTableCell-head': {
-    backgroundColor: darkMode ? '#2D3748' : '#EDF2F7',
-    color: darkMode ? '#F7FAFC' : '#1A202C',
-    fontWeight: 'bold',
+    backgroundColor: darkMode ? '#1A202C' : '#F7FAFC', 
+    color: darkMode ? '#E2E8F0' : '#2D3748',
+    fontWeight: 600,
+    fontSize: '0.875rem',
+    padding: '12px 16px',
     whiteSpace: 'nowrap',
+    borderBottom: darkMode ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(0, 0, 0, 0.1)'
   },
   '& .MuiTableCell-body': {
     color: darkMode ? '#E2E8F0' : '#2D3748',
+    padding: '8px 16px',
+    fontSize: '0.875rem',
   },
   '& .MuiTableRow-root:hover': {
-    backgroundColor: darkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.04)',
+    backgroundColor: darkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)',
   },
+}));
+
+const ActionButton = styled(IconButton)(({ theme, darkMode }) => ({
+  backgroundColor: darkMode ? 'rgba(66, 153, 225, 0.1)' : 'rgba(66, 153, 225, 0.05)',
+  '&:hover': {
+    backgroundColor: darkMode ? 'rgba(66, 153, 225, 0.2)' : 'rgba(66, 153, 225, 0.1)',
+  },
+  marginRight: theme.spacing(0.75),
+  padding: 6,
+}));
+
+// New styled component for scroll-to-top button
+const ScrollToTopButton = styled(Fab)(({ theme, darkMode }) => ({
+  position: 'fixed',
+  bottom: 20,
+  right: 20,
+  backgroundColor: darkMode ? 'rgba(59, 130, 246, 0.9)' : 'rgba(59, 130, 246, 0.8)',
+  color: '#FFFFFF',
+  '&:hover': {
+    backgroundColor: darkMode ? 'rgba(37, 99, 235, 1)' : 'rgba(37, 99, 235, 0.9)',
+  },
+  zIndex: 1000,
+  boxShadow: darkMode ? '0 4px 12px rgba(0, 0, 0, 0.4)' : '0 4px 12px rgba(0, 0, 0, 0.2)',
 }));
 
 const JobsPage = () => {
@@ -51,18 +101,51 @@ const JobsPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedJob, setSelectedJob] = useState(null);
-  const [jobDetails, setJobDetails] = useState(null);
   const [openDialog, setOpenDialog] = useState(false);
-  const [loadingDetails, setLoadingDetails] = useState(false);
-  const [openScheduleDialog, setOpenScheduleDialog] = useState(false);
+  const [openLogicDialog, setOpenLogicDialog] = useState(false);
+  const [expandedRows, setExpandedRows] = useState({});
+  const [scheduleData, setScheduleData] = useState({});
+  const [successMessage, setSuccessMessage] = useState(null);
+  const [viewMode, setViewMode] = useState('tree'); // New state for view mode: 'tree' or 'list'
+  const [showScrollTop, setShowScrollTop] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
   
+  const contentRef = useRef(null);
   const { darkMode } = useTheme();
   const muiTheme = useMuiTheme();
-  const fullScreen = useMediaQuery(muiTheme.breakpoints.down('md'));
+
+  // Check scroll position to show/hide scroll-to-top button
+  const handleScroll = () => {
+    if (contentRef.current) {
+      const scrollTop = contentRef.current.scrollTop;
+      setShowScrollTop(scrollTop > 300);
+    }
+  };
+
+  // Scroll to top function
+  const scrollToTop = () => {
+    if (contentRef.current) {
+      contentRef.current.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
+    }
+  };
 
   // Fetch all jobs on component mount
   useEffect(() => {
     fetchJobs();
+  }, []);
+
+  // Add scroll event listener
+  useEffect(() => {
+    const currentRef = contentRef.current;
+    if (currentRef) {
+      currentRef.addEventListener('scroll', handleScroll);
+      return () => {
+        currentRef.removeEventListener('scroll', handleScroll);
+      };
+    }
   }, []);
 
   // Function to fetch all jobs
@@ -71,17 +154,24 @@ const JobsPage = () => {
     try {
       const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/job/get_all_jobs`);
       
-      // Transform the array data into an array of objects with named properties
-      const formattedJobs = response.data.map(job => ({
-        JOBID: job[0],
-        JOBFLWID: job[1],
-        MAPREF: job[2],
-        TRGSCHM: job[3],
-        TRGTBTYP: job[4],
-        TRGTBNM: job[5]
-      }));
+      // Since the response structure has changed, we'll directly use the data as it comes
+      setJobs(response.data);
       
-      setJobs(formattedJobs);
+      // Initialize schedule data for each job
+      const initialScheduleData = {};
+      response.data.forEach(job => {
+        initialScheduleData[job.JOBFLWID] = {
+          FRQCD: '',
+          FRQDD: '',
+          FRQHH: '',
+          FRQMI: '',
+          STRTDT: null,
+          ENDDT: null,
+          DPND_JOBSCHID: job.DPND_JOBSCHID || '',
+        };
+      });
+      
+      setScheduleData(initialScheduleData);
       setError(null);
     } catch (err) {
       console.error('Error fetching jobs:', err);
@@ -91,101 +181,132 @@ const JobsPage = () => {
     }
   };
 
-  // Function to fetch job details
-  const fetchJobDetails = async (mapref) => {
-    setLoadingDetails(true);
-    try {
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/job/get_job_details/${mapref}`);
-      
-      // Format the job config data
-      const configData = response.data.mapper_cfg;
-      const formattedConfig = {
-        MAPDESC: configData[0],
-        TRGSCHM: configData[1],
-        TRGTBTYP: configData[2],
-        TRGTBNM: configData[3],
-        FRQCD: configData[4],
-        SRCSYSTM: configData[5],
-        LGVRFYFLG: configData[6],
-        STFLG: configData[7],
-        BLKPRCROWS: configData[8]
-      };
-      
-      // Format the mapper details data
-      const detailsData = response.data.mapper_details;
-      const formattedDetails = detailsData.map(detail => ({
-        MAPREF: detail[0],
-        TRGCLNM: detail[1],
-        TRGCLDTYP: detail[2],
-        TRGKEYFLG: detail[3],
-        TRGKEYSEQ: detail[4],
-        TRGCLDESC: detail[5],
-        MAPLOGIC: detail[6],
-        KEYCLNM: detail[7],
-        VALCLNM: detail[8],
-        SCDTYP: detail[9]
-      }));
-      
-      setJobDetails({
-        config: formattedConfig,
-        details: formattedDetails
-      });
-    } catch (err) {
-      console.error('Error fetching job details:', err);
-      setError('Failed to fetch job details. Please try again later.');
-    } finally {
-      setLoadingDetails(false);
-    }
-  };
-
   // Handle opening of job details dialog
   const handleViewDetails = (job) => {
     setSelectedJob(job);
-    fetchJobDetails(job.MAPREF);
     setOpenDialog(true);
   };
 
   // Handle dialog close
   const handleCloseDialog = () => {
     setOpenDialog(false);
-    setJobDetails(null);
     setSelectedJob(null);
   };
 
-  // Handle scheduling
-  const handleScheduleJob = (job) => {
+  // Handle view logic
+  const handleViewLogic = (job) => {
     setSelectedJob(job);
-    setOpenScheduleDialog(true);
+    setOpenLogicDialog(true);
   };
 
-  // Handle close of job schedule dialog
-  const handleCloseScheduleDialog = () => {
-    setOpenScheduleDialog(false);
-    // Don't reset selectedJob here because it might be needed for the details dialog
+  // Handle close of view logic dialog
+  const handleCloseLogicDialog = () => {
+    setOpenLogicDialog(false);
   };
 
-  // Table header columns
+  // Handle row expansion
+  const toggleRowExpansion = (jobId) => {
+    setExpandedRows(prev => ({
+      ...prev,
+      [jobId]: !prev[jobId]
+    }));
+  };
+
+  // Handle schedule data change
+  const handleScheduleChange = (jobId, field, value) => {
+    setScheduleData(prev => ({
+      ...prev,
+      [jobId]: {
+        ...prev[jobId],
+        [field]: value
+      }
+    }));
+  };
+
+  // Handle date change for schedule
+  const handleDateChange = (jobId, field, date) => {
+    setScheduleData(prev => ({
+      ...prev,
+      [jobId]: {
+        ...prev[jobId],
+        [field]: date
+      }
+    }));
+  };
+
+  // Handle save schedule
+  const handleSaveSchedule = (jobId) => {
+    // In real implementation, this would call the API
+    console.log('Saving schedule for job:', jobId, scheduleData[jobId]);
+    setSuccessMessage('Schedule created successfully');
+    setTimeout(() => setSuccessMessage(null), 3000);
+  };
+
+  // Handle view mode change
+  const handleViewModeChange = (event, newValue) => {
+    setViewMode(newValue);
+  };
+
+  // Handle search filter
+  const handleSearchChange = (event) => {
+    setSearchTerm(event.target.value);
+  };
+
+  // Filter jobs based on search term
+  const filteredJobs = jobs.filter(job => {
+    if (!searchTerm) return true;
+    
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      (job.JOBSCHID && job.JOBSCHID.toString().includes(searchLower)) ||
+      (job.TRGSCHM && job.TRGSCHM.toLowerCase().includes(searchLower)) ||
+      (job.TRGTBNM && job.TRGTBNM.toLowerCase().includes(searchLower)) ||
+      (job.MAPREF && job.MAPREF.toLowerCase().includes(searchLower))
+    );
+  });
+
+  // Filter scheduled jobs for dependency tree view
+  const scheduledJobs = filteredJobs.filter(job => job.JOB_SCHEDULE_STATUS === 'Scheduled');
+
+  // Table header columns (updated to show JOBSCHID instead of JOBFLWID)
   const columns = [
-    { id: 'JOBID', label: 'Job ID' },
-    { id: 'JOBFLWID', label: 'Job Flow ID' },
+    { id: 'JOBSCHID', label: 'Job Schedule ID' },
     { id: 'MAPREF', label: 'Mapping Reference' },
-    { id: 'TRGSCHM', label: 'Target Schema' },
-    { id: 'TRGTBTYP', label: 'Target Table Type' },
-    { id: 'TRGTBNM', label: 'Target Table Name' },
+    { id: 'TARGET', label: 'Target Table' },
+    { id: 'TRGTBTYP', label: 'Table Type' },
+    { id: 'STATUS', label: 'Schedule Status' },
     { id: 'actions', label: 'Actions' },
+    { id: 'schedule', label: 'Schedule' },
   ];
 
   return (
+    <LocalizationProvider dateAdapter={AdapterDateFns}>
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
+      style={{ height: '100%', display: 'flex', flexDirection: 'column' }}
     >
-      <Box mb={4}>
-        <Typography variant="h4" component="h1" gutterBottom color={darkMode ? 'white' : 'text.primary'}>
+        <Box mb={3}>
+          <Typography 
+            variant="h4" 
+            component="h1" 
+            gutterBottom 
+            color={darkMode ? 'white' : 'text.primary'}
+            sx={{ 
+              fontSize: { xs: '1.5rem', md: '1.75rem' },
+              fontWeight: 600,
+              letterSpacing: '-0.025em'
+            }}
+          >
           Jobs Management
         </Typography>
-        <Typography variant="body1" color={darkMode ? 'gray.300' : 'text.secondary'} mb={3}>
+          <Typography 
+            variant="body1" 
+            color={darkMode ? 'gray.300' : 'text.secondary'} 
+            mb={2}
+            sx={{ fontSize: '0.9375rem' }}
+          >
           View and manage all your data warehouse jobs
         </Typography>
       </Box>
@@ -196,435 +317,489 @@ const JobsPage = () => {
         </Alert>
       )}
 
+        <Snackbar
+          open={!!successMessage}
+          autoHideDuration={3000}
+          onClose={() => setSuccessMessage(null)}
+          anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+        >
+          <Alert severity="success" variant="filled">
+            {successMessage}
+          </Alert>
+        </Snackbar>
+
       <Paper 
-        elevation={darkMode ? 3 : 1} 
+          elevation={darkMode ? 2 : 1} 
         sx={{ 
           borderRadius: 2, 
           overflow: 'hidden',
           backgroundColor: darkMode ? '#1E293B' : 'white',
-          border: darkMode ? '1px solid #2D3748' : 'none'
+          border: darkMode ? '1px solid #2D3748' : 'none',
+          backgroundImage: darkMode ? 
+            'linear-gradient(to bottom, rgba(30, 41, 59, 0.7), rgba(15, 23, 42, 0.9))' : 
+            'linear-gradient(to bottom, rgba(255, 255, 255, 0.9), rgba(249, 250, 251, 0.95))',
+          boxShadow: darkMode ? 
+            '0 4px 20px rgba(0, 0, 0, 0.3)' : 
+            '0 4px 20px rgba(0, 0, 0, 0.08)',
+          display: 'flex',
+          flexDirection: 'column',
+          flexGrow: 1
         }}
       >
+        {/* View Toggle Tabs */}
+        <Box sx={{ 
+          borderBottom: 1, 
+          borderColor: darkMode ? 'rgba(255, 255, 255, 0.1)' : 'divider', 
+          px: 2,
+          backgroundColor: darkMode ? 'rgba(17, 24, 39, 0.7)' : 'rgba(255, 255, 255, 0.8)',
+          backdropFilter: 'blur(8px)',
+          position: 'sticky',
+          top: 0,
+          zIndex: 10,
+        }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Tabs 
+              value={viewMode} 
+              onChange={handleViewModeChange} 
+              aria-label="job view mode tabs"
+              sx={{
+                '& .MuiTabs-indicator': {
+                  backgroundColor: darkMode ? 'primary.main' : 'primary.main',
+                },
+                '& .MuiTab-root': {
+                  fontSize: '0.875rem',
+                  fontWeight: 500,
+                  color: darkMode ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)',
+                  '&.Mui-selected': {
+                    color: darkMode ? 'primary.light' : 'primary.main',
+                    fontWeight: 600,
+                  }
+                }
+              }}
+            >
+              <Tab 
+                icon={<TreeIcon fontSize="small" />} 
+                iconPosition="start" 
+                label="Dependency Tree" 
+                value="tree" 
+              />
+              <Tab 
+                icon={<ListIcon fontSize="small" />} 
+                iconPosition="start" 
+                label="List View" 
+                value="list" 
+              />
+            </Tabs>
+            
+            {/* Search field */}
+            <Box sx={{ width: 300 }}>
+              <TextField
+                size="small"
+                placeholder="Search jobs..."
+                variant="outlined"
+                fullWidth
+                value={searchTerm}
+                onChange={handleSearchChange}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <SearchIcon fontSize="small" color={darkMode ? 'primary' : 'inherit'} />
+                    </InputAdornment>
+                  ),
+                  sx: {
+                    borderRadius: 2,
+                    backgroundColor: darkMode ? 'rgba(30, 41, 59, 0.5)' : 'rgba(249, 250, 251, 0.9)',
+                    '& .MuiOutlinedInput-notchedOutline': {
+                      borderColor: darkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+                    },
+                    '&:hover .MuiOutlinedInput-notchedOutline': {
+                      borderColor: darkMode ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.2)',
+                    },
+                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                      borderColor: darkMode ? 'primary.main' : 'primary.main',
+                    },
+                    fontSize: '0.875rem',
+                  }
+                }}
+              />
+            </Box>
+          </Box>
+        </Box>
+
         {loading ? (
           <Box display="flex" justifyContent="center" alignItems="center" height="300px">
             <CircularProgress color={darkMode ? 'primary' : 'secondary'} />
           </Box>
         ) : (
-          <StyledTableContainer darkMode={darkMode}>
-            <Table stickyHeader aria-label="jobs table">
-              <TableHead>
-                <TableRow>
-                  {columns.map((column) => (
-                    <TableCell
-                      key={column.id}
-                      align={column.id === 'actions' ? 'center' : 'left'}
-                      sx={{ minWidth: column.id === 'actions' ? 150 : 120 }}
-                    >
-                      {column.label}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {jobs.map((job) => (
-                  <TableRow hover key={job.JOBID} sx={{ cursor: 'pointer' }}>
-                    {columns.map((column) => {
-                      if (column.id === 'actions') {
-                        return (
-                          <TableCell key={column.id} align="center">
-                            <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1 }}>
-                              <Tooltip title="View Details">
-                                <IconButton
-                                  size="small"
-                                  color="primary"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleViewDetails(job);
-                                  }}
-                                >
-                                  <VisibilityOutlined />
-                                </IconButton>
-                              </Tooltip>
-                              <Tooltip title="Schedule Job">
-                                <IconButton
-                                  size="small"
-                                  color="secondary"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleScheduleJob(job);
-                                  }}
-                                >
-                                  <Schedule />
-                                </IconButton>
-                              </Tooltip>
-                            </Box>
-                          </TableCell>
-                        );
-                      }
-                      return (
-                        <TableCell key={column.id}>
-                          {job[column.id]}
-                        </TableCell>
-                      );
-                    })}
-                  </TableRow>
-                ))}
-                {jobs.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={columns.length} align="center">
-                      No jobs found
-                    </TableCell>
-                  </TableRow>
+          <Box
+            ref={contentRef}
+            sx={{ 
+              overflow: 'auto', 
+              flexGrow: 1,
+              maxHeight: 'calc(100vh - 250px)',
+              position: 'relative',
+              '&::-webkit-scrollbar': {
+                width: '8px',
+                height: '8px',
+              },
+              '&::-webkit-scrollbar-track': {
+                backgroundColor: darkMode ? 'rgba(15, 23, 42, 0.3)' : 'rgba(243, 244, 246, 0.5)',
+              },
+              '&::-webkit-scrollbar-thumb': {
+                backgroundColor: darkMode ? 'rgba(59, 130, 246, 0.5)' : 'rgba(59, 130, 246, 0.3)',
+                borderRadius: '4px',
+                '&:hover': {
+                  backgroundColor: darkMode ? 'rgba(59, 130, 246, 0.7)' : 'rgba(59, 130, 246, 0.5)',
+                }
+              }
+            }}
+          >
+            {/* Tree View */}
+            {viewMode === 'tree' && (
+              <Box sx={{ p: 3 }}>
+                <JobDependencyTree 
+                  jobs={scheduledJobs}
+                  darkMode={darkMode}
+                  handleViewDetails={handleViewDetails}
+                  handleViewLogic={handleViewLogic}
+                />
+
+                {scheduledJobs.length === 0 && searchTerm && (
+                  <Box sx={{ 
+                    textAlign: 'center', 
+                    py: 4, 
+                    backgroundColor: darkMode ? 'rgba(30, 41, 59, 0.4)' : 'rgba(243, 244, 246, 0.6)',
+                    borderRadius: 2,
+                    mt: 2
+                  }}>
+                    <Typography variant="body1" color={darkMode ? 'gray.300' : 'gray.600'}>
+                      No matching jobs found for "{searchTerm}"
+                    </Typography>
+                  </Box>
                 )}
-              </TableBody>
-            </Table>
-          </StyledTableContainer>
+              </Box>
+            )}
+            
+            {/* List View */}
+            {viewMode === 'list' && (
+              <StyledTableContainer darkMode={darkMode}>
+                <Table stickyHeader size="small" aria-label="jobs table">
+                <TableHead>
+                  <TableRow>
+                    {columns.map((column) => (
+                      <TableCell
+                        key={column.id}
+                        align={column.id === 'actions' || column.id === 'schedule' ? 'center' : 'left'}
+                        sx={{ 
+                          minWidth: column.id === 'actions' ? 90 : 
+                                   column.id === 'schedule' ? 70 : 
+                                   column.id === 'STATUS' ? 120 :
+                                   column.id === 'TRGTBTYP' ? 100 :
+                                   column.id === 'MAPREF' ? 140 :
+                                   130,
+                          px: column.id === 'actions' || column.id === 'schedule' ? 1 : 2,
+                          position: 'sticky',
+                          top: 0,
+                          zIndex: 1,
+                          fontWeight: 600,
+                          fontSize: '0.8125rem',
+                          whiteSpace: 'nowrap',
+                          backgroundColor: darkMode ? '#1A202C' : '#F7FAFC'
+                        }}
+                      >
+                        {column.label}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {filteredJobs.map((job) => (
+                    <React.Fragment key={job.JOBID}>
+                      <TableRow hover sx={{ cursor: 'pointer' }}>
+                        <TableCell sx={{ fontWeight: 500 }}>
+                          {job.JOBSCHID || 'Not Scheduled'}
+                        </TableCell>
+                        <TableCell>{job.MAPREF}</TableCell>
+                        <TableCell>
+                          <Box component="span" sx={{ 
+                            fontSize: '0.8125rem',
+                            color: darkMode ? 'primary.light' : 'primary.main', 
+                            fontFamily: 'monospace', 
+                            fontWeight: 500,
+                            backgroundColor: darkMode ? 'rgba(59, 130, 246, 0.1)' : 'rgba(59, 130, 246, 0.05)',
+                            py: 0.5, 
+                            px: 1, 
+                            borderRadius: 1,
+                            border: '1px solid',
+                            borderColor: darkMode ? 'rgba(59, 130, 246, 0.2)' : 'rgba(59, 130, 246, 0.1)'
+                          }}>
+                            {`${job.TRGSCHM}.${job.TRGTBNM}`}
+                          </Box>
+                        </TableCell>
+                        <TableCell>{job.TRGTBTYP}</TableCell>
+                        <TableCell>
+                          <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+                            <Box component="span" sx={{ 
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontSize: '0.75rem',
+                              fontWeight: 600,
+                              px: 1.5,
+                              py: 0.5,
+                              width: 'fit-content',
+                              minWidth: '90px',
+                              borderRadius: 8,
+                              backgroundColor: job.JOB_SCHEDULE_STATUS === 'Scheduled' 
+                                ? (darkMode ? 'rgba(16, 185, 129, 0.15)' : 'rgba(16, 185, 129, 0.08)') 
+                                : (darkMode ? 'rgba(245, 158, 11, 0.15)' : 'rgba(245, 158, 11, 0.08)'),
+                              color: job.JOB_SCHEDULE_STATUS === 'Scheduled' 
+                                ? (darkMode ? '#34D399' : '#059669') 
+                                : (darkMode ? '#FBBF24' : '#D97706'),
+                              border: '1px solid',
+                              borderColor: job.JOB_SCHEDULE_STATUS === 'Scheduled' 
+                                ? (darkMode ? 'rgba(16, 185, 129, 0.3)' : 'rgba(16, 185, 129, 0.2)') 
+                                : (darkMode ? 'rgba(245, 158, 11, 0.3)' : 'rgba(245, 158, 11, 0.2)'),
+                              textAlign: 'center',
+                              boxShadow: job.JOB_SCHEDULE_STATUS === 'Scheduled' 
+                                ? (darkMode ? '0 1px 3px rgba(16, 185, 129, 0.1)' : 'none')
+                                : (darkMode ? '0 1px 3px rgba(245, 158, 11, 0.1)' : 'none'),
+                            }}>
+                              {job.JOB_SCHEDULE_STATUS === 'Scheduled' ? (
+                                <>
+                                  <CheckCircleIcon sx={{ fontSize: 14, mr: 0.5 }} />
+                                  Scheduled
+                                </>
+                              ) : (
+                                <>
+                                  <AccessTimeIcon sx={{ fontSize: 14, mr: 0.5 }} />
+                                  Not Scheduled
+                                </>
+                              )}
+                            </Box>
+                          </Box>
+                        </TableCell>
+                        <TableCell align="center">
+                          <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+                            <Tooltip title="View Details">
+                              <ActionButton
+                                size="small"
+                                color="primary"
+                                darkMode={darkMode}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleViewDetails(job);
+                                }}
+                              >
+                                <VisibilityIcon fontSize="small" sx={{ fontSize: 18 }} />
+                              </ActionButton>
+                            </Tooltip>
+
+                            <Tooltip title="View SQL Logic">
+                              <ActionButton
+                                size="small"
+                                color="info"
+                                darkMode={darkMode}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleViewLogic(job);
+                                }}
+                              >
+                                <CodeIcon fontSize="small" sx={{ fontSize: 18 }} />
+                              </ActionButton>
+                            </Tooltip>
+                          </Box>
+                        </TableCell>
+                        <TableCell align="center">
+                          <IconButton
+                                size="small"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                toggleRowExpansion(job.JOBFLWID);
+                              }}
+                              sx={{ 
+                                color: darkMode ? 'primary.light' : 'primary.main',
+                                padding: 0.5,
+                                backgroundColor: expandedRows[job.JOBFLWID] ? 
+                                  (darkMode ? 'rgba(59, 130, 246, 0.2)' : 'rgba(59, 130, 246, 0.1)') : 
+                                  'transparent'
+                              }}
+                            >
+                              {expandedRows[job.JOBFLWID] ? <ExpandLessIcon sx={{ fontSize: 18 }} /> : <ExpandMoreIcon sx={{ fontSize: 18 }} />}
+                            </IconButton>
+                        </TableCell>
+                      </TableRow>
+                      
+                      {/* Expanded row with schedule configuration */}
+                      <TableRow>
+                        <TableCell colSpan={7} sx={{ p: 0, border: 0 }}>
+                          <Collapse in={expandedRows[job.JOBFLWID]} timeout="auto" unmountOnExit>
+                            <ScheduleConfiguration
+                              jobId={job.JOBFLWID}
+                              scheduleData={scheduleData}
+                              handleScheduleChange={handleScheduleChange}
+                              handleDateChange={handleDateChange}
+                              handleSaveSchedule={handleSaveSchedule}
+                              jobOptions={jobs}
+                              darkMode={darkMode}
+                            />
+                          </Collapse>
+                        </TableCell>
+                      </TableRow>
+                    </React.Fragment>
+                  ))}
+                  {filteredJobs.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
+                        {searchTerm ? (
+                          <Typography variant="body1" color={darkMode ? 'gray.300' : 'gray.600'}>
+                            No matching jobs found for "{searchTerm}"
+                          </Typography>
+                        ) : (
+                          <Typography variant="body1" color={darkMode ? 'gray.300' : 'gray.600'}>
+                            No jobs found
+                          </Typography>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </StyledTableContainer>
+            )}
+          </Box>
+        )}
+        
+        {/* Scroll to top button */}
+        {showScrollTop && (
+          <ScrollToTopButton
+            size="small"
+            aria-label="scroll to top"
+            onClick={scrollToTop}
+            darkMode={darkMode}
+          >
+            <KeyboardArrowUpIcon />
+          </ScrollToTopButton>
         )}
       </Paper>
 
       {/* Job Details Dialog */}
-      <Dialog
+      <JobDetailsDialog 
         open={openDialog}
-        onClose={(event, reason) => {
-          // Only close when the close button is clicked, not on backdrop click or escape key
-          if (reason !== 'backdropClick' && reason !== 'escapeKeyDown') {
-            handleCloseDialog();
-          }
-        }}
-        fullScreen={fullScreen}
-        maxWidth="xl"
-        fullWidth
-        PaperProps={{
-          sx: {
-            backgroundColor: darkMode ? '#1E293B' : 'white',
-            color: darkMode ? 'white' : 'inherit',
-            height: '95vh',
-            maxHeight: '95vh',
-            borderRadius: { xs: 0, sm: 2 },
-            m: { xs: 0, sm: 2 },
-            overflow: 'hidden',
-            backgroundImage: darkMode ? 
-              'linear-gradient(to bottom right, rgba(17, 24, 39, 0.8), rgba(30, 41, 59, 0.8))' : 
-              'linear-gradient(to bottom right, rgba(249, 250, 251, 0.8), rgba(255, 255, 255, 0.8))',
-            backdropFilter: 'blur(8px)',
-            border: darkMode ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(0, 0, 0, 0.1)',
-            boxShadow: darkMode ? 
-              '0 25px 50px -12px rgba(0, 0, 0, 0.7)' : 
-              '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
-          }
-        }}
-      >
-        <DialogTitle 
-          sx={{ 
-            display: 'flex', 
-            justifyContent: 'space-between', 
-            alignItems: 'center', 
-            borderBottom: darkMode ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(0, 0, 0, 0.1)',
-            px: 3,
-            py: 2,
-            backgroundColor: darkMode ? 'rgba(15, 23, 42, 0.9)' : 'rgba(255, 255, 255, 0.9)',
-            backdropFilter: 'blur(8px)'
-          }}
-        >
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <VisibilityOutlined 
-              sx={{ 
-                mr: 1.5, 
-                color: darkMode ? 'primary.main' : 'secondary.main'
-              }} 
-            />
-            <Typography variant="h5" fontWeight="500">
-              Job Details: <Box component="span" sx={{ color: darkMode ? 'primary.light' : 'secondary.main' }}>{selectedJob?.MAPREF}</Box>
-            </Typography>
-          </Box>
-          <IconButton 
-            edge="end" 
-            onClick={handleCloseDialog} 
-            aria-label="close"
-            sx={{
-              color: darkMode ? 'gray.400' : 'gray.600',
-              backgroundColor: darkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
-              '&:hover': {
-                backgroundColor: darkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
-              }
-            }}
-          >
-            <Close />
-          </IconButton>
-        </DialogTitle>
-        <DialogContent 
-          dividers 
-          sx={{ 
-            p: { xs: 2, sm: 3 },
-            display: 'flex',
-            flexDirection: 'column',
-            overflow: 'hidden',
-            backgroundColor: darkMode ? 'transparent' : 'transparent',
-            borderTop: 'none',
-            borderBottom: 'none'
-          }}
-        >
-          {loadingDetails ? (
-            <Box display="flex" justifyContent="center" alignItems="center" height="100%">
-              <CircularProgress color={darkMode ? 'primary' : 'secondary'} />
-            </Box>
-          ) : (
-            <>
-              {jobDetails && (
-                <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
-                  <Box sx={{ mb: 3 }}>
-                    <Typography 
-                      variant="h6" 
-                      component="h2" 
-                      gutterBottom 
-                      color={darkMode ? 'white' : 'text.primary'}
-                      sx={{ 
-                        borderLeft: darkMode ? '4px solid #3B82F6' : '4px solid #7C3AED',
-                        pl: 2, 
-                        py: 0.5,
-                        fontWeight: 500
-                      }}
-                    >
-                      Job Configuration
-                    </Typography>
-                    <Paper 
-                      elevation={darkMode ? 3 : 1} 
-                      sx={{ 
-                        overflow: 'hidden',
-                        backgroundColor: darkMode ? 'rgba(30, 41, 59, 0.7)' : 'rgba(255, 255, 255, 0.7)',
-                        backdropFilter: 'blur(12px)',
-                        border: darkMode ? '1px solid rgba(255, 255, 255, 0.05)' : '1px solid rgba(0, 0, 0, 0.05)',
-                        borderRadius: 2
-                      }}
-                    >
-                      <TableContainer>
-                        <Table aria-label="job configuration table">
-                          <TableHead>
-                            <TableRow>
-                              {Object.keys(jobDetails.config).map(key => (
-                                <TableCell 
-                                  key={key}
-                                  sx={{ 
-                                    backgroundColor: darkMode ? 'rgba(15, 23, 42, 0.7)' : 'rgba(249, 250, 251, 0.7)',
-                                    fontWeight: 'bold',
-                                    textAlign: 'center'
-                                  }}
-                                >
-                                  {
-                                    key === 'MAPDESC' ? 'Mapper Description' :
-                                    key === 'TRGSCHM' ? 'Target Schema' :
-                                    key === 'TRGTBTYP' ? 'Target Table Type' :
-                                    key === 'TRGTBNM' ? 'Target Table Name' :
-                                    key === 'FRQCD' ? 'Frequency Code' :
-                                    key === 'SRCSYSTM' ? 'Source System' :
-                                    key === 'LGVRFYFLG' ? 'Logic Verification Flag' :
-                                    key === 'STFLG' ? 'STF Flag' :
-                                    key === 'BLKPRCROWS' ? 'Bulk Process Rows' : key
-                                  }
-                                </TableCell>
-                              ))}
-                            </TableRow>
-                          </TableHead>
-                          <TableBody>
-                            <TableRow hover>
-                              {Object.entries(jobDetails.config).map(([key, value]) => (
-                                <TableCell 
-                                  key={key}
-                                  sx={{
-                                    color: darkMode ? 'rgba(255, 255, 255, 0.8)' : 'rgba(0, 0, 0, 0.8)',
-                                    fontFamily: key === 'MAPLOGIC' ? 'monospace' : 'inherit',
-                                    textAlign: 'center',
-                                    fontWeight: key === 'MAPDESC' ? 'medium' : 'normal'
-                                  }}
-                                >
-                                  {value || '-'}
-                                </TableCell>
-                              ))}
-                            </TableRow>
-                          </TableBody>
-                        </Table>
-                      </TableContainer>
-                    </Paper>
-                  </Box>
-
-                  <Box sx={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
-                    <Typography 
-                      variant="h6" 
-                      component="h2" 
-                      gutterBottom 
-                      color={darkMode ? 'white' : 'text.primary'}
-                      sx={{ 
-                        borderLeft: darkMode ? '4px solid #3B82F6' : '4px solid #7C3AED',
-                        pl: 2, 
-                        py: 0.5,
-                        fontWeight: 500
-                      }}
-                    >
-                      Mapper Details
-                    </Typography>
-                    <Paper 
-                      elevation={darkMode ? 3 : 1} 
-                      sx={{ 
-                        flex: 1,
-                        display: 'flex',
-                        flexDirection: 'column',
-                        overflow: 'hidden',
-                        backgroundColor: darkMode ? 'rgba(30, 41, 59, 0.7)' : 'rgba(255, 255, 255, 0.7)',
-                        backdropFilter: 'blur(12px)',
-                        border: darkMode ? '1px solid rgba(255, 255, 255, 0.05)' : '1px solid rgba(0, 0, 0, 0.05)',
-                        borderRadius: 2
-                      }}
-                    >
-                      <TableContainer sx={{ flex: 1, overflow: 'auto' }}>
-                        <Table stickyHeader size="small" aria-label="mapper details table">
-                          <TableHead>
-                            <TableRow>
-                              <TableCell sx={{ backgroundColor: darkMode ? 'rgba(15, 23, 42, 0.7)' : 'rgba(249, 250, 251, 0.7)', fontWeight: 'bold' }}>Target Column</TableCell>
-                              <TableCell sx={{ backgroundColor: darkMode ? 'rgba(15, 23, 42, 0.7)' : 'rgba(249, 250, 251, 0.7)', fontWeight: 'bold' }}>Data Type</TableCell>
-                              <TableCell sx={{ backgroundColor: darkMode ? 'rgba(15, 23, 42, 0.7)' : 'rgba(249, 250, 251, 0.7)', fontWeight: 'bold' }}>Key Flag</TableCell>
-                              <TableCell sx={{ backgroundColor: darkMode ? 'rgba(15, 23, 42, 0.7)' : 'rgba(249, 250, 251, 0.7)', fontWeight: 'bold' }}>Key Sequence</TableCell>
-                              <TableCell sx={{ backgroundColor: darkMode ? 'rgba(15, 23, 42, 0.7)' : 'rgba(249, 250, 251, 0.7)', fontWeight: 'bold' }}>Description</TableCell>
-                              <TableCell sx={{ backgroundColor: darkMode ? 'rgba(15, 23, 42, 0.7)' : 'rgba(249, 250, 251, 0.7)', fontWeight: 'bold' }}>Map Logic</TableCell>
-                              <TableCell sx={{ backgroundColor: darkMode ? 'rgba(15, 23, 42, 0.7)' : 'rgba(249, 250, 251, 0.7)', fontWeight: 'bold' }}>Key Column</TableCell>
-                              <TableCell sx={{ backgroundColor: darkMode ? 'rgba(15, 23, 42, 0.7)' : 'rgba(249, 250, 251, 0.7)', fontWeight: 'bold' }}>Value Column</TableCell>
-                              <TableCell sx={{ backgroundColor: darkMode ? 'rgba(15, 23, 42, 0.7)' : 'rgba(249, 250, 251, 0.7)', fontWeight: 'bold' }}>SCD Type</TableCell>
-                            </TableRow>
-                          </TableHead>
-                          <TableBody>
-                            {jobDetails.details.map((detail, index) => (
-                              <TableRow 
-                                key={index} 
-                                hover
-                                sx={{
-                                  backgroundColor: index % 2 === 0 ? 
-                                    (darkMode ? 'rgba(30, 41, 59, 0.4)' : 'rgba(249, 250, 251, 0.4)') : 
-                                    'transparent',
-                                  '&:hover': {
-                                    backgroundColor: darkMode ? 'rgba(30, 41, 59, 0.8)' : 'rgba(243, 244, 246, 0.8)'
-                                  }  
-                                }}
-                              >
-                                <TableCell 
-                                  sx={{ 
-                                    fontWeight: detail.TRGKEYFLG === 'Y' ? 'bold' : 'normal',
-                                    color: detail.TRGKEYFLG === 'Y' ? 
-                                      (darkMode ? '#3B82F6' : '#7C3AED') : 
-                                      (darkMode ? 'rgba(255, 255, 255, 0.9)' : 'rgba(0, 0, 0, 0.9)')
-                                  }}
-                                >
-                                  {detail.TRGCLNM}
-                                </TableCell>
-                                <TableCell>{detail.TRGCLDTYP}</TableCell>
-                                <TableCell>
-                                  {detail.TRGKEYFLG === 'Y' ? 
-                                    <Box 
-                                      component="span" 
-                                      sx={{ 
-                                        display: 'inline-block',
-                                        px: 1.5, 
-                                        py: 0.5, 
-                                        borderRadius: 1, 
-                                        backgroundColor: darkMode ? 'rgba(59, 130, 246, 0.2)' : 'rgba(124, 58, 237, 0.1)',
-                                        color: darkMode ? '#3B82F6' : '#7C3AED',
-                                        fontSize: '0.75rem',
-                                        fontWeight: 'bold'
-                                      }}
-                                    >
-                                      YES
-                                    </Box> : 
-                                    <Box 
-                                      component="span" 
-                                      sx={{ 
-                                        display: 'inline-block',
-                                        px: 1.5, 
-                                        py: 0.5, 
-                                        borderRadius: 1, 
-                                        backgroundColor: 'transparent',
-                                        color: darkMode ? 'rgba(255, 255, 255, 0.5)' : 'rgba(0, 0, 0, 0.4)',
-                                        fontSize: '0.75rem'
-                                      }}
-                                    >
-                                      NO
-                                    </Box>
-                                  }
-                                </TableCell>
-                                <TableCell>{detail.TRGKEYSEQ}</TableCell>
-                                <TableCell>{detail.TRGCLDESC}</TableCell>
-                                <TableCell 
-                                  sx={{ 
-                                    maxWidth: 250, 
-                                    overflow: 'hidden', 
-                                    textOverflow: 'ellipsis', 
-                                    whiteSpace: 'nowrap',
-                                    fontFamily: 'monospace',
-                                    fontSize: '0.875rem'
-                                  }}
-                                >
-                                  <Tooltip title={detail.MAPLOGIC || ""} placement="top">
-                                    <span>{detail.MAPLOGIC || "-"}</span>
-                                  </Tooltip>
-                                </TableCell>
-                                <TableCell>{detail.KEYCLNM || "-"}</TableCell>
-                                <TableCell>{detail.VALCLNM || "-"}</TableCell>
-                                <TableCell>{detail.SCDTYP || "-"}</TableCell>
-                              </TableRow>
-                            ))}
-                            {jobDetails.details.length === 0 && (
-                              <TableRow>
-                                <TableCell colSpan={9} align="center">
-                                  No mapper details found
-                                </TableCell>
-                              </TableRow>
-                            )}
-                          </TableBody>
-                        </Table>
-                      </TableContainer>
-                    </Paper>
-                  </Box>
-                </Box>
-              )}
-            </>
-          )}
-        </DialogContent>
-        <DialogActions 
-          sx={{ 
-            padding: 2, 
-            borderTop: darkMode ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(0, 0, 0, 0.1)',
-            backgroundColor: darkMode ? 'rgba(15, 23, 42, 0.9)' : 'rgba(255, 255, 255, 0.9)',
-            backdropFilter: 'blur(8px)',
-            justifyContent: 'flex-end',
-            gap: 1
-          }}
-        >
-          <Button 
-            onClick={handleCloseDialog} 
-            variant="contained" 
-            color="primary"
-            startIcon={<Close />}
-            sx={{
-              px: 3,
-              py: 1,
-              borderRadius: 2,
-              boxShadow: darkMode ? '0 4px 12px rgba(59, 130, 246, 0.5)' : '0 4px 12px rgba(124, 58, 237, 0.25)',
-              '&:hover': {
-                boxShadow: darkMode ? '0 6px 16px rgba(59, 130, 246, 0.6)' : '0 6px 16px rgba(124, 58, 237, 0.35)',
-              }
-            }}
-          >
-            Close
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Job Schedule Dialog */}
-      <JobScheduleDialog 
-        open={openScheduleDialog} 
-        onClose={handleCloseScheduleDialog} 
+        onClose={handleCloseDialog}
         job={selectedJob}
-        availableJobs={jobs}
+        allJobs={jobs}
+      />
+
+      {/* Job Logic Dialog */}
+      <LogicViewDialog
+        open={openLogicDialog}
+        onClose={handleCloseLogicDialog}
+        job={selectedJob}
       />
     </motion.div>
+    </LocalizationProvider>
   );
 };
 
 export default JobsPage;
+
+// Logic View Dialog Component
+const LogicViewDialog = ({ open, onClose, job }) => {
+  const { darkMode } = useTheme();
+  
+  return (
+    <Dialog
+      open={open}
+      onClose={onClose}
+      maxWidth="md"
+      fullWidth
+      PaperProps={{
+        sx: {
+          backgroundColor: darkMode ? '#1E293B' : 'white',
+          backgroundImage: darkMode ? 
+            'linear-gradient(to bottom, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.95))' : 
+            'none',
+          borderRadius: 2,
+          overflow: 'hidden',
+          boxShadow: darkMode ? '0 25px 50px -12px rgba(0, 0, 0, 0.5)' : '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
+        }
+      }}
+    >
+      <DialogTitle sx={{ 
+        backgroundColor: darkMode ? '#1A202C' : '#F9FAFB', 
+        color: darkMode ? 'white' : '#1A202C',
+        borderBottom: darkMode ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(0, 0, 0, 0.1)',
+        px: 3,
+        py: 1.5
+      }}>
+        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          <CodeIcon sx={{ mr: 1.5, color: darkMode ? 'primary.main' : 'primary.main' }} />
+          <Typography variant="h6" sx={{ fontWeight: 500, fontSize: '1rem' }}>
+        SQL Logic for Job ID: {job?.JOBID}
+          </Typography>
+        </Box>
+        <IconButton
+          aria-label="close"
+          onClick={onClose}
+          sx={{
+            position: 'absolute',
+            right: 8,
+            top: 8,
+            color: darkMode ? 'white' : 'grey.500',
+          }}
+        >
+          <CloseIcon />
+        </IconButton>
+      </DialogTitle>
+      <DialogContent sx={{ mt: 2, p: 3, color: darkMode ? 'white' : 'text.primary' }}>
+        <Paper
+          elevation={darkMode ? 2 : 1}
+          sx={{
+            p: 1.5,
+            backgroundColor: darkMode ? '#2D3748' : '#F7FAFC',
+            border: darkMode ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(0, 0, 0, 0.07)',
+            borderRadius: 1.5,
+            maxHeight: '60vh',
+            overflow: 'auto'
+          }}
+        >
+          <pre
+            style={{
+              margin: 0,
+              whiteSpace: 'pre-wrap',
+              wordBreak: 'break-word',
+              fontFamily: '"Roboto Mono", "Consolas", monospace',
+              fontSize: '13px',
+              color: darkMode ? '#E2E8F0' : '#2D3748',
+              padding: '8px'
+            }}
+          >
+            {job?.DWLOGIC || 'No SQL logic available for this job.'}
+          </pre>
+        </Paper>
+      </DialogContent>
+      <DialogActions sx={{ 
+        backgroundColor: darkMode ? '#1A202C' : '#F9FAFB',
+        borderTop: darkMode ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(0, 0, 0, 0.1)',
+        px: 3,
+        py: 1.5
+      }}>
+        <Button 
+          onClick={onClose} 
+          variant="contained" 
+          color="primary"
+          size="small"
+          sx={{ 
+            borderRadius: 1.5,
+            py: 0.5,
+            px: 2,
+            fontSize: '0.8125rem'
+          }}
+        >
+          Close
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+};

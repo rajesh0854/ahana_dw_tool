@@ -24,7 +24,8 @@ import {
   Stack,
   Tooltip,
   Alert,
-  Snackbar
+  Snackbar,
+  useMediaQuery
 } from '@mui/material';
 import { 
   Edit as EditIcon, 
@@ -46,28 +47,28 @@ import { useRouter } from 'next/navigation';
 import ProtectedRoute from '../components/ProtectedRoute';
 
 const ProfileCard = styled(Card)(({ theme }) => ({
-  borderRadius: theme.spacing(3),
-  boxShadow: '0 10px 30px rgba(0, 0, 0, 0.08)',
+  borderRadius: theme.spacing(2),
+  boxShadow: '0 8px 24px rgba(0, 0, 0, 0.06)',
   overflow: 'visible',
   position: 'relative',
   border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
   maxWidth: '100%',
   transition: 'transform 0.3s ease, box-shadow 0.3s ease',
   '&:hover': {
-    boxShadow: '0 15px 35px rgba(0, 0, 0, 0.1)',
+    boxShadow: '0 12px 28px rgba(0, 0, 0, 0.08)',
   }
 }));
 
 const ProfileAvatar = styled(Avatar)(({ theme }) => ({
-  width: 100,
-  height: 100,
+  width: 80,
+  height: 80,
   border: `4px solid ${theme.palette.background.paper}`,
-  boxShadow: '0 8px 20px rgba(0, 0, 0, 0.1)',
-  fontSize: '2.5rem',
+  boxShadow: '0 6px 16px rgba(0, 0, 0, 0.08)',
+  fontSize: '2rem',
   backgroundColor: theme.palette.primary.main,
   position: 'absolute',
-  top: -30,
-  left: 30,
+  top: -24,
+  left: 24,
   transition: 'transform 0.3s ease',
   '&:hover': {
     transform: 'scale(1.05)',
@@ -75,9 +76,9 @@ const ProfileAvatar = styled(Avatar)(({ theme }) => ({
   [theme.breakpoints.down('md')]: {
     left: '50%',
     transform: 'translateX(-50%)',
-    top: -50,
-    width: 90,
-    height: 90,
+    top: -40,
+    width: 72,
+    height: 72,
     '&:hover': {
       transform: 'translateX(-50%) scale(1.05)',
     },
@@ -86,14 +87,14 @@ const ProfileAvatar = styled(Avatar)(({ theme }) => ({
 
 const InfoItemCard = styled(Card)(({ theme }) => ({
   borderRadius: theme.spacing(2),
-  boxShadow: '0 6px 15px rgba(0, 0, 0, 0.05)',
+  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.04)',
   height: '100%',
   border: `1px solid ${alpha(theme.palette.divider, 0.5)}`,
   transition: 'all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)',
   '&:hover': {
     borderColor: alpha(theme.palette.primary.main, 0.3),
-    transform: 'translateY(-5px)',
-    boxShadow: '0 12px 28px rgba(0, 0, 0, 0.12), 0 6px 12px rgba(0, 0, 0, 0.08)',
+    transform: 'translateY(-4px)',
+    boxShadow: '0 8px 20px rgba(0, 0, 0, 0.08), 0 4px 10px rgba(0, 0, 0, 0.06)',
   }
 }));
 
@@ -102,25 +103,25 @@ const ProfileField = ({ label, value, icon }) => (
     sx={{ 
       display: 'flex', 
       alignItems: 'center', 
-      mb: 2,
+      mb: 1.5,
       transition: 'transform 0.2s ease',
       '&:hover': {
-        transform: 'translateX(5px)'
+        transform: 'translateX(4px)'
       }
     }}
   >
     <Box 
       sx={{ 
-        mr: 2, 
+        mr: 1.5, 
         color: 'primary.main',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.1),
         borderRadius: '50%',
-        p: 1,
-        width: 36,
-        height: 36
+        p: 0.75,
+        width: 32,
+        height: 32
       }}
     >
       {icon}
@@ -129,7 +130,7 @@ const ProfileField = ({ label, value, icon }) => (
       <Typography variant="caption" color="textSecondary" fontWeight="500">
         {label}
       </Typography>
-      <Typography variant="body1" fontWeight="medium">
+      <Typography variant="body2" fontWeight="medium">
         {value || 'Not specified'}
       </Typography>
     </Box>
@@ -138,6 +139,8 @@ const ProfileField = ({ label, value, icon }) => (
 
 const ProfilePage = () => {
   const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const isTablet = useMediaQuery(theme.breakpoints.down('md'));
   const { user, logout, updateUserProfile } = useAuth();
   const router = useRouter();
   const [profileData, setProfileData] = useState(null);
@@ -291,7 +294,7 @@ const ProfilePage = () => {
 
   if (loading) {
     return (
-      <Container sx={{ py: 8 }}>
+      <Container sx={{ py: 4 }}>
         <Box display="flex" justifyContent="center" alignItems="center" minHeight="60vh">
           <Typography>Loading profile...</Typography>
         </Box>
@@ -308,9 +311,9 @@ const ProfilePage = () => {
           exit={{ opacity: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <Container maxWidth="lg" sx={{ py: { xs: 4, md: 6 } }}>
+          <Container maxWidth="md" sx={{ py: { xs: 3, md: 4 } }}>
             <motion.div
-              initial={{ y: 20 }}
+              initial={{ y: 16 }}
               animate={{ y: 0 }}
               transition={{ 
                 type: "spring", 
@@ -318,15 +321,15 @@ const ProfilePage = () => {
                 damping: 20 
               }}
             >
-              <Box sx={{ position: 'relative', mt: { xs: 8, md: 4 }, maxWidth: 900, mx: 'auto' }}>
+              <Box sx={{ position: 'relative', mt: { xs: 6, md: 3 }, mx: 'auto' }}>
                 {/* Profile header */}
                 <ProfileCard>
                   <Box
                     sx={{
-                      height: { xs: 80, md: 120 },
+                      height: { xs: 64, md: 90 },
                       background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
-                      borderTopLeftRadius: theme.spacing(3),
-                      borderTopRightRadius: theme.spacing(3),
+                      borderTopLeftRadius: theme.spacing(2),
+                      borderTopRightRadius: theme.spacing(2),
                       position: 'relative',
                       overflow: 'hidden',
                       '&::after': {
@@ -347,10 +350,10 @@ const ProfilePage = () => {
                   </ProfileAvatar>
 
                   <Box sx={{ 
-                    pt: { xs: 5, md: 2 }, 
-                    pb: 3, 
-                    px: 3, 
-                    mt: { xs: 2, md: 0 },
+                    pt: { xs: 4, md: 1.5 }, 
+                    pb: 2, 
+                    px: { xs: 2, md: 3 }, 
+                    mt: { xs: 1.5, md: 0 },
                     display: 'flex',
                     flexDirection: { xs: 'column', md: 'row' },
                     alignItems: { xs: 'center', md: 'flex-end' },
@@ -358,22 +361,24 @@ const ProfilePage = () => {
                   }}>
                     <Box sx={{ 
                       textAlign: { xs: 'center', md: 'left' },
-                      ml: { md: 12 }
+                      ml: { md: 10 }
                     }}>
-                      <Typography variant="h5" fontWeight="bold" gutterBottom>
+                      <Typography variant={isTablet ? "subtitle1" : "h6"} fontWeight="bold" gutterBottom>
                         {`${profileData?.first_name || ''} ${profileData?.last_name || ''}`}
                         {!profileData?.first_name && !profileData?.last_name && profileData?.username}
                       </Typography>
                       
-                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: { xs: 'center', md: 'flex-start' }, flexWrap: 'wrap', gap: 1 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: { xs: 'center', md: 'flex-start' }, flexWrap: 'wrap', gap: 0.75 }}>
                         <Chip 
                           label={profileData?.role || 'User'} 
                           color="primary" 
                           size="small"
                           sx={{ 
                             fontWeight: 500, 
-                            px: 1,
-                            borderRadius: '30px',
+                            height: 24,
+                            fontSize: '0.75rem',
+                            px: 0.75,
+                            borderRadius: '20px',
                           }}
                         />
                         <Chip 
@@ -383,44 +388,52 @@ const ProfilePage = () => {
                           variant="outlined"
                           sx={{ 
                             fontWeight: 500, 
-                            px: 1,
-                            borderRadius: '30px', 
+                            height: 24,
+                            fontSize: '0.75rem',
+                            px: 0.75,
+                            borderRadius: '20px', 
                           }}
                         />
                       </Box>
                     </Box>
                     
-                    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{ mt: { xs: 3, md: 0 }, width: { xs: '100%', sm: 'auto' } }}>
-                      <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{ mt: { xs: 2, md: 0 }, width: { xs: '100%', sm: 'auto' } }}>
+                      <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
                         <Button 
                           variant="outlined" 
-                          startIcon={<SecurityIcon />}
+                          startIcon={<SecurityIcon sx={{ fontSize: isMobile ? 16 : 18 }} />}
                           onClick={handlePasswordDialogOpen}
-                          fullWidth={!!(theme.breakpoints.down('sm'))}
+                          fullWidth={isMobile}
+                          size={isMobile ? "small" : "medium"}
                           sx={{ 
-                            borderRadius: 6,
+                            borderRadius: 4,
                             borderWidth: 1.5,
+                            fontSize: isMobile ? 12 : 13,
+                            py: isMobile ? 0.5 : 0.75,
                             '&:hover': {
                               borderWidth: 1.5,
-                              boxShadow: '0 4px 8px rgba(0, 0, 0, 0.07)',
+                              boxShadow: '0 3px 6px rgba(0, 0, 0, 0.07)',
                             }
                           }}
                         >
                           Change Password
                         </Button>
                       </motion.div>
-                      <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                      <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
                         <Button 
                           variant="contained" 
                           color="primary"
-                          startIcon={<LogoutIcon />}
+                          startIcon={<LogoutIcon sx={{ fontSize: isMobile ? 16 : 18 }} />}
                           onClick={handleLogout}
-                          fullWidth={!!(theme.breakpoints.down('sm'))}
+                          fullWidth={isMobile}
+                          size={isMobile ? "small" : "medium"}
                           sx={{ 
-                            borderRadius: 6,
-                            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                            borderRadius: 4,
+                            fontSize: isMobile ? 12 : 13,
+                            py: isMobile ? 0.5 : 0.75,
+                            boxShadow: '0 3px 8px rgba(0, 0, 0, 0.12)',
                             '&:hover': {
-                              boxShadow: '0 6px 16px rgba(0, 0, 0, 0.2)',
+                              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.16)',
                             }
                           }}
                         >
@@ -432,46 +445,48 @@ const ProfilePage = () => {
                 </ProfileCard>
 
                 {/* Profile details */}
-                <Grid container spacing={3} sx={{ mt: 3 }}>
+                <Grid container spacing={2.5} sx={{ mt: 2.5 }}>
                   <Grid item xs={12} md={6}>
                     <motion.div 
-                      initial={{ opacity: 0, x: -20 }}
+                      initial={{ opacity: 0, x: -16 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: 0.2, duration: 0.4 }}
                     >
                       <InfoItemCard>
-                        <CardContent>
-                          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                            <Typography variant="h6" fontWeight="bold" color="primary">
+                        <CardContent sx={{ p: { xs: 2, md: 2.5 } }}>
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
+                            <Typography variant="subtitle1" fontWeight="bold" color="primary">
                               Account Information
                             </Typography>
                             <motion.div whileHover={{ rotate: 180 }} transition={{ duration: 0.3 }}>
                               <Tooltip title="Edit Profile">
                                 <IconButton onClick={handleEditDialogOpen} color="primary" size="small" sx={{ 
                                   backgroundColor: alpha(theme.palette.primary.main, 0.1),
+                                  width: 32,
+                                  height: 32,
                                   '&:hover': { backgroundColor: alpha(theme.palette.primary.main, 0.2) }
                                 }}>
-                                  <EditIcon fontSize="small" />
+                                  <EditIcon fontSize="small" sx={{ fontSize: 18 }} />
                                 </IconButton>
                               </Tooltip>
                             </motion.div>
                           </Box>
-                          <Divider sx={{ mb: 3 }} />
+                          <Divider sx={{ mb: 2 }} />
                           
                           <ProfileField 
                             label="Username" 
                             value={profileData?.username} 
-                            icon={<AccountIcon fontSize="small" />}
+                            icon={<AccountIcon fontSize="small" sx={{ fontSize: 18 }} />}
                           />
                           <ProfileField 
                             label="Email" 
                             value={profileData?.email} 
-                            icon={<EmailIcon fontSize="small" />}
+                            icon={<EmailIcon fontSize="small" sx={{ fontSize: 18 }} />}
                           />
                           <ProfileField 
                             label="Account Status" 
                             value={profileData?.is_active ? 'Active' : 'Inactive'} 
-                            icon={<SecurityIcon fontSize="small" />}
+                            icon={<SecurityIcon fontSize="small" sx={{ fontSize: 18 }} />}
                           />
                           <ProfileField 
                             label="Member Since" 
@@ -484,7 +499,7 @@ const ProfilePage = () => {
                                   })
                                 : undefined
                             } 
-                            icon={<CalendarIcon fontSize="small" />}
+                            icon={<CalendarIcon fontSize="small" sx={{ fontSize: 18 }} />}
                           />
                         </CardContent>
                       </InfoItemCard>
@@ -493,36 +508,36 @@ const ProfilePage = () => {
                   
                   <Grid item xs={12} md={6}>
                     <motion.div 
-                      initial={{ opacity: 0, x: 20 }}
+                      initial={{ opacity: 0, x: 16 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: 0.3, duration: 0.4 }}
                     >
                       <InfoItemCard>
-                        <CardContent>
-                          <Typography variant="h6" fontWeight="bold" color="primary" gutterBottom>
+                        <CardContent sx={{ p: { xs: 2, md: 2.5 } }}>
+                          <Typography variant="subtitle1" fontWeight="bold" color="primary" gutterBottom>
                             Personal Information
                           </Typography>
-                          <Divider sx={{ mb: 3 }} />
+                          <Divider sx={{ mb: 2 }} />
                           
                           <ProfileField 
                             label="First Name" 
                             value={profileData?.first_name} 
-                            icon={<PersonIcon fontSize="small" />}
+                            icon={<PersonIcon fontSize="small" sx={{ fontSize: 18 }} />}
                           />
                           <ProfileField 
                             label="Last Name" 
                             value={profileData?.last_name} 
-                            icon={<PersonIcon fontSize="small" />}
+                            icon={<PersonIcon fontSize="small" sx={{ fontSize: 18 }} />}
                           />
                           <ProfileField 
                             label="Phone" 
                             value={profileData?.phone} 
-                            icon={<PhoneIcon fontSize="small" />}
+                            icon={<PhoneIcon fontSize="small" sx={{ fontSize: 18 }} />}
                           />
                           <ProfileField 
                             label="Department" 
                             value={profileData?.department} 
-                            icon={<WorkIcon fontSize="small" />}
+                            icon={<WorkIcon fontSize="small" sx={{ fontSize: 18 }} />}
                           />
                         </CardContent>
                       </InfoItemCard>
@@ -544,7 +559,7 @@ const ProfilePage = () => {
         PaperProps={{
           elevation: 0,
           sx: {
-            borderRadius: 3,
+            borderRadius: 2,
             border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
           }
         }}
@@ -553,11 +568,12 @@ const ProfilePage = () => {
         <DialogTitle sx={{ 
           fontWeight: 600,
           borderBottom: `1px solid ${theme.palette.divider}`,
-          pb: 1
+          pb: 1,
+          fontSize: '1.1rem'
         }}>
           Edit Profile
         </DialogTitle>
-        <DialogContent sx={{ pt: 3 }}>
+        <DialogContent sx={{ pt: 2.5 }}>
           <Grid container spacing={2}>
             <Grid item xs={12} sm={6}>
               <TextField
@@ -567,8 +583,9 @@ const ProfilePage = () => {
                 onChange={handleEditChange}
                 fullWidth
                 variant="outlined"
+                size="small"
                 InputProps={{ 
-                  sx: { borderRadius: 2 } 
+                  sx: { borderRadius: 1.5 } 
                 }}
               />
             </Grid>
@@ -580,8 +597,9 @@ const ProfilePage = () => {
                 onChange={handleEditChange}
                 fullWidth
                 variant="outlined"
+                size="small"
                 InputProps={{ 
-                  sx: { borderRadius: 2 } 
+                  sx: { borderRadius: 1.5 } 
                 }}
               />
             </Grid>
@@ -593,8 +611,9 @@ const ProfilePage = () => {
                 onChange={handleEditChange}
                 fullWidth
                 variant="outlined"
+                size="small"
                 InputProps={{ 
-                  sx: { borderRadius: 2 } 
+                  sx: { borderRadius: 1.5 } 
                 }}
               />
             </Grid>
@@ -606,8 +625,9 @@ const ProfilePage = () => {
                 onChange={handleEditChange}
                 fullWidth
                 variant="outlined"
+                size="small"
                 InputProps={{ 
-                  sx: { borderRadius: 2 } 
+                  sx: { borderRadius: 1.5 } 
                 }}
               />
             </Grid>
@@ -619,22 +639,25 @@ const ProfilePage = () => {
                 onChange={handleEditChange}
                 fullWidth
                 variant="outlined"
+                size="small"
                 InputProps={{ 
-                  sx: { borderRadius: 2 } 
+                  sx: { borderRadius: 1.5 } 
                 }}
               />
             </Grid>
           </Grid>
         </DialogContent>
-        <DialogActions sx={{ px: 3, py: 2, borderTop: `1px solid ${theme.palette.divider}` }}>
-          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+        <DialogActions sx={{ px: 3, py: 1.5, borderTop: `1px solid ${theme.palette.divider}` }}>
+          <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
             <Button 
               onClick={handleEditDialogClose}
-              startIcon={<CancelIcon />}
+              startIcon={<CancelIcon sx={{ fontSize: 18 }} />}
               variant="outlined"
+              size="small"
               sx={{ 
-                borderRadius: 6,
+                borderRadius: 4,
                 borderWidth: 1.5,
+                fontSize: 13,
                 '&:hover': {
                   borderWidth: 1.5,
                 }
@@ -643,17 +666,19 @@ const ProfilePage = () => {
               Cancel
             </Button>
           </motion.div>
-          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+          <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
             <Button 
               onClick={handleSaveProfile} 
               color="primary" 
               variant="contained"
-              startIcon={<SaveIcon />}
+              startIcon={<SaveIcon sx={{ fontSize: 18 }} />}
+              size="small"
               sx={{ 
-                borderRadius: 6,
-                boxShadow: theme.shadows[2],
+                borderRadius: 4,
+                fontSize: 13,
+                boxShadow: theme.shadows[1],
                 '&:hover': {
-                  boxShadow: theme.shadows[4],
+                  boxShadow: theme.shadows[3],
                 }
               }}
             >
@@ -672,7 +697,7 @@ const ProfilePage = () => {
         PaperProps={{
           elevation: 0,
           sx: {
-            borderRadius: 3,
+            borderRadius: 2,
             border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
           }
         }}
@@ -681,11 +706,12 @@ const ProfilePage = () => {
         <DialogTitle sx={{ 
           fontWeight: 600,
           borderBottom: `1px solid ${theme.palette.divider}`,
-          pb: 1
+          pb: 1,
+          fontSize: '1.1rem'
         }}>
           Change Password
         </DialogTitle>
-        <DialogContent sx={{ pt: 3 }}>
+        <DialogContent sx={{ pt: 2.5 }}>
           <Grid container spacing={2}>
             <Grid item xs={12}>
               <TextField
@@ -696,8 +722,9 @@ const ProfilePage = () => {
                 onChange={handlePasswordChange}
                 fullWidth
                 variant="outlined"
+                size="small"
                 InputProps={{ 
-                  sx: { borderRadius: 2 } 
+                  sx: { borderRadius: 1.5 } 
                 }}
               />
             </Grid>
@@ -710,8 +737,9 @@ const ProfilePage = () => {
                 onChange={handlePasswordChange}
                 fullWidth
                 variant="outlined"
+                size="small"
                 InputProps={{ 
-                  sx: { borderRadius: 2 } 
+                  sx: { borderRadius: 1.5 } 
                 }}
               />
             </Grid>
@@ -724,22 +752,25 @@ const ProfilePage = () => {
                 onChange={handlePasswordChange}
                 fullWidth
                 variant="outlined"
+                size="small"
                 InputProps={{ 
-                  sx: { borderRadius: 2 } 
+                  sx: { borderRadius: 1.5 } 
                 }}
               />
             </Grid>
           </Grid>
         </DialogContent>
-        <DialogActions sx={{ px: 3, py: 2, borderTop: `1px solid ${theme.palette.divider}` }}>
-          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+        <DialogActions sx={{ px: 3, py: 1.5, borderTop: `1px solid ${theme.palette.divider}` }}>
+          <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
             <Button 
               onClick={handlePasswordDialogClose}
-              startIcon={<CancelIcon />}
+              startIcon={<CancelIcon sx={{ fontSize: 18 }} />}
               variant="outlined"
+              size="small"
               sx={{ 
-                borderRadius: 6,
+                borderRadius: 4,
                 borderWidth: 1.5,
+                fontSize: 13,
                 '&:hover': {
                   borderWidth: 1.5,
                 }
@@ -748,17 +779,19 @@ const ProfilePage = () => {
               Cancel
             </Button>
           </motion.div>
-          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+          <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
             <Button 
               onClick={handleChangePassword} 
               color="primary" 
               variant="contained"
-              startIcon={<SecurityIcon />}
+              startIcon={<SecurityIcon sx={{ fontSize: 18 }} />}
+              size="small"
               sx={{ 
-                borderRadius: 6,
-                boxShadow: theme.shadows[2],
+                borderRadius: 4,
+                fontSize: 13,
+                boxShadow: theme.shadows[1],
                 '&:hover': {
-                  boxShadow: theme.shadows[4],
+                  boxShadow: theme.shadows[3],
                 }
               }}
             >
@@ -781,8 +814,8 @@ const ProfilePage = () => {
           variant="filled"
           sx={{ 
             width: '100%',
-            borderRadius: 2,
-            boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
+            borderRadius: 1.5,
+            boxShadow: '0 4px 16px rgba(0,0,0,0.12)'
           }}
         >
           {notification.message}

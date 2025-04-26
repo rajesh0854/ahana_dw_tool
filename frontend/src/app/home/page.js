@@ -44,7 +44,7 @@ const Page = () => {
       gradient: 'linear-gradient(135deg, #6366F1 0%, #4F46E5 100%)',
       description:
         'Map and transform your data structures with intuitive visual tools',
-      icon: <Storage sx={{ fontSize: '2.5rem', color: '#fff' }} />,
+      icon: <Storage sx={{ fontSize: '2rem', color: '#fff' }} />,
       delay: 0.1,
     },
     {
@@ -52,7 +52,7 @@ const Page = () => {
       path: '/jobs',
       gradient: 'linear-gradient(135deg, #0EA5E9 0%, #0284C7 100%)',
       description: 'Schedule, manage and monitor all your processing jobs',
-      icon: <Timeline sx={{ fontSize: '2.5rem', color: '#fff' }} />,
+      icon: <Timeline sx={{ fontSize: '2rem', color: '#fff' }} />,
       delay: 0.2,
     },
     {
@@ -60,7 +60,7 @@ const Page = () => {
       path: '/type_mapper',
       gradient: 'linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%)',
       description: 'Convert and validate data types with automated mapping',
-      icon: <AutoFixHigh sx={{ fontSize: '2.5rem', color: '#fff' }} />,
+      icon: <AutoFixHigh sx={{ fontSize: '2rem', color: '#fff' }} />,
       delay: 0.3,
     },
     {
@@ -68,7 +68,7 @@ const Page = () => {
       path: '/admin',
       gradient: 'linear-gradient(135deg, #EC4899 0%, #DB2777 100%)',
       description: 'Comprehensive administrative tools for user management',
-      icon: <AdminPanelSettings sx={{ fontSize: '2.5rem', color: '#fff' }} />,
+      icon: <AdminPanelSettings sx={{ fontSize: '2rem', color: '#fff' }} />,
       delay: 0.4,
     },
     {
@@ -76,7 +76,7 @@ const Page = () => {
       path: '/analytics',
       gradient: 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)',
       description: 'Gain valuable insights with advanced data analytics',
-      icon: <BarChart sx={{ fontSize: '2.5rem', color: '#fff' }} />,
+      icon: <BarChart sx={{ fontSize: '2rem', color: '#fff' }} />,
       delay: 0.5,
     },
     {
@@ -84,7 +84,7 @@ const Page = () => {
       path: '/catalog',
       gradient: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
       description: 'Organize and discover your data assets efficiently',
-      icon: <DataObject sx={{ fontSize: '2.5rem', color: '#fff' }} />,
+      icon: <DataObject sx={{ fontSize: '2rem', color: '#fff' }} />,
       delay: 0.6,
     },
     {
@@ -92,7 +92,7 @@ const Page = () => {
       path: '/integrations',
       gradient: 'linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)',
       description: 'Connect with external systems and data sources',
-      icon: <CloudSync sx={{ fontSize: '2.5rem', color: '#fff' }} />,
+      icon: <CloudSync sx={{ fontSize: '2rem', color: '#fff' }} />,
       delay: 0.7,
     },
     {
@@ -100,7 +100,7 @@ const Page = () => {
       path: '/security',
       gradient: 'linear-gradient(135deg, #64748B 0%, #475569 100%)',
       description: 'Comprehensive security controls and audit tools',
-      icon: <Shield sx={{ fontSize: '2.5rem', color: '#fff' }} />,
+      icon: <Shield sx={{ fontSize: '2rem', color: '#fff' }} />,
       delay: 0.8,
     },
   ]
@@ -163,7 +163,7 @@ const Page = () => {
       variants={pageVariants}
       className={`min-h-screen ${darkMode ? 'bg-[#0A101F]' : 'bg-[#F8FAFC]'}`}
     >
-      <div className="absolute top-0 left-0 right-0 h-[50vh] overflow-hidden -z-10">
+      <div className="absolute top-0 left-0 right-0 h-[40vh] overflow-hidden -z-10">
         <div
           className={`w-full h-full ${
             darkMode
@@ -180,14 +180,14 @@ const Page = () => {
                 darkMode ? 'bg-blue-500/10' : 'bg-indigo-400/10'
               }`}
               style={{
-                width: `${Math.random() * 200 + 50}px`,
-                height: `${Math.random() * 200 + 50}px`,
+                width: `${Math.random() * 160 + 40}px`,
+                height: `${Math.random() * 160 + 40}px`,
                 top: `${Math.random() * 100}%`,
                 left: `${Math.random() * 100}%`,
               }}
               animate={{
-                y: [0, Math.random() * 30 - 15],
-                x: [0, Math.random() * 30 - 15],
+                y: [0, Math.random() * 25 - 12],
+                x: [0, Math.random() * 25 - 12],
                 scale: [1, Math.random() * 0.3 + 0.9],
               }}
               transition={{
@@ -201,18 +201,18 @@ const Page = () => {
       </div>
 
       <Container
-        maxWidth="xl"
-        sx={{ py: { xs: 4, md: 8 }, position: 'relative' }}
+        maxWidth="lg"
+        sx={{ py: { xs: 3, md: 5 }, position: 'relative' }}
       >
-        {/* Header Section with centered title (removed tag line) */}
-        <motion.div variants={headerVariants} className="text-center mb-16">
+        {/* Header Section with centered title */}
+        <motion.div variants={headerVariants} className="text-center mb-10">
           <Typography
             variant="h2"
             component="h1"
             sx={{
               fontWeight: 800,
-              mb: 2.5,
-              fontSize: { xs: '2.5rem', md: '3.5rem' },
+              mb: 1.5,
+              fontSize: { xs: '2rem', md: '2.8rem' },
               background: darkMode
                 ? 'linear-gradient(to right, #C4B5FD, #818CF8, #60A5FA)'
                 : 'linear-gradient(to right, #4F46E5, #6366F1, #3B82F6)',
@@ -232,17 +232,18 @@ const Page = () => {
             transition={{ duration: 0.6, delay: 0.4 }}
           >
             <Typography
-              variant="h6"
+              variant="subtitle1"
               sx={{
                 color: darkMode
                   ? 'rgba(255,255,255,0.7)'
                   : 'rgba(71,85,105,0.9)',
-                maxWidth: '800px',
+                maxWidth: '650px',
                 mx: 'auto',
-                mt: 3,
-                mb: 5,
-                lineHeight: 1.6,
+                mt: 2,
+                mb: 3,
+                lineHeight: 1.5,
                 fontWeight: 400,
+                fontSize: '0.95rem',
               }}
             >
               Powerful tools to transform, manage, and analyze your data
@@ -251,39 +252,41 @@ const Page = () => {
           </motion.div>
         </motion.div>
 
-        {/* Cards Section - Middle feature section removed */}
-        <Box sx={{ mb: 10, mt: 4 }}>
-          <motion.div variants={headerVariants} className="text-center mb-10">
+        {/* Cards Section */}
+        <Box sx={{ mb: 6, mt: 2 }}>
+          <motion.div variants={headerVariants} className="text-center mb-6">
             <Typography
-              variant="h4"
+              variant="h5"
               sx={{
                 fontWeight: 700,
-                mb: 2,
+                mb: 1.5,
                 position: 'relative',
                 display: 'inline-block',
+                fontSize: { xs: '1.3rem', md: '1.5rem' },
                 '&::after': {
                   content: '""',
                   display: 'block',
-                  width: '60px',
-                  height: '4px',
+                  width: '50px',
+                  height: '3px',
                   background: darkMode
                     ? 'linear-gradient(to right, #818CF8, #6366F1)'
                     : 'linear-gradient(to right, #4F46E5, #6366F1)',
                   borderRadius: '2px',
-                  margin: '12px auto 0',
+                  margin: '8px auto 0',
                 },
               }}
             >
               Access Your Tools
             </Typography>
             <Typography
-              variant="body1"
+              variant="body2"
               sx={{
-                maxWidth: '650px',
+                maxWidth: '550px',
                 mx: 'auto',
                 color: darkMode
                   ? 'rgba(255,255,255,0.7)'
                   : 'rgba(71,85,105,0.9)',
+                fontSize: '0.85rem',
               }}
             >
               All the tools you need to transform, manage, and analyze your
@@ -292,36 +295,35 @@ const Page = () => {
           </motion.div>
 
           <motion.div variants={containerVariants} className="relative z-10">
-            <Grid container spacing={2.5}>
+            <Grid container spacing={2}>
               {cards.map((card, index) => (
                 <Grid item xs={12} sm={6} md={3} key={index}>
                   <motion.div custom={index} variants={cardVariants}>
                     <Paper
                       component={motion.div}
                       whileHover={{
-                        scale: 1.04,
-                        y: -5,
+                        scale: 1.03,
+                        y: -4,
                         boxShadow: darkMode
-                          ? '0 20px 40px -10px rgba(0,0,0,0.5)'
-                          : '0 20px 40px -10px rgba(0,0,0,0.15)',
+                          ? '0 16px 32px -8px rgba(0,0,0,0.5)'
+                          : '0 16px 32px -8px rgba(0,0,0,0.15)',
                       }}
                       whileTap={{ scale: 0.98 }}
                       onMouseEnter={() => setHoveredCard(index)}
                       onMouseLeave={() => setHoveredCard(null)}
                       onClick={() => router.push(card.path)}
                       sx={{
-                        // Further reduced height by ~20%
-                        height: { xs: 144, sm: 160, md: 160 },
+                        height: { xs: 120, sm: 130, md: 130 },
                         cursor: 'pointer',
                         position: 'relative',
                         overflow: 'hidden',
-                        borderRadius: '14px', // Slightly smaller border radius
+                        borderRadius: '12px',
                         border: darkMode
                           ? '1px solid rgba(255,255,255,0.05)'
                           : '1px solid rgba(0,0,0,0.03)',
                         boxShadow: darkMode
-                          ? '0 10px 30px rgba(0,0,0,0.25)'
-                          : '0 10px 30px rgba(0,0,0,0.08)',
+                          ? '0 8px 24px rgba(0,0,0,0.25)'
+                          : '0 8px 24px rgba(0,0,0,0.08)',
                         transition: 'all 0.3s ease-in-out',
                         backgroundColor: darkMode
                           ? 'rgba(15, 23, 42, 0.5)'
@@ -368,13 +370,13 @@ const Page = () => {
                           alignItems: 'center',
                           position: 'relative',
                           zIndex: 2,
-                          p: { xs: 1.5, md: 2 }, // Reduced padding
+                          p: { xs: 1.2, md: 1.5 },
                         }}
                       >
                         <motion.div
                           animate={{
-                            scale: hoveredCard === index ? 1.12 : 1,
-                            y: hoveredCard === index ? -3 : 0, // Smaller hover lift
+                            scale: hoveredCard === index ? 1.08 : 1,
+                            y: hoveredCard === index ? -2 : 0,
                           }}
                           transition={{
                             duration: 0.4,
@@ -382,40 +384,40 @@ const Page = () => {
                             stiffness: 120,
                           }}
                           style={{
-                            marginBottom: '10px', // Reduced margin
+                            marginBottom: '6px',
                             backgroundColor: 'rgba(255, 255, 255, 0.2)',
                             borderRadius: '50%',
-                            padding: '8px', // Smaller padding
+                            padding: '6px',
                             display: 'flex',
                           }}
                         >
-                          {/* Smaller icon size */}
+                          {/* Icon */}
                           {React.cloneElement(card.icon, {
-                            sx: { fontSize: '2rem', color: '#fff' },
+                            sx: { fontSize: '1.6rem', color: '#fff' },
                           })}
                         </motion.div>
                         <Typography
-                          variant="h6"
+                          variant="subtitle1"
                           component="div"
                           align="center"
                           sx={{
                             color: '#fff',
                             fontWeight: 700,
-                            mb: 0.75, // Reduced margin
-                            fontSize: { xs: '0.9rem', md: '1rem' }, // Smaller font
+                            mb: 0.5,
+                            fontSize: { xs: '0.8rem', md: '0.9rem' },
                             letterSpacing: '0.2px',
-                            textShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                            textShadow: '0 1px 3px rgba(0,0,0,0.1)',
                           }}
                         >
                           {card.title}
                         </Typography>
                         <Typography
-                          variant="body2"
+                          variant="caption"
                           align="center"
                           sx={{
                             color: 'rgba(255,255,255,0.95)',
-                            lineHeight: 1.4, // Tighter line height
-                            fontSize: { xs: '0.7rem', md: '0.75rem' }, // Smaller font
+                            lineHeight: 1.3,
+                            fontSize: { xs: '0.65rem', md: '0.7rem' },
                             maxWidth: '95%',
                             fontWeight: 400,
                           }}
@@ -427,10 +429,10 @@ const Page = () => {
                         <motion.div
                           style={{
                             position: 'absolute',
-                            bottom: '12px', // Repositioned
-                            right: '12px',
-                            width: '6px', // Smaller dot
-                            height: '6px',
+                            bottom: '8px',
+                            right: '8px',
+                            width: '4px',
+                            height: '4px',
                             borderRadius: '50%',
                             backgroundColor: 'rgba(255,255,255,0.7)',
                             opacity: 0,
@@ -460,21 +462,21 @@ const Page = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.6 }}
         >
-          <Box sx={{ mt: 10, textAlign: 'center' }}>
+          <Box sx={{ mt: 6, textAlign: 'center' }}>
             <Divider
               sx={{
-                mb: 4,
+                mb: 3,
                 opacity: darkMode ? 0.1 : 0.2,
-                maxWidth: '500px',
+                maxWidth: '400px',
                 mx: 'auto',
               }}
             />
             <Typography
-              variant="body2"
+              variant="caption"
               sx={{
                 color: darkMode ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)',
-                fontSize: '0.85rem',
-                mt: 2,
+                fontSize: '0.75rem',
+                mt: 1.5,
               }}
             >
               © 2025 Ahana Systems & Solutions Pvt Ltd | All Rights Reserved

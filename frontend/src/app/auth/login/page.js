@@ -83,7 +83,7 @@ const RightPanel = styled(Box)`
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  padding: 2rem;
+  padding: 1.5rem;
   background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
 
   @media (max-width: 960px) {
@@ -92,12 +92,12 @@ const RightPanel = styled(Box)`
   }
 `
 
-// Form container - smaller size and improved styling
+// Form container - smaller size and improved scaling
 const FormContainer = styled(Box)`
   width: 100%;
-  max-width: 380px;
-  padding: 2.5rem;
-  border-radius: 1.25rem;
+  max-width: 340px;
+  padding: 2rem;
+  border-radius: 1rem;
   background-color: white;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.12);
   transition: all 0.3s ease;
@@ -110,13 +110,13 @@ const FormContainer = styled(Box)`
 // Custom styled button with improved animation
 const LoginButton = styled('button')`
   width: 100%;
-  padding: 0.875rem;
-  margin-top: 1.5rem;
+  padding: 0.75rem;
+  margin-top: 1.25rem;
   border: none;
-  border-radius: 0.75rem;
+  border-radius: 0.625rem;
   background: linear-gradient(90deg, #2065b0 0%, #0d47a1 100%);
   color: white;
-  font-size: 1rem;
+  font-size: 0.9375rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
@@ -161,12 +161,12 @@ const LoginButton = styled('button')`
 
 // Improved styled text field
 const StyledTextField = styled(TextField)`
-  margin-bottom: 1.25rem;
+  margin-bottom: 1rem;
 
   .MuiOutlinedInput-root {
-    border-radius: 0.75rem;
+    border-radius: 0.625rem;
     transition: all 0.3s ease;
-    font-size: 0.95rem;
+    font-size: 0.875rem;
 
     &.Mui-focused {
       .MuiOutlinedInput-notchedOutline {
@@ -181,7 +181,7 @@ const StyledTextField = styled(TextField)`
   }
 
   .MuiInputLabel-root {
-    font-size: 0.95rem;
+    font-size: 0.875rem;
 
     &.Mui-focused {
       color: #2065b0;
@@ -195,8 +195,8 @@ const StyledTextField = styled(TextField)`
 
 // Enhanced Logo
 const Logo = styled(motion.div)`
-  margin-bottom: 1.5rem;
-  font-size: 2.25rem;
+  margin-bottom: 1.25rem;
+  font-size: 1.875rem;
   font-weight: 700;
   color: #2065b0;
   display: flex;
@@ -295,9 +295,10 @@ const LoginPage = () => {
               component="h1"
               sx={{
                 fontWeight: 800,
-                marginBottom: 4,
+                marginBottom: 3,
                 textShadow: '0 2px 15px rgba(0, 0, 0, 0.3)',
                 letterSpacing: '-0.5px',
+                fontSize: '2.5rem',
               }}
             >
               Welcome to DW Tool
@@ -306,11 +307,12 @@ const LoginPage = () => {
               variant="h5"
               sx={{
                 fontWeight: 400,
-                marginBottom: 6,
+                marginBottom: 4,
                 textShadow: '0 2px 10px rgba(0, 0, 0, 0.25)',
                 maxWidth: '80%',
                 mx: 'auto',
                 lineHeight: 1.5,
+                fontSize: '1.15rem',
               }}
             >
               Your complete solution for data management and mapping
@@ -320,7 +322,7 @@ const LoginPage = () => {
               sx={{
                 display: 'flex',
                 justifyContent: 'center',
-                gap: 3,
+                gap: 2.5,
                 flexWrap: 'wrap',
               }}
             >
@@ -333,21 +335,23 @@ const LoginPage = () => {
                   sx={{
                     backgroundColor: 'rgba(255, 255, 255, 0.12)',
                     backdropFilter: 'blur(12px)',
-                    padding: 3,
+                    padding: 2.5,
                     borderRadius: 3,
                     textAlign: 'center',
-                    width: '180px',
-                    height: '130px',
+                    width: '160px',
+                    height: '110px',
                     display: 'flex',
                     flexDirection: 'column',
                     justifyContent: 'center',
                     boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
                   }}
                 >
-                  <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
+                  <Typography variant="h4" sx={{ fontWeight: 700, mb: 1, fontSize: '1.75rem' }}>
                     100+
                   </Typography>
-                  <Typography variant="body1">Data Connectors</Typography>
+                  <Typography variant="body1" sx={{ fontSize: '0.9rem' }}>
+                    Data Connectors
+                  </Typography>
                 </Box>
               </motion.div>
 
@@ -360,21 +364,23 @@ const LoginPage = () => {
                   sx={{
                     backgroundColor: 'rgba(255, 255, 255, 0.12)',
                     backdropFilter: 'blur(12px)',
-                    padding: 3,
+                    padding: 2.5,
                     borderRadius: 3,
                     textAlign: 'center',
-                    width: '180px',
-                    height: '130px',
+                    width: '160px',
+                    height: '110px',
                     display: 'flex',
                     flexDirection: 'column',
                     justifyContent: 'center',
                     boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
                   }}
                 >
-                  <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
+                  <Typography variant="h4" sx={{ fontWeight: 700, mb: 1, fontSize: '1.75rem' }}>
                     Fast
                   </Typography>
-                  <Typography variant="body1">Data Mapping</Typography>
+                  <Typography variant="body1" sx={{ fontSize: '0.9rem' }}>
+                    Data Mapping
+                  </Typography>
                 </Box>
               </motion.div>
 
@@ -387,21 +393,23 @@ const LoginPage = () => {
                   sx={{
                     backgroundColor: 'rgba(255, 255, 255, 0.12)',
                     backdropFilter: 'blur(12px)',
-                    padding: 3,
+                    padding: 2.5,
                     borderRadius: 3,
                     textAlign: 'center',
-                    width: '180px',
-                    height: '130px',
+                    width: '160px',
+                    height: '110px',
                     display: 'flex',
                     flexDirection: 'column',
                     justifyContent: 'center',
                     boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
                   }}
                 >
-                  <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
+                  <Typography variant="h4" sx={{ fontWeight: 700, mb: 1, fontSize: '1.75rem' }}>
                     Secure
                   </Typography>
-                  <Typography variant="body1">Enterprise Ready</Typography>
+                  <Typography variant="body1" sx={{ fontSize: '0.9rem' }}>
+                    Enterprise Ready
+                  </Typography>
                 </Box>
               </motion.div>
             </Box>
@@ -414,7 +422,7 @@ const LoginPage = () => {
             variants={containerVariants}
             initial="hidden"
             animate="visible"
-            style={{ width: '100%', maxWidth: '380px' }}
+            style={{ width: '100%', maxWidth: '340px' }}
           >
             <FormContainer
               as={motion.form}
@@ -441,7 +449,8 @@ const LoginPage = () => {
                   gutterBottom
                   sx={{
                     fontWeight: 600,
-                    mb: 3,
+                    mb: 2.5,
+                    fontSize: '1.25rem',
                     background: 'linear-gradient(90deg, #2065b0, #0d47a1)',
                     backgroundClip: 'text',
                     WebkitBackgroundClip: 'text',
@@ -462,7 +471,7 @@ const LoginPage = () => {
                 >
                   <Alert
                     severity="error"
-                    sx={{ mb: 3, borderRadius: '0.75rem' }}
+                    sx={{ mb: 2.5, borderRadius: '0.625rem' }}
                   >
                     {error}
                   </Alert>
@@ -521,7 +530,7 @@ const LoginPage = () => {
                   display: 'flex',
                   justifyContent: 'space-between',
                   alignItems: 'center',
-                  marginBottom: '1rem',
+                  marginBottom: '0.875rem',
                 }}
               >
                 <FormControlLabel
@@ -532,11 +541,12 @@ const LoginPage = () => {
                       sx={{
                         color: '#adb5bd',
                         '&.Mui-checked': { color: '#2065b0' },
+                        '& .MuiSvgIcon-root': { fontSize: '1.125rem' },
                       }}
                       size="small"
                     />
                   }
-                  label={<Typography variant="body2">Remember me</Typography>}
+                  label={<Typography variant="body2" sx={{ fontSize: '0.8125rem' }}>Remember me</Typography>}
                 />
                 <Link
                   href="/auth/forgot-password"
@@ -544,7 +554,7 @@ const LoginPage = () => {
                     color: '#2065b0',
                     textDecoration: 'none',
                     fontWeight: 600,
-                    fontSize: '0.85rem',
+                    fontSize: '0.8125rem',
                     transition: 'all 0.2s ease',
                     '&:hover': {
                       color: '#0d47a1',

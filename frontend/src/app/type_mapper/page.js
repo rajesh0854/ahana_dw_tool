@@ -166,16 +166,16 @@ export default function ParameterPage() {
                 theme.palette.primary.light,
                 0.05
               )}, ${alpha(theme.palette.background.default, 1)})`,
-        py: 3,
-        px: 2,
+        py: 2,
+        px: 1.5,
       }}
     >
       <Box maxWidth="100%" sx={{ mx: 'auto' }}>
         <Card
           elevation={0}
           sx={{
-            mb: 4,
-            borderRadius: 3,
+            mb: 3,
+            borderRadius: 2,
             backgroundColor:
               theme.palette.mode === 'dark'
                 ? alpha(theme.palette.background.paper, 0.8)
@@ -184,30 +184,30 @@ export default function ParameterPage() {
               theme.palette.divider,
               theme.palette.mode === 'dark' ? 0.2 : 0.1
             )}`,
-            boxShadow: `0 4px 20px ${alpha(
+            boxShadow: `0 4px 15px ${alpha(
               theme.palette.common.black,
               theme.palette.mode === 'dark' ? 0.3 : 0.05
             )}`,
           }}
         >
-          <CardContent sx={{ p: { xs: 2, sm: 4 } }}>
+          <CardContent sx={{ p: { xs: 1.5, sm: 2.5 } }}>
             <Box
               sx={{
                 display: 'flex',
                 flexDirection: { xs: 'column', md: 'row' },
                 justifyContent: 'space-between',
                 alignItems: { xs: 'flex-start', md: 'center' },
-                mb: 3,
-                gap: 2,
+                mb: 2,
+                gap: 1.5,
               }}
             >
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
                 <SettingsIcon
-                  sx={{ fontSize: 32, color: theme.palette.primary.main }}
+                  sx={{ fontSize: 24, color: theme.palette.primary.main }}
                 />
                 <Box>
                   <Typography
-                    variant="h4"
+                    variant="h5"
                     component="h1"
                     sx={{
                       fontWeight: 700,
@@ -221,7 +221,10 @@ export default function ParameterPage() {
                   </Typography>
                   <Typography
                     variant="body2"
-                    sx={{ color: theme.palette.text.secondary }}
+                    sx={{ 
+                      color: theme.palette.text.secondary,
+                      fontSize: '0.75rem'
+                    }}
                   >
                     Manage global configuration settings that control
                     application behavior
@@ -232,7 +235,7 @@ export default function ParameterPage() {
               <Box
                 sx={{
                   display: 'flex',
-                  gap: 2,
+                  gap: 1.5,
                   alignItems: 'center',
                   flexWrap: { xs: 'wrap', sm: 'nowrap' },
                   width: { xs: '100%', md: 'auto' },
@@ -245,10 +248,10 @@ export default function ParameterPage() {
                   value={filterType}
                   onChange={(e) => setFilterType(e.target.value)}
                   sx={{
-                    minWidth: { xs: '100%', sm: 200 },
+                    minWidth: { xs: '100%', sm: 180 },
                     backgroundColor: theme.palette.background.paper,
                     '& .MuiOutlinedInput-root': {
-                      borderRadius: 2,
+                      borderRadius: 1.5,
                     },
                   }}
                   InputProps={{
@@ -276,6 +279,7 @@ export default function ParameterPage() {
                     color="primary"
                     onClick={fetchParameters}
                     disabled={loading}
+                    size="small"
                     sx={{
                       backgroundColor: alpha(theme.palette.primary.main, 0.1),
                       '&:hover': {
@@ -283,7 +287,7 @@ export default function ParameterPage() {
                       },
                     }}
                   >
-                    <RefreshIcon />
+                    <RefreshIcon fontSize="small" />
                   </IconButton>
                 </Tooltip>
 
@@ -292,12 +296,13 @@ export default function ParameterPage() {
                   startIcon={showAddForm ? <CancelIcon /> : <AddIcon />}
                   onClick={() => setShowAddForm(!showAddForm)}
                   color={showAddForm ? 'error' : 'primary'}
+                  size="small"
                   sx={{
-                    borderRadius: 2,
+                    borderRadius: 1.5,
                     boxShadow: showAddForm
                       ? 'none'
-                      : '0 4px 12px rgba(0,0,0,0.1)',
-                    px: 3,
+                      : '0 3px 8px rgba(0,0,0,0.1)',
+                    px: 2,
                   }}
                 >
                   {showAddForm ? 'Cancel' : 'Add Parameter'}
@@ -305,18 +310,19 @@ export default function ParameterPage() {
               </Box>
             </Box>
 
-            <Divider sx={{ mb: 3, opacity: 0.7 }} />
+            <Divider sx={{ mb: 2, opacity: 0.7 }} />
 
             {error && (
               <Alert
                 severity="error"
                 sx={{
-                  mb: 3,
-                  borderRadius: 2,
-                  boxShadow: `0 4px 12px ${alpha(
+                  mb: 2,
+                  borderRadius: 1.5,
+                  boxShadow: `0 3px 8px ${alpha(
                     theme.palette.error.main,
                     0.2
                   )}`,
+                  py: 0.5,
                 }}
                 action={
                   <IconButton
@@ -325,7 +331,7 @@ export default function ParameterPage() {
                     size="small"
                     onClick={() => setError(null)}
                   >
-                    <CloseIcon fontSize="inherit" />
+                    <CloseIcon fontSize="small" />
                   </IconButton>
                 }
               >
@@ -338,10 +344,10 @@ export default function ParameterPage() {
                 <Card
                   elevation={2}
                   sx={{
-                    p: { xs: 2, sm: 3 },
-                    mb: 4,
+                    p: { xs: 1.5, sm: 2 },
+                    mb: 2.5,
                     backgroundColor: alpha(theme.palette.primary.light, 0.04),
-                    borderRadius: 3,
+                    borderRadius: 2,
                     border: `1px solid ${alpha(
                       theme.palette.primary.main,
                       0.15
@@ -352,13 +358,18 @@ export default function ParameterPage() {
                     sx={{
                       display: 'flex',
                       alignItems: 'center',
-                      gap: 1,
-                      mb: 2,
+                      gap: 0.75,
+                      mb: 1.5,
                     }}
                   >
-                    <AddIcon sx={{ color: theme.palette.primary.main }} />
+                    <AddIcon 
+                      sx={{ 
+                        color: theme.palette.primary.main,
+                        fontSize: '1.2rem'
+                      }} 
+                    />
                     <Typography
-                      variant="h6"
+                      variant="subtitle1"
                       sx={{
                         fontWeight: 600,
                         color: theme.palette.primary.dark,
@@ -368,7 +379,7 @@ export default function ParameterPage() {
                     </Typography>
                   </Box>
                   <form onSubmit={handleAddParameter}>
-                    <Grid container spacing={3}>
+                    <Grid container spacing={2}>
                       <Grid item xs={12} md={6}>
                         <TextField
                           fullWidth
@@ -379,9 +390,10 @@ export default function ParameterPage() {
                           required
                           placeholder="DB, Datatype, etc."
                           variant="outlined"
+                          size="small"
                           sx={{
                             '& .MuiOutlinedInput-root': {
-                              borderRadius: 2,
+                              borderRadius: 1.5,
                               backgroundColor: theme.palette.background.paper,
                             },
                           }}
@@ -397,9 +409,10 @@ export default function ParameterPage() {
                           required
                           placeholder="Parameter code"
                           variant="outlined"
+                          size="small"
                           sx={{
                             '& .MuiOutlinedInput-root': {
-                              borderRadius: 2,
+                              borderRadius: 1.5,
                               backgroundColor: theme.palette.background.paper,
                             },
                           }}
@@ -415,9 +428,10 @@ export default function ParameterPage() {
                           required
                           placeholder="Parameter description"
                           variant="outlined"
+                          size="small"
                           sx={{
                             '& .MuiOutlinedInput-root': {
-                              borderRadius: 2,
+                              borderRadius: 1.5,
                               backgroundColor: theme.palette.background.paper,
                             },
                           }}
@@ -433,9 +447,10 @@ export default function ParameterPage() {
                           required
                           placeholder="Parameter value"
                           variant="outlined"
+                          size="small"
                           sx={{
                             '& .MuiOutlinedInput-root': {
-                              borderRadius: 2,
+                              borderRadius: 1.5,
                               backgroundColor: theme.palette.background.paper,
                             },
                           }}
@@ -444,7 +459,7 @@ export default function ParameterPage() {
                     </Grid>
                     <Box
                       sx={{
-                        mt: 3,
+                        mt: 2,
                         display: 'flex',
                         justifyContent: 'flex-end',
                       }}
@@ -454,17 +469,18 @@ export default function ParameterPage() {
                         variant="contained"
                         color="success"
                         disabled={loading}
+                        size="small"
                         startIcon={
                           loading ? (
-                            <CircularProgress size={20} />
+                            <CircularProgress size={16} />
                           ) : (
-                            <SaveIcon />
+                            <SaveIcon fontSize="small" />
                           )
                         }
                         sx={{
-                          borderRadius: 2,
-                          px: 3,
-                          boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                          borderRadius: 1.5,
+                          px: 2,
+                          boxShadow: '0 3px 8px rgba(0,0,0,0.15)',
                         }}
                       >
                         {loading ? 'Saving...' : 'Save Parameter'}
@@ -481,18 +497,18 @@ export default function ParameterPage() {
                   display: 'flex',
                   justifyContent: 'center',
                   alignItems: 'center',
-                  p: 8,
+                  p: 5,
                 }}
               >
-                <CircularProgress size={60} thickness={4} />
+                <CircularProgress size={40} thickness={4} />
               </Box>
             ) : (
-              <Box sx={{ borderRadius: 3, overflow: 'hidden' }}>
+              <Box sx={{ borderRadius: 2, overflow: 'hidden' }}>
                 <TableContainer
                   component={Paper}
                   elevation={0}
                   sx={{
-                    borderRadius: '16px 16px 0 0',
+                    borderRadius: '12px 12px 0 0',
                     border: '1px solid',
                     borderColor: alpha(
                       theme.palette.divider,
@@ -517,7 +533,7 @@ export default function ParameterPage() {
                     },
                   }}
                 >
-                  <Table sx={{ minWidth: 800 }} size="small" padding="none">
+                  <Table sx={{ minWidth: 800 }} size="small">
                     <TableHead
                       sx={{
                         backgroundColor:
@@ -526,74 +542,74 @@ export default function ParameterPage() {
                             : alpha(theme.palette.primary.main, 0.05),
                       }}
                     >
-                      <TableRow sx={{ height: '36px' }}>
-                        <TableCell sx={{ py: 0.8, px: 1.5 }}>
+                      <TableRow>
+                        <TableCell sx={{ py: 1, px: 1.5 }}>
                           <Typography
                             variant="subtitle2"
                             sx={{
                               fontWeight: 700,
                               color: theme.palette.primary.dark,
-                              fontSize: '0.75rem',
+                              fontSize: '0.7rem',
                             }}
                           >
                             Type
                           </Typography>
                         </TableCell>
-                        <TableCell sx={{ py: 0.8, px: 1.5 }}>
+                        <TableCell sx={{ py: 1, px: 1.5 }}>
                           <Typography
                             variant="subtitle2"
                             sx={{
                               fontWeight: 700,
                               color: theme.palette.primary.dark,
-                              fontSize: '0.75rem',
+                              fontSize: '0.7rem',
                             }}
                           >
                             Code
                           </Typography>
                         </TableCell>
-                        <TableCell sx={{ py: 0.8, px: 1.5 }}>
+                        <TableCell sx={{ py: 1, px: 1.5 }}>
                           <Typography
                             variant="subtitle2"
                             sx={{
                               fontWeight: 700,
                               color: theme.palette.primary.dark,
-                              fontSize: '0.75rem',
+                              fontSize: '0.7rem',
                             }}
                           >
                             Description
                           </Typography>
                         </TableCell>
-                        <TableCell sx={{ py: 0.8, px: 1.5 }}>
+                        <TableCell sx={{ py: 1, px: 1.5 }}>
                           <Typography
                             variant="subtitle2"
                             sx={{
                               fontWeight: 700,
                               color: theme.palette.primary.dark,
-                              fontSize: '0.75rem',
+                              fontSize: '0.7rem',
                             }}
                           >
                             Value
                           </Typography>
                         </TableCell>
-                        <TableCell sx={{ py: 0.8, px: 1.5 }}>
+                        <TableCell sx={{ py: 1, px: 1.5 }}>
                           <Typography
                             variant="subtitle2"
                             sx={{
                               fontWeight: 700,
                               color: theme.palette.primary.dark,
-                              fontSize: '0.75rem',
+                              fontSize: '0.7rem',
                             }}
                           >
                             Created
                           </Typography>
                         </TableCell>
-                        <TableCell sx={{ py: 0.8, px: 1.5 }}>
+                        <TableCell sx={{ py: 1, px: 1.5 }}>
                           <Typography
                             variant="subtitle2"
                             sx={{
                               fontWeight: 700,
                               color: theme.palette.primary.dark,
-                              fontSize: '0.75rem',
+                              fontSize: '0.7rem',
                             }}
                           >
                             Updated
@@ -604,18 +620,18 @@ export default function ParameterPage() {
                     <TableBody>
                       {paginatedParameters.length === 0 ? (
                         <TableRow>
-                          <TableCell colSpan={6} align="center" sx={{ py: 6 }}>
+                          <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
                             <Box
                               sx={{
                                 display: 'flex',
                                 flexDirection: 'column',
                                 alignItems: 'center',
-                                gap: 2,
+                                gap: 1.5,
                               }}
                             >
                               <InfoIcon
                                 sx={{
-                                  fontSize: 48,
+                                  fontSize: 36,
                                   color: alpha(
                                     theme.palette.text.secondary,
                                     0.5
@@ -624,7 +640,7 @@ export default function ParameterPage() {
                               />
                               <Typography
                                 color="text.secondary"
-                                sx={{ fontSize: '1.1rem' }}
+                                sx={{ fontSize: '0.9rem' }}
                               >
                                 {parameters.length === 0
                                   ? 'No parameters found'
@@ -635,7 +651,7 @@ export default function ParameterPage() {
                                   variant="outlined"
                                   size="small"
                                   onClick={() => setFilterType('')}
-                                  sx={{ mt: 1 }}
+                                  sx={{ mt: 0.5 }}
                                 >
                                   Clear Filter
                                 </Button>
@@ -652,21 +668,20 @@ export default function ParameterPage() {
                               '&:last-child td, &:last-child th': { border: 0 },
                               transition: 'all 0.2s ease',
                               cursor: 'pointer',
-                              height: '48px',
                               '&:hover': {
                                 backgroundColor:
                                   theme.palette.mode === 'dark'
                                     ? alpha(theme.palette.primary.main, 0.1)
                                     : alpha(theme.palette.primary.main, 0.02),
                                 transform: 'translateY(-1px)',
-                                boxShadow: `0 2px 6px ${alpha(
+                                boxShadow: `0 2px 4px ${alpha(
                                   theme.palette.common.black,
                                   theme.palette.mode === 'dark' ? 0.2 : 0.05
                                 )}`,
                               },
                             }}
                           >
-                            <TableCell sx={{ py: 0.9, px: 1.5 }}>
+                            <TableCell sx={{ py: 1, px: 1.5 }}>
                               <Chip
                                 label={param.PRTYP}
                                 size="small"
@@ -677,33 +692,33 @@ export default function ParameterPage() {
                                   ),
                                   color: theme.palette.primary.dark,
                                   fontWeight: 600,
-                                  borderRadius: '10px',
-                                  height: '22px',
+                                  borderRadius: '8px',
+                                  height: '20px',
                                   '& .MuiChip-label': {
                                     px: 1,
                                     py: 0,
-                                    fontSize: '0.75rem',
+                                    fontSize: '0.7rem',
                                   },
                                 }}
                               />
                             </TableCell>
-                            <TableCell sx={{ py: 0.9, px: 1.5 }}>
+                            <TableCell sx={{ py: 1, px: 1.5 }}>
                               <Typography
                                 variant="body2"
-                                sx={{ fontWeight: 600, fontSize: '0.85rem' }}
+                                sx={{ fontWeight: 600, fontSize: '0.8rem' }}
                               >
                                 {param.PRCD}
                               </Typography>
                             </TableCell>
-                            <TableCell sx={{ py: 0.9, px: 1.5 }}>
+                            <TableCell sx={{ py: 1, px: 1.5 }}>
                               <Typography
                                 variant="body2"
-                                sx={{ lineHeight: 1.3, fontSize: '0.85rem' }}
+                                sx={{ lineHeight: 1.3, fontSize: '0.8rem' }}
                               >
                                 {param.PRDESC}
                               </Typography>
                             </TableCell>
-                            <TableCell sx={{ py: 0.9, px: 1.5 }}>
+                            <TableCell sx={{ py: 1, px: 1.5 }}>
                               <Typography
                                 variant="body2"
                                 sx={{
@@ -712,8 +727,8 @@ export default function ParameterPage() {
                                     theme.palette.mode === 'dark'
                                       ? alpha(theme.palette.grey[900], 0.5)
                                       : alpha(theme.palette.grey[100], 0.7),
-                                  p: 0.4,
-                                  px: 0.9,
+                                  p: 0.3,
+                                  px: 0.8,
                                   borderRadius: 1,
                                   display: 'inline-block',
                                   border: '1px solid',
@@ -721,32 +736,32 @@ export default function ParameterPage() {
                                     theme.palette.mode === 'dark'
                                       ? alpha(theme.palette.grey[700], 0.5)
                                       : alpha(theme.palette.grey[300], 0.5),
-                                  fontSize: '0.8rem',
+                                  fontSize: '0.75rem',
                                   letterSpacing: '0.25px',
                                 }}
                               >
                                 {param.PRVAL}
                               </Typography>
                             </TableCell>
-                            <TableCell sx={{ py: 0.9, px: 1.5 }}>
+                            <TableCell sx={{ py: 1, px: 1.5 }}>
                               <Typography
                                 variant="body2"
                                 color="text.secondary"
                                 sx={{
                                   whiteSpace: 'nowrap',
-                                  fontSize: '0.8rem',
+                                  fontSize: '0.75rem',
                                 }}
                               >
                                 {formatDate(param.PRRECCRDT)}
                               </Typography>
                             </TableCell>
-                            <TableCell sx={{ py: 0.9, px: 1.5 }}>
+                            <TableCell sx={{ py: 1, px: 1.5 }}>
                               <Typography
                                 variant="body2"
                                 color="text.secondary"
                                 sx={{
                                   whiteSpace: 'nowrap',
-                                  fontSize: '0.8rem',
+                                  fontSize: '0.75rem',
                                 }}
                               >
                                 {formatDate(param.PRRECUPDT)}
@@ -769,7 +784,7 @@ export default function ParameterPage() {
                   onRowsPerPageChange={handleChangeRowsPerPage}
                   rowsPerPageOptions={[5, 10, 25, 50, 100]}
                   sx={{
-                    borderRadius: '0 0 16px 16px',
+                    borderRadius: '0 0 12px 12px',
                     backgroundColor:
                       theme.palette.mode === 'dark'
                         ? alpha(theme.palette.background.paper, 0.4)
@@ -783,11 +798,11 @@ export default function ParameterPage() {
                     ),
                     '.MuiTablePagination-selectLabel, .MuiTablePagination-displayedRows':
                       {
-                        fontSize: '0.875rem',
+                        fontSize: '0.8rem',
                         color: theme.palette.text.secondary,
                       },
                     '.MuiTablePagination-actions': {
-                      marginLeft: 2,
+                      marginLeft: 1.5,
                     },
                   }}
                 />
@@ -797,24 +812,28 @@ export default function ParameterPage() {
             {filteredParameters.length > 0 && (
               <Box
                 sx={{
-                  mt: 3,
+                  mt: 2,
                   display: 'flex',
                   flexDirection: { xs: 'column', sm: 'row' },
                   justifyContent: 'space-between',
                   alignItems: { xs: 'flex-start', sm: 'center' },
-                  gap: 1,
+                  gap: 0.75,
                 }}
               >
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
                   <InfoIcon
                     fontSize="small"
-                    sx={{ color: alpha(theme.palette.primary.main, 0.6) }}
+                    sx={{ 
+                      color: alpha(theme.palette.primary.main, 0.6),
+                      fontSize: '0.9rem'
+                    }}
                   />
                   <Typography
                     variant="body2"
                     sx={{
                       fontStyle: 'italic',
                       color: theme.palette.text.secondary,
+                      fontSize: '0.75rem'
                     }}
                   >
                     Parameter values control core application behavior and
@@ -826,10 +845,11 @@ export default function ParameterPage() {
                   sx={{
                     color: theme.palette.primary.main,
                     backgroundColor: alpha(theme.palette.primary.main, 0.05),
-                    py: 0.5,
-                    px: 2,
+                    py: 0.25,
+                    px: 1.5,
                     borderRadius: 10,
                     fontWeight: 500,
+                    fontSize: '0.75rem'
                   }}
                 >
                   Showing {Math.min(rowsPerPage, filteredParameters.length)} of{' '}
