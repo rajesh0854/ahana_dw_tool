@@ -88,7 +88,7 @@ export const AuthProvider = ({ children }) => {
             if (storedLicenseStatus) {
               setLicenseStatus(JSON.parse(storedLicenseStatus));
             }
-            // Cookies.set('token', token);
+            Cookies.set('token', token);
           } else {
             handleTokenExpiration();
           }
@@ -137,7 +137,7 @@ export const AuthProvider = ({ children }) => {
 
       const data = response.data;
 
-      if (!response.status === 200) {
+      if (response.status !== 200) {
         throw new Error(data.error || 'Login failed');
       }
 
@@ -153,8 +153,7 @@ export const AuthProvider = ({ children }) => {
         role: data.role
       }));
 
-      // Set cookie for middleware
-      // Cookies.set('token', data.token);
+      Cookies.set('token', data.token);
 
       setUser({
         id: data.user_id,

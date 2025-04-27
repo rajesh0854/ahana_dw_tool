@@ -17,7 +17,8 @@ import {
   KeyboardArrowRight as KeyboardArrowRightIcon,
   Code as CodeIcon,
   ExpandMore as ExpandMoreIcon,
-  ExpandLess as ExpandLessIcon
+  ExpandLess as ExpandLessIcon,
+  InfoOutlined as InfoIcon
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import { styled } from '@mui/material/styles';
@@ -419,6 +420,31 @@ const JobDependencyTree = ({
             Job Dependency Hierarchy
           </Typography>
           
+          <Tooltip title={
+            <Box sx={{ p: 1 }}>
+              <Typography sx={{ fontSize: '0.85rem', mb: 1, fontWeight: 500 }}>
+                Job Dependency Tree Help
+              </Typography>
+              <Box component="ul" sx={{ m: 0, pl: 2 }}>
+                <Box component="li" sx={{ mb: 0.5, fontSize: '0.8rem' }}>
+                  <BoltIcon sx={{ fontSize: 14, color: '#60A5FA', mr: 1, verticalAlign: 'middle' }} /> 
+                  Root jobs (no dependencies)
+                </Box>
+                <Box component="li" sx={{ mb: 0.5, fontSize: '0.8rem' }}>
+                  <CheckCircleIcon sx={{ fontSize: 14, color: '#34D399', mr: 1, verticalAlign: 'middle' }} /> 
+                  Dependent jobs (child jobs)
+                </Box>
+                <Box component="li" sx={{ fontSize: '0.8rem' }}>
+                  Click job cards or <ExpandMoreIcon sx={{ fontSize: 14, verticalAlign: 'middle', mx: 0.5 }} /> to expand/collapse
+                </Box>
+              </Box>
+            </Box>
+          } arrow placement="right">
+            <IconButton size="small" sx={{ ml: 1, color: darkMode ? 'primary.light' : 'primary.main' }}>
+              <InfoIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+          
           <Chip
             label={`${jobs.length} Jobs`}
             size="small"
@@ -435,33 +461,6 @@ const JobDependencyTree = ({
           />
         </Box>
       </Box>
-      
-      {/* Instructions */}
-      {jobs.length > 0 && (
-        <Box 
-          sx={{ 
-            backgroundColor: darkMode ? 'rgba(17, 24, 39, 0.4)' : 'rgba(243, 244, 246, 0.6)',
-            border: '1px solid',
-            borderColor: darkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
-            borderRadius: 2,
-            p: 1.5,
-            mb: 3,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between'
-          }}
-        >
-          <Typography 
-            variant="body2" 
-            color={darkMode ? 'gray.300' : 'gray.700'}
-            sx={{ fontSize: '0.875rem' }}
-          >
-            Root jobs are shown with <BoltIcon sx={{ fontSize: 16, color: darkMode ? '#60A5FA' : '#3B82F6', mx: 0.5, verticalAlign: 'text-bottom' }} /> 
-            icon and dependent jobs with <CheckCircleIcon sx={{ fontSize: 16, color: darkMode ? '#34D399' : '#059669', mx: 0.5, verticalAlign: 'text-bottom' }} /> icon. 
-            Click on a job or use the <ExpandMoreIcon sx={{ fontSize: 16, verticalAlign: 'text-bottom', mx: 0.5 }} /> button to expand dependencies.
-          </Typography>
-        </Box>
-      )}
       
       {/* Display root jobs as top-level nodes */}
       {rootJobs.map(job => (

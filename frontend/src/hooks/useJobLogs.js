@@ -35,14 +35,22 @@ const useJobLogs = () => {
         if (Array.isArray(job)) {
           return {
             MAP_REFERENCE: job[0] || '',
-            STATUS: job[1] || ''
+            STATUS: job[1] || '',
+            FREQUENCY_CODE: job[2] || '',
+            FREQUENCY_DAY: job[3] || '',
+            FREQUENCY_HOUR: job[4] || '',
+            FREQUENCY_MINUTE: job[5] || ''
           };
         }
         
         // Otherwise, expect an object
         return {
           MAP_REFERENCE: job.MAP_REFERENCE || '',
-          STATUS: job.STATUS || ''
+          STATUS: job.STATUS || '',
+          FREQUENCY_CODE: job.FREQUENCY_CODE || '',
+          FREQUENCY_DAY: job.FREQUENCY_DAY || '',
+          FREQUENCY_HOUR: job.FREQUENCY_HOUR || '',
+          FREQUENCY_MINUTE: job.FREQUENCY_MINUTE || ''
         };
       });
       

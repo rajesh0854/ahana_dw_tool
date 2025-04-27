@@ -188,6 +188,17 @@ const LicenseCheck = ({ children }) => {
                                 rows={3}
                                 className="mb-2"
                             />
+                            {licenseStatus?.system_id && (
+                                <div className="text-sm bg-blue-50 dark:bg-blue-900/20 p-3 rounded-md border border-blue-200 dark:border-blue-800 mt-2">
+                                    <p className="font-medium mb-1 text-blue-700 dark:text-blue-300">System Information</p>
+                                    <p className="text-gray-600 dark:text-gray-300">
+                                        System ID: <span className="font-mono font-medium">{licenseStatus.system_id}</span>
+                                    </p>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                        This system identifier is required when generating a license key.
+                                    </p>
+                                </div>
+                            )}
                             <p className="text-sm text-gray-500">
                                 Note: You must be logged in as an administrator to activate the license.
                             </p>

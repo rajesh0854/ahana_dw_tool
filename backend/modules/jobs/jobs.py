@@ -337,17 +337,32 @@ def get_scheduled_jobs():
     try:
         conn = create_oracle_connection()
         query = """ 
-        SELECT MAPREF as MAP_REFERENCE,
-        STFLG as STATUS from DWJOBSCH 
-        where CURFLG = 'Y' 
+        SELECT 
+            MAPREF as MAP_REFERENCE,
+            STFLG as STATUS,
+            FRQCD as FREQUENCY_CODE,
+            FRQDD as FREQUENCY_DAY,
+            FRQHH as FREQUENCY_HOUR,
+            FRQMI as FREQUENCY_MINUTE
+        FROM DWJOBSCH 
+        WHERE CURFLG = 'Y' 
         """
         cursor = conn.cursor()
         cursor.execute(query)
+        column_names = [desc[0] for desc in cursor.description]
         scheduled_jobs = cursor.fetchall()
+        
+        # Debug information
+        print(f"Column names: {column_names}")
+        print(f"Number of jobs found: {len(scheduled_jobs)}")
+        if len(scheduled_jobs) > 0:
+            print(f"Sample job data: {scheduled_jobs[0]}")
+            
         return jsonify({
             'scheduled_jobs': scheduled_jobs
         })
     except Exception as e:
+        print(f"Error in get_scheduled_jobs: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 

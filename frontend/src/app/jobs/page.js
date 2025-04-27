@@ -23,7 +23,11 @@ import {
   Tab,
   Fab,
   TextField,
-  InputAdornment
+  InputAdornment,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel
 } from '@mui/material';
 import { styled, useTheme as useMuiTheme } from '@mui/material/styles';
 import { 
@@ -111,6 +115,8 @@ const JobsPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [scheduleLoading, setScheduleLoading] = useState({});
   const [scheduleSaving, setScheduleSaving] = useState({});
+  const [tableTypeFilter, setTableTypeFilter] = useState('');
+  const [scheduleStatusFilter, setScheduleStatusFilter] = useState('');
   
   const contentRef = useRef(null);
   const { darkMode } = useTheme();
@@ -410,21 +416,60 @@ const JobsPage = () => {
   const handleSearchChange = (event) => {
     setSearchTerm(event.target.value);
   };
+  
+  // Handle table type filter
+  const handleTableTypeFilterChange = (event) => {
+    setTableTypeFilter(event.target.value);
+  };
+  
+  // Handle schedule status filter
+  const handleScheduleStatusFilterChange = (event) => {
+    setScheduleStatusFilter(event.target.value);
+  };
 
-  // Filter jobs based on search term
+  // Add function to clear all filters
+  const clearAllFilters = () => {
+    setSearchTerm('');
+    setTableTypeFilter('');
+    setScheduleStatusFilter('');
+  };
+
+  // Apply all filters to jobs
   const filteredJobs = jobs.filter(job => {
-    if (!searchTerm) return true;
+    // Apply search term filter
+    if (searchTerm) {
+      const searchLower = searchTerm.toLowerCase();
+      const matchesSearch = (
+        (job.JOBSCHID && job.JOBSCHID.toString().includes(searchLower)) ||
+        (job.TRGSCHM && job.TRGSCHM.toLowerCase().includes(searchLower)) ||
+        (job.TRGTBNM && job.TRGTBNM.toLowerCase().includes(searchLower)) ||
+        (job.MAPREF && job.MAPREF.toLowerCase().includes(searchLower))
+      );
+      if (!matchesSearch) return false;
+    }
     
-    const searchLower = searchTerm.toLowerCase();
-    return (
-      (job.JOBSCHID && job.JOBSCHID.toString().includes(searchLower)) ||
-      (job.TRGSCHM && job.TRGSCHM.toLowerCase().includes(searchLower)) ||
-      (job.TRGTBNM && job.TRGTBNM.toLowerCase().includes(searchLower)) ||
-      (job.MAPREF && job.MAPREF.toLowerCase().includes(searchLower))
-    );
+    // Apply table type filter
+    if (tableTypeFilter && job.TRGTBTYP !== tableTypeFilter) {
+      return false;
+    }
+    
+    // Apply schedule status filter
+    if (scheduleStatusFilter) {
+      if (scheduleStatusFilter === 'Scheduled' && job.JOB_SCHEDULE_STATUS !== 'Scheduled') {
+        return false;
+      }
+      if (scheduleStatusFilter === 'Not Scheduled' && job.JOB_SCHEDULE_STATUS === 'Scheduled') {
+        return false;
+      }
+    }
+    
+    return true;
   });
+  
+  // Get unique table types for filter dropdown
+  const tableTypes = [...new Set(jobs.map(job => job.TRGTBTYP))].filter(Boolean).sort();
 
-  // Filter scheduled jobs for dependency tree view
+  // Filter out non-scheduled jobs for dependency tree view
   const scheduledJobs = filteredJobs.filter(job => job.JOB_SCHEDULE_STATUS === 'Scheduled');
 
   // Table header columns (updated to show JOBSCHID instead of JOBFLWID)
@@ -569,15 +614,153 @@ const JobsPage = () => {
               />
             </Tabs>
             
-            {/* Search field */}
-            <Box sx={{ width: 300 }}>
+            {/* Filters and Search */}
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              {/* Active Filter Badge */}
+              {(tableTypeFilter || scheduleStatusFilter || searchTerm) && (
+                <Box sx={{ 
+                  display: 'flex',
+                  alignItems: 'center',
+                  mr: 1,
+                  backgroundColor: darkMode ? 'rgba(59, 130, 246, 0.15)' : 'rgba(59, 130, 246, 0.08)',
+                  color: darkMode ? '#60A5FA' : '#3B82F6',
+                  borderRadius: 8,
+                  px: 1.5,
+                  py: 0.3,
+                  fontSize: '0.75rem',
+                  fontWeight: 600,
+                  border: '1px solid',
+                  borderColor: darkMode ? 'rgba(59, 130, 246, 0.3)' : 'rgba(59, 130, 246, 0.15)',
+                  cursor: 'pointer',
+                  '&:hover': {
+                    backgroundColor: darkMode ? 'rgba(59, 130, 246, 0.25)' : 'rgba(59, 130, 246, 0.15)',
+                  }
+                }}
+                onClick={clearAllFilters}
+                >
+                  <FilterListIcon fontSize="small" sx={{ mr: 0.5, fontSize: 16 }} />
+                  {(tableTypeFilter ? 1 : 0) + (scheduleStatusFilter ? 1 : 0) + (searchTerm ? 1 : 0)} 
+                  {' Filter' + ((tableTypeFilter && scheduleStatusFilter) || 
+                               (tableTypeFilter && searchTerm) || 
+                               (scheduleStatusFilter && searchTerm) ? 's' : '')} 
+                  Active (Clear)
+                </Box>
+              )}
+              
+              {/* Table Type Filter */}
+              <Box sx={{ 
+                backgroundColor: darkMode ? 'rgba(30, 41, 59, 0.5)' : 'rgba(249, 250, 251, 0.9)',
+                borderRadius: 2,
+                border: '1px solid',
+                borderColor: darkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+                display: 'flex',
+                alignItems: 'center',
+                position: 'relative',
+                minWidth: 140,
+                height: '38px'
+              }}>
+                <Select
+                  value={tableTypeFilter}
+                  onChange={handleTableTypeFilterChange}
+                  displayEmpty
+                  variant="standard"
+                  sx={{ 
+                    fontSize: '0.875rem',
+                    '& .MuiSelect-select': {
+                      pl: 2,
+                      pr: 4,
+                      py: 1,
+                      backgroundColor: 'transparent',
+                    },
+                    '&:before, &:after': {
+                      display: 'none'
+                    },
+                    '& .MuiSelect-icon': {
+                      right: 8
+                    },
+                    width: '100%'
+                  }}
+                  MenuProps={{ 
+                    PaperProps: { 
+                      sx: { 
+                        maxHeight: 300,
+                        mt: 0.5
+                      } 
+                    } 
+                  }}
+                >
+                  <MenuItem value=""><em>Table Type: All ({jobs.length})</em></MenuItem>
+                  {tableTypes.map(type => {
+                    const count = jobs.filter(job => job.TRGTBTYP === type).length;
+                    return (
+                      <MenuItem key={type} value={type}>
+                        {type} ({count})
+                      </MenuItem>
+                    );
+                  })}
+                </Select>
+              </Box>
+              
+              {/* Schedule Status Filter */}
+              <Box sx={{ 
+                backgroundColor: darkMode ? 'rgba(30, 41, 59, 0.5)' : 'rgba(249, 250, 251, 0.9)',
+                borderRadius: 2,
+                border: '1px solid',
+                borderColor: darkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+                display: 'flex',
+                alignItems: 'center',
+                position: 'relative',
+                minWidth: 160,
+                height: '38px'
+              }}>
+                <Select
+                  value={scheduleStatusFilter}
+                  onChange={handleScheduleStatusFilterChange}
+                  displayEmpty
+                  variant="standard"
+                  sx={{ 
+                    fontSize: '0.875rem',
+                    '& .MuiSelect-select': {
+                      pl: 2,
+                      pr: 4,
+                      py: 1,
+                      backgroundColor: 'transparent',
+                    },
+                    '&:before, &:after': {
+                      display: 'none'
+                    },
+                    '& .MuiSelect-icon': {
+                      right: 8
+                    },
+                    width: '100%'
+                  }}
+                  MenuProps={{ 
+                    PaperProps: { 
+                      sx: { 
+                        maxHeight: 300,
+                        mt: 0.5
+                      } 
+                    } 
+                  }}
+                >
+                  <MenuItem value=""><em>Status: All ({jobs.length})</em></MenuItem>
+                  <MenuItem value="Scheduled">
+                    Scheduled ({jobs.filter(job => job.JOB_SCHEDULE_STATUS === 'Scheduled').length})
+                  </MenuItem>
+                  <MenuItem value="Not Scheduled">
+                    Not Scheduled ({jobs.filter(job => job.JOB_SCHEDULE_STATUS !== 'Scheduled').length})
+                  </MenuItem>
+                </Select>
+              </Box>
+              
+              {/* Search field */}
               <TextField
                 size="small"
                 placeholder="Search jobs..."
                 variant="outlined"
-                fullWidth
                 value={searchTerm}
                 onChange={handleSearchChange}
+                sx={{ width: 240 }}
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
@@ -642,7 +825,7 @@ const JobsPage = () => {
                   handleViewLogic={handleViewLogic}
                 />
 
-                {scheduledJobs.length === 0 && searchTerm && (
+                {scheduledJobs.length === 0 && (
                   <Box sx={{ 
                     textAlign: 'center', 
                     py: 4, 
@@ -651,7 +834,9 @@ const JobsPage = () => {
                     mt: 2
                   }}>
                     <Typography variant="body1" color={darkMode ? 'gray.300' : 'gray.600'}>
-                      No matching jobs found for "{searchTerm}"
+                      {searchTerm || tableTypeFilter || scheduleStatusFilter ? 
+                        "No matching jobs found with current filters" : 
+                        "No scheduled jobs found to display"}
                     </Typography>
                   </Box>
                 )}
@@ -831,9 +1016,9 @@ const JobsPage = () => {
                   {filteredJobs.length === 0 && (
                     <TableRow>
                       <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
-                        {searchTerm ? (
+                        {searchTerm || tableTypeFilter || scheduleStatusFilter ? (
                           <Typography variant="body1" color={darkMode ? 'gray.300' : 'gray.600'}>
-                            No matching jobs found for "{searchTerm}"
+                            No matching jobs found with current filters
                           </Typography>
                         ) : (
                           <Typography variant="body1" color={darkMode ? 'gray.300' : 'gray.600'}>

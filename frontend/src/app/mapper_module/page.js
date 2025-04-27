@@ -230,6 +230,25 @@ const MapperModule = () => {
   const [downloadAnchorEl, setDownloadAnchorEl] = useState(null)
   const [uploadAnchorEl, setUploadAnchorEl] = useState(null)
 
+  // Add state variables for filter options
+  const [filterAnchorEl, setFilterAnchorEl] = useState(null)
+  const [filters, setFilters] = useState({
+    tableType: [],
+    status: [],
+    sourceSystem: [],
+    logicVerification: []
+  })
+  const [tableTypeOptions, setTableTypeOptions] = useState([])
+  const [sourceSystemOptions, setSourceSystemOptions] = useState([])
+  const [statusOptions] = useState([
+    { label: 'Active', value: 'A' },
+    { label: 'Inactive', value: 'I' }
+  ])
+  const [logicVerOptions] = useState([
+    { label: 'Verified', value: 'Y' },
+    { label: 'Unverified', value: 'N' }
+  ])
+
   // Fetch all mapper references
   const fetchAllReferences = async () => {
     setLoadingReferences(true)
@@ -1769,21 +1788,107 @@ const MapperModule = () => {
     setSearchQuery(query)
     setReferenceTablePage(0) // Reset to first page when searching
     
-    if (query.trim() === '') {
+    applyFilters()
+  }
+
+  // Add useEffect to extract unique table types and source systems from references
+  useEffect(() => {
+    if (allReferences.length > 0) {
+      // Extract unique table types
+      const tableTypes = [...new Set(allReferences.map(ref => ref[3]).filter(Boolean))]
+        .map(type => ({ label: type, value: type }))
+      setTableTypeOptions(tableTypes)
+      
+      // Extract unique source systems
+      const sourceSystems = [...new Set(allReferences.map(ref => ref[5]).filter(Boolean))]
+        .map(system => ({ label: system, value: system }))
+      setSourceSystemOptions(sourceSystems)
+    }
+  }, [allReferences])
+
+  // Add functions to handle filter
+  const handleFilterClick = (event) => {
+    setFilterAnchorEl(event.currentTarget)
+  }
+
+  const handleFilterClose = () => {
+    setFilterAnchorEl(null)
+  }
+
+  const handleFilterChange = (filterType, value) => {
+    setFilters(prev => {
+      const newFilters = { ...prev }
+      
+      // Toggle filter value
+      if (newFilters[filterType].includes(value)) {
+        newFilters[filterType] = newFilters[filterType].filter(v => v !== value)
+      } else {
+        newFilters[filterType] = [...newFilters[filterType], value]
+      }
+      
+      return newFilters
+    })
+  }
+
+  const applyFilters = () => {
+    setReferenceTablePage(0) // Reset to first page when filtering
+    
+    if (searchQuery.trim() === '' && 
+        !filters.tableType.length && 
+        !filters.status.length && 
+        !filters.sourceSystem.length && 
+        !filters.logicVerification.length) {
+      setFilteredReferences(allReferences)
+      return
+    }
+    
+    const filtered = allReferences.filter(reference => {
+      // Text search filter
+      const textMatch = searchQuery.trim() === '' || 
+        reference[0]?.toString().toLowerCase().includes(searchQuery.toLowerCase()) || 
+        reference[1]?.toString().toLowerCase().includes(searchQuery.toLowerCase()) || 
+        reference[2]?.toString().toLowerCase().includes(searchQuery.toLowerCase()) || 
+        reference[5]?.toString().toLowerCase().includes(searchQuery.toLowerCase())
+      
+      // Table type filter
+      const tableTypeMatch = filters.tableType.length === 0 || 
+        filters.tableType.includes(reference[3])
+      
+      // Status filter
+      const statusMatch = filters.status.length === 0 || 
+        filters.status.includes(reference[7])
+      
+      // Source system filter
+      const sourceSystemMatch = filters.sourceSystem.length === 0 || 
+        filters.sourceSystem.includes(reference[5])
+      
+      // Logic verification filter
+      const logicVerMatch = filters.logicVerification.length === 0 || 
+        filters.logicVerification.includes(reference[6])
+      
+      // Return true only if all filters match
+      return textMatch && tableTypeMatch && statusMatch && sourceSystemMatch && logicVerMatch
+    })
+    
+    setFilteredReferences(filtered)
+    handleFilterClose()
+  }
+
+  const clearFilters = () => {
+    setFilters({
+      tableType: [],
+      status: [],
+      sourceSystem: [],
+      logicVerification: []
+    })
+    
+    if (searchQuery.trim() === '') {
       setFilteredReferences(allReferences)
     } else {
-      const filtered = allReferences.filter(reference => 
-        // Search in reference ID (index 0)
-        reference[0]?.toString().toLowerCase().includes(query.toLowerCase()) || 
-        // Search in description (index 1)
-        reference[1]?.toString().toLowerCase().includes(query.toLowerCase()) || 
-        // Search in schema (index 2)
-        reference[2]?.toString().toLowerCase().includes(query.toLowerCase()) || 
-        // Search in source system (index 5)
-        reference[5]?.toString().toLowerCase().includes(query.toLowerCase())
-      )
-      setFilteredReferences(filtered)
+      handleReferenceSearch({ target: { value: searchQuery } })
     }
+    
+    handleFilterClose()
   }
 
   return (
@@ -1832,7 +1937,7 @@ const MapperModule = () => {
             </div>
             
             {/* Add search field */}
-            <div className="mb-3">
+            <div className="mb-3 flex items-center gap-2">
               <TextField
                 placeholder="Search references..."
                 variant="outlined"
@@ -1852,7 +1957,7 @@ const MapperModule = () => {
                         size="small"
                         onClick={() => {
                           setSearchQuery('')
-                          setFilteredReferences(allReferences)
+                          applyFilters()
                         }}
                         edge="end"
                       >
@@ -1874,6 +1979,44 @@ const MapperModule = () => {
                   }
                 }}
               />
+              
+              {/* Filter Button */}
+              <Tooltip title="Filter References">
+                <IconButton
+                  onClick={handleFilterClick}
+                  sx={{
+                    backgroundColor: darkMode ? 'rgba(31, 41, 55, 0.5)' : 'white',
+                    border: '1px solid',
+                    borderColor: darkMode ? 'rgba(75, 85, 99, 0.2)' : 'rgba(229, 231, 235, 1)',
+                    borderRadius: '8px',
+                    height: '40px',
+                    width: '40px',
+                    '&:hover': {
+                      backgroundColor: darkMode ? 'rgba(55, 65, 81, 0.7)' : 'rgba(249, 250, 251, 0.9)'
+                    },
+                    position: 'relative'
+                  }}
+                >
+                  <SettingsIcon fontSize="small" />
+                  {/* Indicator dot if filters are active */}
+                  {(filters.tableType.length > 0 || 
+                   filters.status.length > 0 || 
+                   filters.sourceSystem.length > 0 || 
+                   filters.logicVerification.length > 0) && (
+                    <Box 
+                      sx={{ 
+                        position: 'absolute', 
+                        top: 8, 
+                        right: 8, 
+                        width: 8, 
+                        height: 8, 
+                        borderRadius: '50%', 
+                        backgroundColor: '#2563EB' 
+                      }} 
+                    />
+                  )}
+                </IconButton>
+              </Tooltip>
             </div>
             
             <div className={`rounded-lg border ${darkMode ? 'border-gray-700 bg-gray-800/20 backdrop-blur-sm' : 'border-gray-200 bg-white/90 backdrop-blur-sm'} overflow-hidden shadow-md mb-4 transition-all duration-300`}>
@@ -3639,6 +3782,396 @@ const MapperModule = () => {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Filter Menu */}
+      <Menu
+        anchorEl={filterAnchorEl}
+        open={Boolean(filterAnchorEl)}
+        onClose={handleFilterClose}
+        PaperProps={{
+          sx: {
+            mt: 1.5,
+            width: 300,
+            maxHeight: 'calc(100vh - 100px)',
+            backgroundColor: darkMode ? '#1F2937' : 'white',
+            border: '1px solid',
+            borderColor: darkMode ? 'rgba(75, 85, 99, 0.2)' : 'rgba(229, 231, 235, 1)',
+            borderRadius: '8px',
+            boxShadow: darkMode 
+              ? '0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2)' 
+              : '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+        }
+      }}
+    >
+      <Box p={2}>
+        <Typography 
+          variant="subtitle1" 
+          sx={{ 
+            fontWeight: 'bold', 
+            mb: 2,
+            color: darkMode ? 'white' : 'inherit'
+          }}
+        >
+          Filter References
+        </Typography>
+        
+        {/* Table Type Filter */}
+        <Box mb={2}>
+          <Typography 
+            variant="subtitle2" 
+            sx={{ 
+              mb: 1, 
+              fontWeight: 'medium', 
+              color: darkMode ? '#D1D5DB' : 'inherit'
+            }}
+          >
+            Table Type
+          </Typography>
+          <FormControl fullWidth size="small">
+            <Select
+              multiple
+              value={filters.tableType}
+              onChange={(e) => {
+                setFilters({...filters, tableType: e.target.value})
+              }}
+              renderValue={(selected) => selected.join(', ')}
+              MenuProps={{
+                PaperProps: {
+                  style: {
+                    maxHeight: 224,
+                    backgroundColor: darkMode ? '#1F2937' : 'white',
+                  },
+                },
+              }}
+              sx={{
+                backgroundColor: darkMode ? 'rgba(31, 41, 55, 0.5)' : 'white',
+                color: darkMode ? 'white' : 'inherit',
+                '& .MuiOutlinedInput-notchedOutline': {
+                  borderColor: darkMode ? 'rgba(75, 85, 99, 0.5)' : 'rgba(209, 213, 219, 0.8)',
+                },
+                '&:hover .MuiOutlinedInput-notchedOutline': {
+                  borderColor: darkMode ? 'rgba(147, 197, 253, 0.5)' : 'rgba(59, 130, 246, 0.5)',
+                },
+                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                  borderColor: darkMode ? 'rgba(147, 197, 253, 0.8)' : 'rgba(59, 130, 246, 0.8)',
+                }
+              }}
+            >
+              {tableTypeOptions.map((option) => (
+                <MenuItem 
+                  key={option.value} 
+                  value={option.value}
+                  sx={{
+                    backgroundColor: darkMode ? '#1F2937' : 'white',
+                    color: darkMode ? 'white' : 'inherit',
+                    '&.Mui-selected': {
+                      backgroundColor: darkMode ? 'rgba(37, 99, 235, 0.2)' : 'rgba(37, 99, 235, 0.1)',
+                    },
+                    '&.Mui-selected:hover': {
+                      backgroundColor: darkMode ? 'rgba(37, 99, 235, 0.3)' : 'rgba(37, 99, 235, 0.2)',
+                    },
+                    '&:hover': {
+                      backgroundColor: darkMode ? 'rgba(55, 65, 81, 0.7)' : 'rgba(249, 250, 251, 0.9)'
+                    },
+                  }}
+                >
+                  <Checkbox 
+                    checked={filters.tableType.indexOf(option.value) > -1}
+                    sx={{
+                      color: darkMode ? 'rgba(156, 163, 175, 0.8)' : 'rgba(107, 114, 128, 0.8)',
+                      '&.Mui-checked': {
+                        color: darkMode ? 'rgb(96, 165, 250)' : 'rgb(37, 99, 235)',
+                      },
+                      padding: '4px'
+                    }}
+                  />
+                  <ListItemText primary={option.label} />
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Box>
+        
+        {/* Status Filter */}
+        <Box mb={2}>
+          <Typography 
+            variant="subtitle2" 
+            sx={{ 
+              mb: 1, 
+              fontWeight: 'medium', 
+              color: darkMode ? '#D1D5DB' : 'inherit'
+            }}
+          >
+            Status
+          </Typography>
+          <FormControl fullWidth size="small">
+            <Select
+              multiple
+              value={filters.status}
+              onChange={(e) => {
+                setFilters({...filters, status: e.target.value})
+              }}
+              renderValue={(selected) => {
+                return selected.map(value => 
+                  statusOptions.find(option => option.value === value)?.label
+                ).join(', ');
+              }}
+              MenuProps={{
+                PaperProps: {
+                  style: {
+                    maxHeight: 224,
+                    backgroundColor: darkMode ? '#1F2937' : 'white',
+                  },
+                },
+              }}
+              sx={{
+                backgroundColor: darkMode ? 'rgba(31, 41, 55, 0.5)' : 'white',
+                color: darkMode ? 'white' : 'inherit',
+                '& .MuiOutlinedInput-notchedOutline': {
+                  borderColor: darkMode ? 'rgba(75, 85, 99, 0.5)' : 'rgba(209, 213, 219, 0.8)',
+                },
+                '&:hover .MuiOutlinedInput-notchedOutline': {
+                  borderColor: darkMode ? 'rgba(147, 197, 253, 0.5)' : 'rgba(59, 130, 246, 0.5)',
+                },
+                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                  borderColor: darkMode ? 'rgba(147, 197, 253, 0.8)' : 'rgba(59, 130, 246, 0.8)',
+                }
+              }}
+            >
+              {statusOptions.map((option) => (
+                <MenuItem 
+                  key={option.value} 
+                  value={option.value}
+                  sx={{
+                    backgroundColor: darkMode ? '#1F2937' : 'white',
+                    color: darkMode ? 'white' : 'inherit',
+                    '&.Mui-selected': {
+                      backgroundColor: darkMode ? 'rgba(37, 99, 235, 0.2)' : 'rgba(37, 99, 235, 0.1)',
+                    },
+                    '&.Mui-selected:hover': {
+                      backgroundColor: darkMode ? 'rgba(37, 99, 235, 0.3)' : 'rgba(37, 99, 235, 0.2)',
+                    },
+                    '&:hover': {
+                      backgroundColor: darkMode ? 'rgba(55, 65, 81, 0.7)' : 'rgba(249, 250, 251, 0.9)'
+                    },
+                  }}
+                >
+                  <Checkbox 
+                    checked={filters.status.indexOf(option.value) > -1}
+                    sx={{
+                      color: darkMode ? 'rgba(156, 163, 175, 0.8)' : 'rgba(107, 114, 128, 0.8)',
+                      '&.Mui-checked': {
+                        color: option.value === 'A' 
+                          ? (darkMode ? 'rgb(16, 185, 129)' : 'rgb(5, 150, 105)')
+                          : (darkMode ? 'rgb(239, 68, 68)' : 'rgb(220, 38, 38)'),
+                      },
+                      padding: '4px'
+                    }}
+                  />
+                  <ListItemText primary={option.label} />
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Box>
+        
+        {/* Source System Filter */}
+        <Box mb={2}>
+          <Typography 
+            variant="subtitle2" 
+            sx={{ 
+              mb: 1, 
+              fontWeight: 'medium', 
+              color: darkMode ? '#D1D5DB' : 'inherit'
+            }}
+          >
+            Source System
+          </Typography>
+          <FormControl fullWidth size="small">
+            <Select
+              multiple
+              value={filters.sourceSystem}
+              onChange={(e) => {
+                setFilters({...filters, sourceSystem: e.target.value})
+              }}
+              renderValue={(selected) => selected.join(', ')}
+              MenuProps={{
+                PaperProps: {
+                  style: {
+                    maxHeight: 224,
+                    backgroundColor: darkMode ? '#1F2937' : 'white',
+                  },
+                },
+              }}
+              sx={{
+                backgroundColor: darkMode ? 'rgba(31, 41, 55, 0.5)' : 'white',
+                color: darkMode ? 'white' : 'inherit',
+                '& .MuiOutlinedInput-notchedOutline': {
+                  borderColor: darkMode ? 'rgba(75, 85, 99, 0.5)' : 'rgba(209, 213, 219, 0.8)',
+                },
+                '&:hover .MuiOutlinedInput-notchedOutline': {
+                  borderColor: darkMode ? 'rgba(147, 197, 253, 0.5)' : 'rgba(59, 130, 246, 0.5)',
+                },
+                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                  borderColor: darkMode ? 'rgba(147, 197, 253, 0.8)' : 'rgba(59, 130, 246, 0.8)',
+                }
+              }}
+            >
+              {sourceSystemOptions.map((option) => (
+                <MenuItem 
+                  key={option.value} 
+                  value={option.value}
+                  sx={{
+                    backgroundColor: darkMode ? '#1F2937' : 'white',
+                    color: darkMode ? 'white' : 'inherit',
+                    '&.Mui-selected': {
+                      backgroundColor: darkMode ? 'rgba(37, 99, 235, 0.2)' : 'rgba(37, 99, 235, 0.1)',
+                    },
+                    '&.Mui-selected:hover': {
+                      backgroundColor: darkMode ? 'rgba(37, 99, 235, 0.3)' : 'rgba(37, 99, 235, 0.2)',
+                    },
+                    '&:hover': {
+                      backgroundColor: darkMode ? 'rgba(55, 65, 81, 0.7)' : 'rgba(249, 250, 251, 0.9)'
+                    },
+                  }}
+                >
+                  <Checkbox 
+                    checked={filters.sourceSystem.indexOf(option.value) > -1}
+                    sx={{
+                      color: darkMode ? 'rgba(156, 163, 175, 0.8)' : 'rgba(107, 114, 128, 0.8)',
+                      '&.Mui-checked': {
+                        color: darkMode ? 'rgb(96, 165, 250)' : 'rgb(37, 99, 235)',
+                      },
+                      padding: '4px'
+                    }}
+                  />
+                  <ListItemText primary={option.label} />
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Box>
+        
+        {/* Logic Verification Filter */}
+        <Box mb={2}>
+          <Typography 
+            variant="subtitle2" 
+            sx={{ 
+              mb: 1, 
+              fontWeight: 'medium', 
+              color: darkMode ? '#D1D5DB' : 'inherit'
+            }}
+          >
+            Logic Verification
+          </Typography>
+          <FormControl fullWidth size="small">
+            <Select
+              multiple
+              value={filters.logicVerification}
+              onChange={(e) => {
+                setFilters({...filters, logicVerification: e.target.value})
+              }}
+              renderValue={(selected) => {
+                return selected.map(value => 
+                  logicVerOptions.find(option => option.value === value)?.label
+                ).join(', ');
+              }}
+              MenuProps={{
+                PaperProps: {
+                  style: {
+                    maxHeight: 224,
+                    backgroundColor: darkMode ? '#1F2937' : 'white',
+                  },
+                },
+              }}
+              sx={{
+                backgroundColor: darkMode ? 'rgba(31, 41, 55, 0.5)' : 'white',
+                color: darkMode ? 'white' : 'inherit',
+                '& .MuiOutlinedInput-notchedOutline': {
+                  borderColor: darkMode ? 'rgba(75, 85, 99, 0.5)' : 'rgba(209, 213, 219, 0.8)',
+                },
+                '&:hover .MuiOutlinedInput-notchedOutline': {
+                  borderColor: darkMode ? 'rgba(147, 197, 253, 0.5)' : 'rgba(59, 130, 246, 0.5)',
+                },
+                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                  borderColor: darkMode ? 'rgba(147, 197, 253, 0.8)' : 'rgba(59, 130, 246, 0.8)',
+                }
+              }}
+            >
+              {logicVerOptions.map((option) => (
+                <MenuItem 
+                  key={option.value} 
+                  value={option.value}
+                  sx={{
+                    backgroundColor: darkMode ? '#1F2937' : 'white',
+                    color: darkMode ? 'white' : 'inherit',
+                    '&.Mui-selected': {
+                      backgroundColor: darkMode ? 'rgba(37, 99, 235, 0.2)' : 'rgba(37, 99, 235, 0.1)',
+                    },
+                    '&.Mui-selected:hover': {
+                      backgroundColor: darkMode ? 'rgba(37, 99, 235, 0.3)' : 'rgba(37, 99, 235, 0.2)',
+                    },
+                    '&:hover': {
+                      backgroundColor: darkMode ? 'rgba(55, 65, 81, 0.7)' : 'rgba(249, 250, 251, 0.9)'
+                    },
+                  }}
+                >
+                  <Checkbox 
+                    checked={filters.logicVerification.indexOf(option.value) > -1}
+                    sx={{
+                      color: darkMode ? 'rgba(156, 163, 175, 0.8)' : 'rgba(107, 114, 128, 0.8)',
+                      '&.Mui-checked': {
+                        color: option.value === 'Y' 
+                          ? (darkMode ? 'rgb(96, 165, 250)' : 'rgb(37, 99, 235)')
+                          : (darkMode ? 'rgb(251, 191, 36)' : 'rgb(217, 119, 6)'),
+                      },
+                      padding: '4px'
+                    }}
+                  />
+                  <ListItemText primary={option.label} />
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Box>
+        
+        {/* Filter actions */}
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3 }}>
+          <Button 
+            variant="outlined" 
+            size="small"
+            onClick={clearFilters}
+            sx={{
+              textTransform: 'none',
+              color: darkMode ? 'rgb(156, 163, 175)' : 'inherit',
+              borderColor: darkMode ? 'rgba(75, 85, 99, 0.5)' : 'rgba(209, 213, 219, 0.8)',
+              borderRadius: '6px',
+              '&:hover': {
+                backgroundColor: darkMode ? 'rgba(75, 85, 99, 0.1)' : 'rgba(249, 250, 251, 0.8)',
+                borderColor: darkMode ? 'rgba(107, 114, 128, 0.8)' : 'rgba(209, 213, 219, 1)',
+              }
+            }}
+          >
+            Clear All
+          </Button>
+          <Button 
+            variant="contained" 
+            size="small"
+            onClick={applyFilters}
+            sx={{
+              textTransform: 'none',
+              borderRadius: '6px',
+              background: 'linear-gradient(135deg, #2563EB, #3B82F6)',
+              '&:hover': {
+                background: 'linear-gradient(135deg, #1D4ED8, #2563EB)',
+              },
+            }}
+          >
+            Apply Filters
+          </Button>
+        </Box>
+      </Box>
+    </Menu>
 
       <style jsx global>{`
         ::-webkit-scrollbar {

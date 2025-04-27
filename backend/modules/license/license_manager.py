@@ -49,7 +49,8 @@ class LicenseManager:
                 return {
                     "status": "inactive",
                     "message": "No license key found",
-                    "valid": False
+                    "valid": False,
+                    "system_id": self.system_id
                 }
 
             print(f"\nReading license from: {self.license_file}")
@@ -74,7 +75,8 @@ class LicenseManager:
                 return {
                     "status": "invalid",
                     "message": result,
-                    "valid": False
+                    "valid": False,
+                    "system_id": self.system_id
                 }
                 
         except Exception as e:
@@ -82,7 +84,8 @@ class LicenseManager:
             return {
                 "status": "error",
                 "message": str(e),
-                "valid": False
+                "valid": False,
+                "system_id": self.system_id
             }
 
     def activate_license(self, license_key):

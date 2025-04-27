@@ -7,6 +7,7 @@ import json
 from cryptography.fernet import Fernet
 import getmac
 import os
+import argparse
 
 def generate_secret_key():
     """Generate a secret key for Fernet encryption"""
@@ -53,7 +54,7 @@ class LicenseKeyGenerator:
         
         # Encode to base64 for easier handling
         license_key = base64.urlsafe_b64encode(encrypted_data).decode()
-        return license_key
+        return license_key, license_data
     
     def validate_license_key(self, license_key, system_id):
         """Validate a license key"""
@@ -93,52 +94,38 @@ class LicenseKeyGenerator:
             return False, f"Invalid license key: {str(e)}"
 
 def main():
-    # Example usage
-    generator = LicenseKeyGenerator()
+    # Parse command line arguments
+    parser = argparse.ArgumentParser(description='Generate license key with specified validity period')
+    parser.add_argument('--days', type=int, default=365, help='Number of days the license will be valid')
+    args = parser.parse_args()
     
-    # Get the system identifier
+    # Get the system identifier (MAC address)
     system_id = get_system_identifier()
-    print("\nSystem Identifier:", system_id)
     
     # Generate a new license key
-    license_key = generator.generate_license_key(
+    generator = LicenseKeyGenerator()
+    license_key, license_data = generator.generate_license_key(
         system_id=system_id,
-        days_valid=365,
+        days_valid=args.days,
         features=["basic", "advanced", "premium"]
     )
     
-    print("\nGenerated License Key:")
-    print(license_key)
-    print("\nSecret Key (save this securely):")
-    print(generator.secret_key.decode())
-    
-    # Create directory if it doesn't exist
-    os.makedirs('modules/license', exist_ok=True)
-    
     # Save the secret key to a file in modules/license directory
+    os.makedirs('modules/license', exist_ok=True)
     with open('modules/license/secret.key', 'wb') as f:
         f.write(generator.secret_key)
-    print("\nSecret key has been saved to 'modules/license/secret.key' file")
     
     # Save the license key to a file in modules/license directory
     with open('modules/license/license.key', 'w') as f:
         f.write(license_key)
-    print("\nLicense key has been saved to 'modules/license/license.key' file")
     
-    # Validate the license key
-    print("\nTesting validation...")
-    is_valid, result = generator.validate_license_key(license_key, system_id)
-    
-    print("\nValidation Result:")
-    print(f"Valid: {is_valid}")
-    if is_valid:
-        print("\nLicense Details:")
-        print(f"Created: {datetime.fromisoformat(result['created_at']).strftime('%Y-%m-%d %H:%M:%S')}")
-        print(f"Expires: {datetime.fromisoformat(result['valid_until']).strftime('%Y-%m-%d %H:%M:%S')}")
-        print(f"Features: {', '.join(result['features'])}")
-        print(f"System ID: {result['system_id']}")
-    else:
-        print("Error:", result)
+    # Print only the requested information
+    print(f"System MAC: {system_id}")
+    print(f"License Key: {license_key}")
+    print(f"Validation Key: {generator.secret_key.decode()}")
+    print(f"Number of Days: {args.days}")
+    print(f"License ID: {license_data['license_id']}")
+    print(f"Created Date: {datetime.fromisoformat(license_data['created_at']).strftime('%Y-%m-%d %H:%M:%S')}")
 
 if __name__ == "__main__":
     main() 
