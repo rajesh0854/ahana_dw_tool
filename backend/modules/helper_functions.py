@@ -257,7 +257,7 @@ def call_activate_deactivate_mapping(connection, p_mapref, p_stflg):
 def create_update_mapping(connection, p_mapref, p_mapdesc, p_trgschm, p_trgtbtyp, 
                          p_trgtbnm, p_frqcd, p_srcsystm, p_lgvrfyflg, p_lgvrfydt, p_stflg,p_blkprcrows):
     """
-    Creates or updates a mapping using MAP.PKGDWMAPR.CREATE_UPDATE_MAPPING
+    Creates or updates a mapping using TRG.PKGDWMAPR.CREATE_UPDATE_MAPPING
     
     Args:
         connection: Oracle connection object
@@ -285,7 +285,7 @@ def create_update_mapping(connection, p_mapref, p_mapdesc, p_trgschm, p_trgtbtyp
         # SQL to execute with named parameters
         sql = """
         BEGIN
-            :result := MAP.PKGDWMAPR.CREATE_UPDATE_MAPPING(
+            :result := TRG.PKGDWMAPR.CREATE_UPDATE_MAPPING(
                 p_mapref => :p_mapref,
                 p_mapdesc => :p_mapdesc,
                 p_trgschm => :p_trgschm,
@@ -337,7 +337,7 @@ def create_update_mapping_detail(connection, p_mapref, p_trgclnm, p_trgcldtyp, p
                                p_trgkeyseq, p_trgcldesc, p_maplogic, p_keyclnm, 
                                p_valclnm, p_mapcmbcd, p_excseq, p_scdtyp, p_lgvrfyflg, p_lgvrfydt):
     """
-    Creates or updates a mapping detail using MAP.PKGDWMAPR.CREATE_UPDATE_MAPPING_DETAIL
+    Creates or updates a mapping detail using TRG.PKGDWMAPR.CREATE_UPDATE_MAPPING_DETAIL
     
     Args:
         connection: Oracle connection object
@@ -369,7 +369,7 @@ def create_update_mapping_detail(connection, p_mapref, p_trgclnm, p_trgcldtyp, p
         # SQL to execute with named parameters
         sql = """
         BEGIN
-            :result := MAP.PKGDWMAPR.CREATE_UPDATE_MAPPING_DETAIL(
+            :result := TRG.PKGDWMAPR.CREATE_UPDATE_MAPPING_DETAIL(
                 p_mapref => :p_mapref,
                 p_trgclnm => :p_trgclnm,
                 p_trgcldtyp => :p_trgcldtyp,
@@ -423,7 +423,7 @@ def create_update_mapping_detail(connection, p_mapref, p_trgclnm, p_trgcldtyp, p
 
 def validate_logic_in_db(connection, p_logic, p_keyclnm, p_valclnm):
     """
-    Validates the logic using MAP.PKGDWMAPR.VALIDATE_LOGIC
+    Validates the logic using TRG.PKGDWMAPR.VALIDATE_LOGIC
     
     Args:
         connection: Oracle connection object
@@ -439,7 +439,7 @@ def validate_logic_in_db(connection, p_logic, p_keyclnm, p_valclnm):
     
     sql = """
     BEGIN
-        :result := MAP.PKGDWMAPR.VALIDATE_LOGIC(
+        :result := TRG.PKGDWMAPR.VALIDATE_LOGIC(
             p_logic => :p_logic,
             p_keyclnm => :p_keyclnm,
             p_valclnm => :p_valclnm
@@ -462,7 +462,7 @@ def validate_logic_in_db(connection, p_logic, p_keyclnm, p_valclnm):
 
 def validate_logic2(connection, p_logic, p_keyclnm, p_valclnm):
     """
-    Validates SQL logic using MAP.PKGDWMAPR.VALIDATE_LOGIC2
+    Validates SQL logic using TRG.PKGDWMAPR.VALIDATE_LOGIC2
     
     Args:
         connection: Oracle connection object
@@ -484,7 +484,7 @@ def validate_logic2(connection, p_logic, p_keyclnm, p_valclnm):
         # SQL to execute with named parameters
         sql = """
         BEGIN
-            :result := MAP.PKGDWMAPR.VALIDATE_LOGIC2(
+            :result := TRG.PKGDWMAPR.VALIDATE_LOGIC2(
                 p_logic => :p_logic,
                 p_keyclnm => :p_keyclnm,
                 p_valclnm => :p_valclnm,
@@ -520,7 +520,7 @@ def validate_logic2(connection, p_logic, p_keyclnm, p_valclnm):
 
 def validate_all_mapping_details(connection, p_mapref):
     """
-    Calls the Oracle function MAP.PKGDWMAPR.VALIDATE_MAPPING_DETAILS
+    Calls the Oracle function TRG.PKGDWMAPR.VALIDATE_MAPPING_DETAILS
     
     Args:
         connection: Oracle connection object
@@ -542,7 +542,7 @@ def validate_all_mapping_details(connection, p_mapref):
         # SQL to execute with named parameters
         sql = """
         BEGIN
-            :result := MAP.PKGDWMAPR.VALIDATE_MAPPING_DETAILS(
+            :result := TRG.PKGDWMAPR.VALIDATE_MAPPING_DETAILS(
                 p_mapref => :p_mapref,
                 p_err => :p_err
             );
@@ -618,7 +618,7 @@ def call_create_update_job(connection, p_mapref):
         # SQL to execute with named parameters
         sql = """
         BEGIN
-            :job_id := MAP.PKGDWJOB.CREATE_UPDATE_JOB(
+            :job_id := TRG.PKGDWJOB.CREATE_UPDATE_JOB(
                 p_mapref => :p_mapref
             );
         END;

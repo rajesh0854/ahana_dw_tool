@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Typography, 
   Box, 
@@ -9,39 +9,81 @@ import {
   TextField,
   InputLabel,
   Autocomplete,
-  CircularProgress
+  CircularProgress,
+  Alert,
+  Tooltip,
+  Divider,
+  Chip,
+  Stack,
+  Paper
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { 
   CalendarMonth as CalendarIcon,
   Save as SaveIcon,
-  Update as UpdateIcon
+  Update as UpdateIcon,
+  Link as LinkIcon,
+  ErrorOutline as ErrorIcon,
+  InfoOutlined as InfoIcon,
+  DoneAll as DoneAllIcon
 } from '@mui/icons-material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 
 // Styled components
 const CompactSelect = styled(Select)(({ theme, darkMode }) => ({
   '& .MuiSelect-select': {
-    padding: '6px 8px',
-    fontSize: '0.8125rem',
+    padding: '4px 6px',
+    fontSize: '0.75rem',
   },
-  minWidth: 90
+  minWidth: 80
 }));
 
 const CompactTextField = styled(TextField)(({ theme }) => ({
   '& .MuiInputBase-input': {
-    padding: '6px 8px',
-    fontSize: '0.8125rem'
+    padding: '4px 6px',
+    fontSize: '0.75rem'
   }
 }));
 
 const CompactFormControl = styled(FormControl)(({ theme }) => ({
   '& .MuiInputLabel-root': {
-    fontSize: '0.8125rem',
-    transform: 'translate(8px, 8px) scale(1)'
+    fontSize: '0.75rem',
+    transform: 'translate(8px, 7px) scale(1)'
   },
   '& .MuiInputLabel-shrink': {
     transform: 'translate(14px, -6px) scale(0.75)'
+  }
+}));
+
+const StyledChip = styled(Chip)(({ theme, darkMode, status }) => ({
+  height: '20px',
+  fontSize: '0.675rem',
+  fontWeight: 600,
+  borderRadius: '4px',
+  padding: '0 2px',
+  backgroundColor: status === 'Scheduled' 
+    ? (darkMode ? theme.palette.success.dark : theme.palette.success.light) 
+    : (darkMode ? theme.palette.grey[700] : theme.palette.grey[200]),
+  color: status === 'Scheduled'
+    ? (darkMode ? theme.palette.success.contrastText : theme.palette.success.dark)
+    : (darkMode ? theme.palette.grey[100] : theme.palette.grey[800]),
+  '.MuiChip-label': {
+    padding: '0 6px'
+  }
+}));
+
+const CompactButton = styled(Button)(({ theme, darkMode }) => ({
+  height: '32px',
+  fontSize: '0.75rem',
+  padding: '4px 10px',
+  minWidth: 'unset',
+  borderRadius: '6px',
+  whiteSpace: 'nowrap',
+  boxShadow: 'none',
+  textTransform: 'none',
+  fontWeight: 600,
+  '&.Mui-disabled': {
+    opacity: 0.6
   }
 }));
 
@@ -51,11 +93,16 @@ const ScheduleConfiguration = ({
   handleScheduleChange, 
   handleDateChange, 
   handleSaveSchedule,
+  handleSaveDependency,
   jobOptions,
   darkMode,
   scheduleLoading,
-  scheduleSaving
+  scheduleSaving,
+  dependencySaving
 }) => {
+  // State for validation errors
+  const [dateError, setDateError] = useState(null);
+  
   // For debugging
   console.log(`ScheduleConfiguration for job ${jobId}:`, {
     scheduleData: scheduleData[jobId],
@@ -119,108 +166,173 @@ const ScheduleConfiguration = ({
     return minutes;
   };
 
+  // Validate date ranges whenever start or end date changes
+  useEffect(() => {
+    const startDate = scheduleData[jobId]?.STRTDT;
+    const endDate = scheduleData[jobId]?.ENDDT;
+    
+    if (startDate && endDate) {
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      
+      if (end < start) {
+        setDateError('End date cannot be earlier than start date');
+      } else {
+        setDateError(null);
+      }
+    } else {
+      setDateError(null);
+    }
+  }, [scheduleData, jobId]);
+
   // Find the current job to check if it's scheduled
   const job = jobOptions.find(j => j.JOBFLWID === jobId);
   const isScheduled = job?.JOB_SCHEDULE_STATUS === 'Scheduled';
   const isLoading = scheduleLoading?.[jobId] === true;
   const isSaving = scheduleSaving?.[jobId] === true;
+  const isDependencySaving = dependencySaving?.[jobId] === true;
 
   // Determine if form has changes compared to initial data
-  const hasRequiredFields = scheduleData[jobId]?.FRQCD && 
+  const hasRequiredScheduleFields = scheduleData[jobId]?.FRQCD && 
                            scheduleData[jobId]?.FRQDD && 
                            scheduleData[jobId]?.FRQHH && 
                            scheduleData[jobId]?.FRQMI && 
-                           scheduleData[jobId]?.STRTDT;
+                           scheduleData[jobId]?.STRTDT &&
+                           !dateError;
+                           
+  const hasDependencyData = scheduleData[jobId]?.DPND_JOBSCHID;
+
+  // Handler for saving dependency only
+  const handleSaveDependencyClick = () => {
+    if (!hasDependencyData) return;
+    
+    const parentJob = jobOptions.find(j => j.JOBFLWID.toString() === scheduleData[jobId]?.DPND_JOBSCHID);
+    if (parentJob) {
+      const dependencyData = {
+        PARENT_MAP_REFERENCE: parentJob.MAPREF,
+        CHILD_MAP_REFERENCE: job.MAPREF
+      };
+      
+      handleSaveDependency(jobId, dependencyData);
+    }
+  };
 
   return (
-    <Box sx={{ 
-      py: 2.5, 
-      px: 3, 
-      backgroundColor: darkMode ? 'rgba(15, 23, 42, 0.5)' : 'rgba(243, 244, 246, 0.7)',
-      borderRadius: 2,
-      borderBottom: '1px solid',
-      borderColor: darkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
-      borderTop: '1px solid',
-      borderTopColor: darkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
-      boxShadow: darkMode ? 'inset 0 1px 5px rgba(0, 0, 0, 0.2)' : 'inset 0 1px 5px rgba(0, 0, 0, 0.05)',
-    }}>
-      <Typography 
-        variant="subtitle2" 
-        gutterBottom 
-        fontWeight="600" 
-        sx={{ 
-          mb: 2,
-          color: darkMode ? 'primary.light' : 'primary.dark',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          fontSize: '0.9rem',
-          letterSpacing: '0.01em',
-        }}
-      >
+    <Paper
+      elevation={0}
+      sx={{
+        p: 1.75,
+        mx: 0.5, 
+        my: 0.75,
+        backgroundColor: darkMode ? 'rgba(17, 25, 40, 0.7)' : 'rgba(249, 250, 251, 0.9)',
+        borderRadius: 2,
+        border: '1px solid',
+        borderColor: darkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)',
+        boxShadow: darkMode ? 
+          '0 4px 12px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.05)' : 
+          '0 4px 12px rgba(0, 0, 0, 0.03), inset 0 1px 0 rgba(255, 255, 255, 0.9)',
+        transition: 'all 0.15s ease-in-out',
+        '&:hover': {
+          boxShadow: darkMode ? 
+            '0 6px 16px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.05)' : 
+            '0 6px 16px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.9)',
+        },
+        width: '100%'
+      }}
+    >
+      {/* Header with status and job info */}
+      <Box sx={{ 
+        display: 'flex', 
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        mb: 1.5
+      }}>
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
           <Box component="span" sx={{ 
-            width: 4, 
-            height: 18, 
+            width: 3, 
+            height: 22, 
             backgroundColor: isScheduled ? 
               (darkMode ? 'success.main' : 'success.main') : 
               (darkMode ? 'primary.main' : 'primary.main'),
             mr: 1.5, 
-            borderRadius: 1,
+            borderRadius: '2px',
             boxShadow: '0 1px 2px rgba(0, 0, 0, 0.1)'
           }}></Box>
-          Schedule Configuration for {job?.MAPREF || scheduleData[jobId]?.MAPREF || jobId}
+          <Typography 
+            variant="subtitle2" 
+            fontWeight="600" 
+            sx={{ 
+              fontSize: '0.875rem',
+              color: darkMode ? 'primary.light' : 'primary.dark',
+            }}
+          >
+            {job?.MAPREF || scheduleData[jobId]?.MAPREF || jobId}
+          </Typography>
+          <StyledChip 
+            size="small" 
+            label={isScheduled ? "Scheduled" : "Not Scheduled"} 
+            status={isScheduled ? "Scheduled" : "Not Scheduled"}
+            darkMode={darkMode}
+            sx={{ ml: 1.5 }}
+          />
         </Box>
         
-        {isLoading && (
+        {/* Loading or saving indicator */}
+        {(isLoading || isSaving || isDependencySaving) && (
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <CircularProgress size={16} sx={{ mr: 1 }} />
-            <Typography variant="caption" sx={{ color: darkMode ? 'gray.400' : 'gray.600' }}>
-              Loading schedule...
+            <CircularProgress size={14} sx={{ mr: 1 }} color={isSaving || isDependencySaving ? "success" : "primary"} />
+            <Typography variant="caption" sx={{ color: darkMode ? 'gray.400' : 'gray.600', fontSize: '0.7rem' }}>
+              {isLoading ? 'Loading...' : isSaving ? 'Saving schedule...' : 'Saving dependency...'}
             </Typography>
           </Box>
         )}
-        
-        {isSaving && (
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <CircularProgress size={16} sx={{ mr: 1 }} color="success" />
-            <Typography variant="caption" sx={{ color: darkMode ? 'success.light' : 'success.main' }}>
-              Saving schedule...
-            </Typography>
-          </Box>
-        )}
-      </Typography>
+      </Box>
+
+      {/* Error message */}
+      {dateError && (
+        <Alert 
+          severity="error" 
+          icon={<ErrorIcon fontSize="small" />} 
+          sx={{ 
+            mb: 1.5, 
+            py: 0,
+            px: 1,
+            fontSize: '0.75rem',
+            '& .MuiAlert-icon': { fontSize: '0.875rem', mr: 1 }
+          }}
+        >
+          {dateError}
+        </Alert>
+      )}
       
-      {/* Single row layout */}
-      <Box 
-        sx={{ 
+      {/* All fields in a single row */}
+      <Box
+        sx={{
           display: 'flex',
-          flexDirection: { xs: 'column', md: 'row' },
-          alignItems: { xs: 'stretch', md: 'flex-end' },
-          gap: 2,
+          alignItems: 'flex-end',
           flexWrap: 'nowrap',
-          width: '100%',
-          opacity: isLoading || isSaving ? 0.7 : 1,
-          pointerEvents: isLoading || isSaving ? 'none' : 'auto',
+          gap: { xs: 0.75, md: 1 },
+          opacity: isLoading || isSaving || isDependencySaving ? 0.7 : 1,
+          pointerEvents: isLoading || isSaving || isDependencySaving ? 'none' : 'auto',
+          width: '100%'
         }}
       >
-        {/* Frequency - 12% */}
-        <Box sx={{ width: { xs: '100%', md: '12%' } }}>
+        {/* Frequency */}
+        <Box sx={{ width: '8%', minWidth: '65px' }}>
           <CompactFormControl fullWidth size="small">
-            <InputLabel sx={{ fontSize: '0.8125rem' }}>Frequency</InputLabel>
+            <InputLabel sx={{ fontSize: '0.75rem' }}>Frequency</InputLabel>
             <CompactSelect
               value={scheduleData[jobId]?.FRQCD || ''}
               onChange={(e) => {
-                console.log('Selected frequency:', e.target.value);
                 handleScheduleChange(jobId, 'FRQCD', e.target.value);
               }}
               label="Frequency"
               darkMode={darkMode}
               MenuProps={{ PaperProps: { sx: { maxHeight: 300 } } }}
             >
-              <MenuItem value="">Select</MenuItem>
+              <MenuItem value="" sx={{ fontSize: '0.75rem' }}>Select</MenuItem>
               {frequencyCodes.map(option => (
-                <MenuItem key={option.value} value={option.value}>
+                <MenuItem key={option.value} value={option.value} sx={{ fontSize: '0.75rem' }}>
                   {option.label}
                 </MenuItem>
               ))}
@@ -228,10 +340,10 @@ const ScheduleConfiguration = ({
           </CompactFormControl>
         </Box>
         
-        {/* Day - 12% */}
-        <Box sx={{ width: { xs: '100%', md: '12%' } }}>
+        {/* Day */}
+        <Box sx={{ width: '7%', minWidth: '55px' }}>
           <CompactFormControl fullWidth size="small">
-            <InputLabel sx={{ fontSize: '0.8125rem' }}>Day</InputLabel>
+            <InputLabel sx={{ fontSize: '0.75rem' }}>Day</InputLabel>
             <CompactSelect
               value={scheduleData[jobId]?.FRQDD || ''}
               onChange={(e) => handleScheduleChange(jobId, 'FRQDD', e.target.value)}
@@ -240,9 +352,9 @@ const ScheduleConfiguration = ({
               darkMode={darkMode}
               MenuProps={{ PaperProps: { sx: { maxHeight: 300 } } }}
             >
-              <MenuItem value="">Select</MenuItem>
+              <MenuItem value="" sx={{ fontSize: '0.75rem' }}>Select</MenuItem>
               {getDayOptions(scheduleData[jobId]?.FRQCD).map(option => (
-                <MenuItem key={option.value} value={option.value}>
+                <MenuItem key={option.value} value={option.value} sx={{ fontSize: '0.75rem' }}>
                   {option.label}
                 </MenuItem>
               ))}
@@ -250,10 +362,10 @@ const ScheduleConfiguration = ({
           </CompactFormControl>
         </Box>
         
-        {/* Hour - 8% */}
-        <Box sx={{ width: { xs: '100%', md: '8%' } }}>
+        {/* Hour */}
+        <Box sx={{ width: '6%', minWidth: '45px' }}>
           <CompactFormControl fullWidth size="small">
-            <InputLabel sx={{ fontSize: '0.8125rem' }}>Hour</InputLabel>
+            <InputLabel sx={{ fontSize: '0.75rem' }}>Hour</InputLabel>
             <CompactSelect
               value={scheduleData[jobId]?.FRQHH || ''}
               onChange={(e) => handleScheduleChange(jobId, 'FRQHH', e.target.value)}
@@ -262,9 +374,9 @@ const ScheduleConfiguration = ({
               darkMode={darkMode}
               MenuProps={{ PaperProps: { sx: { maxHeight: 300 } } }}
             >
-              <MenuItem value="">Select</MenuItem>
+              <MenuItem value="" sx={{ fontSize: '0.75rem' }}>Select</MenuItem>
               {getHourOptions(scheduleData[jobId]?.FRQCD).map(option => (
-                <MenuItem key={option.value} value={option.value}>
+                <MenuItem key={option.value} value={option.value} sx={{ fontSize: '0.75rem' }}>
                   {option.label}
                 </MenuItem>
               ))}
@@ -272,10 +384,10 @@ const ScheduleConfiguration = ({
           </CompactFormControl>
         </Box>
         
-        {/* Minute - 8% */}
-        <Box sx={{ width: { xs: '100%', md: '8%' } }}>
+        {/* Minute */}
+        <Box sx={{ width: '6%', minWidth: '45px' }}>
           <CompactFormControl fullWidth size="small">
-            <InputLabel sx={{ fontSize: '0.8125rem' }}>Minute</InputLabel>
+            <InputLabel sx={{ fontSize: '0.75rem' }}>Minute</InputLabel>
             <CompactSelect
               value={scheduleData[jobId]?.FRQMI || ''}
               onChange={(e) => handleScheduleChange(jobId, 'FRQMI', e.target.value)}
@@ -284,9 +396,9 @@ const ScheduleConfiguration = ({
               darkMode={darkMode}
               MenuProps={{ PaperProps: { sx: { maxHeight: 300 } } }}
             >
-              <MenuItem value="">Select</MenuItem>
+              <MenuItem value="" sx={{ fontSize: '0.75rem' }}>Select</MenuItem>
               {getMinuteOptions().map(option => (
-                <MenuItem key={option.value} value={option.value}>
+                <MenuItem key={option.value} value={option.value} sx={{ fontSize: '0.75rem' }}>
                   {option.label}
                 </MenuItem>
               ))}
@@ -294,26 +406,27 @@ const ScheduleConfiguration = ({
           </CompactFormControl>
         </Box>
         
-        {/* Start Date - 17% */}
-        <Box sx={{ width: { xs: '100%', md: '17%' } }}>
+        {/* Start Date */}
+        <Box sx={{ width: '13%', minWidth: '105px' }}>
           <DatePicker
             label="Start Date"
             value={scheduleData[jobId]?.STRTDT}
             onChange={(date) => handleDateChange(jobId, 'STRTDT', date)}
             slots={{
-              openPickerIcon: () => <CalendarIcon fontSize="small" />
+              openPickerIcon: () => <CalendarIcon fontSize="small" sx={{ fontSize: '0.875rem' }} />
             }}
             slotProps={{
               textField: {
                 size: "small",
                 fullWidth: true,
+                error: dateError && scheduleData[jobId]?.STRTDT !== null,
+                InputLabelProps: {
+                  sx: { fontSize: '0.75rem' }
+                },
                 sx: { 
                   '& .MuiInputBase-input': { 
-                    fontSize: '0.8125rem',
-                    padding: '8px 10px'
-                  },
-                  '& .MuiInputLabel-root': {
-                    fontSize: '0.8125rem'
+                    fontSize: '0.75rem',
+                    padding: '6px 8px'
                   }
                 }
               },
@@ -324,26 +437,28 @@ const ScheduleConfiguration = ({
           />
         </Box>
         
-        {/* End Date - 17% */}
-        <Box sx={{ width: { xs: '100%', md: '17%' } }}>
+        {/* End Date */}
+        <Box sx={{ width: '13%', minWidth: '105px' }}>
           <DatePicker
             label="End Date"
             value={scheduleData[jobId]?.ENDDT}
             onChange={(date) => handleDateChange(jobId, 'ENDDT', date)}
+            minDate={scheduleData[jobId]?.STRTDT ? new Date(scheduleData[jobId]?.STRTDT) : null}
             slots={{
-              openPickerIcon: () => <CalendarIcon fontSize="small" />
+              openPickerIcon: () => <CalendarIcon fontSize="small" sx={{ fontSize: '0.875rem' }} />
             }}
             slotProps={{
               textField: {
                 size: "small",
                 fullWidth: true,
+                error: !!dateError,
+                InputLabelProps: {
+                  sx: { fontSize: '0.75rem' }
+                },
                 sx: { 
                   '& .MuiInputBase-input': { 
-                    fontSize: '0.8125rem',
-                    padding: '8px 10px'
-                  },
-                  '& .MuiInputLabel-root': {
-                    fontSize: '0.8125rem'
+                    fontSize: '0.75rem',
+                    padding: '6px 8px'
                   }
                 }
               },
@@ -354,96 +469,112 @@ const ScheduleConfiguration = ({
           />
         </Box>
         
-        {/* Dependent Job - 16% */}
-        <Box sx={{ width: { xs: '100%', md: '16%' } }}>
-          <Autocomplete
-            size="small"
-            options={jobOptions.filter(j => j.JOBFLWID !== jobId)}
-            getOptionLabel={(option) => `${option.JOBFLWID} (${option.MAPREF})`}
-            isOptionEqualToValue={(option, value) => 
-              option.JOBFLWID.toString() === value.JOBFLWID.toString()
-            }
-            value={jobOptions.find(j => j.JOBFLWID.toString() === scheduleData[jobId]?.DPND_JOBSCHID) || null}
-            onChange={(event, newValue) => {
-              handleScheduleChange(jobId, 'DPND_JOBSCHID', newValue ? newValue.JOBFLWID.toString() : '');
-            }}
-            sx={{
-              '& .MuiInputBase-root': {
-                fontSize: '0.8125rem'
-              },
-              '& .MuiOutlinedInput-root': {
-                padding: '1px 9px 1px 8px'
-              },
-              '& .MuiOutlinedInput-input': {
-                padding: '7.5px 4px 7.5px 4px'
-              },
-              '& .MuiAutocomplete-endAdornment': {
-                top: 'calc(50% - 12px)'
-              }
-            }}
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                label="Dependent Job"
-                fullWidth
-                InputLabelProps={{
-                  sx: { fontSize: '0.8125rem' }
-                }}
-              />
-            )}
-          />
-        </Box>
-        
-        {/* Save Button - 10% */}
-        <Box sx={{ 
-          width: { xs: '100%', md: '10%' },
-          display: 'flex',
-          justifyContent: { xs: 'flex-end', md: 'center' },
-          alignItems: 'center',
-          mt: { xs: 1, md: 0 },
-          mb: { xs: 0.5, md: 0.5 }
-        }}>
-          <Button
+        {/* Save Schedule Button */}
+        <Box sx={{ width: '7%', minWidth: '75px' }}>
+          <CompactButton
             variant="contained"
             color="primary"
             startIcon={isSaving ? (
-              <CircularProgress size={16} color="inherit" />
+              <CircularProgress size={14} color="inherit" />
             ) : isScheduled ? (
-              <UpdateIcon sx={{ fontSize: 16 }} />
+              <UpdateIcon sx={{ fontSize: 14 }} />
             ) : (
-              <SaveIcon sx={{ fontSize: 16 }} />
+              <SaveIcon sx={{ fontSize: 14 }} />
             )}
             size="small"
             onClick={() => handleSaveSchedule(jobId)}
             disabled={
-              !hasRequiredFields ||
+              !hasRequiredScheduleFields ||
               isLoading ||
               isSaving
             }
-            sx={{ 
-              borderRadius: 1.5,
-              py: 0.75,
-              px: 1.5,
-              height: '36px',
-              fontSize: '0.8125rem',
-              fontWeight: 600,
-              textTransform: 'none',
-              whiteSpace: 'nowrap',
-              boxShadow: darkMode ? 
-                '0 2px 10px rgba(59, 130, 246, 0.3)' : 
-                '0 2px 10px rgba(59, 130, 246, 0.2)',
-              '&:hover': {
-                boxShadow: darkMode ? 
-                  '0 3px 12px rgba(59, 130, 246, 0.4)' : 
-                  '0 3px 12px rgba(59, 130, 246, 0.3)',
-              }
-            }}
+            darkMode={darkMode}
+            fullWidth
           >
             {isSaving ? 'Saving...' : isScheduled ? 'Update' : 'Save'}
-          </Button>
+          </CompactButton>
+        </Box>
+        
+        {/* Divider */}
+        <Divider orientation="vertical" flexItem sx={{ mx: 0.5 }} />
+        
+        {/* Dependency section */}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexGrow: 1, minWidth: '240px' }}>
+          <Box sx={{ flexGrow: 1, minWidth: '150px' }}>
+            <Autocomplete
+              size="small"
+              options={jobOptions.filter(j => j.JOBFLWID !== jobId)}
+              getOptionLabel={(option) => option.MAPREF}
+              isOptionEqualToValue={(option, value) => 
+                option.JOBFLWID.toString() === value.JOBFLWID.toString()
+              }
+              value={jobOptions.find(j => j.JOBFLWID.toString() === scheduleData[jobId]?.DPND_JOBSCHID) || null}
+              onChange={(event, newValue) => {
+                handleScheduleChange(jobId, 'DPND_JOBSCHID', newValue ? newValue.JOBFLWID.toString() : '');
+              }}
+              disabled={!isScheduled}
+              sx={{
+                '& .MuiInputBase-root': {
+                  fontSize: '0.75rem'
+                },
+                '& .MuiOutlinedInput-root': {
+                  padding: '1px 4px 1px 8px'
+                },
+                '& .MuiOutlinedInput-input': {
+                  padding: '6px 4px 6px 4px'
+                },
+                '& .MuiAutocomplete-endAdornment': {
+                  top: 'calc(50% - 10px)'
+                }
+              }}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Parent Job"
+                  fullWidth
+                  InputLabelProps={{
+                    sx: { fontSize: '0.75rem' }
+                  }}
+                />
+              )}
+            />
+          </Box>
+          
+          <CompactButton
+            variant="outlined"
+            color="secondary"
+            startIcon={isDependencySaving ? (
+              <CircularProgress size={14} color="inherit" />
+            ) : (
+              <LinkIcon sx={{ fontSize: 14 }} />
+            )}
+            size="small"
+            onClick={handleSaveDependencyClick}
+            disabled={
+              !hasDependencyData ||
+              !isScheduled ||
+              isLoading ||
+              isDependencySaving
+            }
+            darkMode={darkMode}
+          >
+            {isDependencySaving ? 'Saving...' : 'Link'}
+          </CompactButton>
+          
+          <Tooltip title="This job will run after the selected parent job completes">
+            <InfoIcon 
+              sx={{ 
+                fontSize: '0.875rem', 
+                color: darkMode ? 'grey.500' : 'grey.600', 
+                cursor: 'help',
+                opacity: 0.8,
+                '&:hover': { opacity: 1 }
+              }} 
+            />
+          </Tooltip>
         </Box>
       </Box>
-    </Box>
+    </Paper>
   );
 };
 

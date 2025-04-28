@@ -41,7 +41,8 @@ import {
   ViewList as ListIcon,
   KeyboardArrowUp as KeyboardArrowUpIcon,
   Search as SearchIcon,
-  FilterList as FilterListIcon
+  FilterListIcon,
+  Refresh as RefreshIcon
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import { useTheme } from '@/context/ThemeContext';
@@ -117,6 +118,9 @@ const JobsPage = () => {
   const [scheduleSaving, setScheduleSaving] = useState({});
   const [tableTypeFilter, setTableTypeFilter] = useState('');
   const [scheduleStatusFilter, setScheduleStatusFilter] = useState('');
+  
+  // New state for dependency saving
+  const [dependencySaving, setDependencySaving] = useState({});
   
   const contentRef = useRef(null);
   const { darkMode } = useTheme();
@@ -362,6 +366,7 @@ const JobsPage = () => {
         formattedEndDate = format(jobData.ENDDT, 'yyyy-MM-dd');
       }
       
+      // Remove dependency data for the schedule update
       const requestData = {
         JOBFLWID: jobId,
         MAPREF: jobData.MAPREF,
@@ -370,8 +375,8 @@ const JobsPage = () => {
         FRQHH: jobData.FRQHH,
         FRQMI: jobData.FRQMI,
         STRTDT: formattedStartDate,
-        ENDDT: formattedEndDate,
-        DPND_JOBSCHID: jobData.DPND_JOBSCHID || null
+        ENDDT: formattedEndDate
+        // Removed DPND_JOBSCHID as requested
       };
       
       const response = await axios.post(
@@ -399,6 +404,36 @@ const JobsPage = () => {
     } finally {
       // Clear saving state for this job
       setScheduleSaving(prev => ({ ...prev, [jobId]: false }));
+      
+      setTimeout(() => {
+        setSuccessMessage(null);
+        setError(null);
+      }, 3000);
+    }
+  };
+  
+  // Handle save dependency
+  const handleSaveDependency = async (jobId, dependencyData) => {
+    try {
+      // Set saving state for this specific job's dependency
+      setDependencySaving(prev => ({ ...prev, [jobId]: true }));
+      
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/job/save_parent_child_job`, 
+        dependencyData
+      );
+      
+      if (response.data.success) {
+        setSuccessMessage('Dependency saved successfully');
+      } else {
+        setError(response.data.message || 'Failed to save dependency');
+      }
+    } catch (err) {
+      console.error('Error saving job dependency:', err);
+      setError('Failed to save dependency. Please try again.');
+    } finally {
+      // Clear saving state for this job's dependency
+      setDependencySaving(prev => ({ ...prev, [jobId]: false }));
       
       setTimeout(() => {
         setSuccessMessage(null);
@@ -482,6 +517,10 @@ const JobsPage = () => {
     { id: 'actions', label: 'Actions' },
     { id: 'schedule', label: 'Schedule' },
   ];
+
+  const handleRefresh = () => {
+    fetchJobs();
+  };
 
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
@@ -615,7 +654,56 @@ const JobsPage = () => {
             </Tabs>
             
             {/* Filters and Search */}
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3, flexWrap: 'wrap' }}>
+
+              {/* Refresh button */}
+              <Tooltip title="Refresh Jobs">
+                <IconButton 
+                  onClick={handleRefresh}
+                  sx={{ 
+                    backgroundColor: darkMode ? 'rgba(59, 130, 246, 0.1)' : 'rgba(59, 130, 246, 0.05)',
+                    color: darkMode ? '#60A5FA' : '#3B82F6',
+                    '&:hover': {
+                      backgroundColor: darkMode ? 'rgba(59, 130, 246, 0.2)' : 'rgba(59, 130, 246, 0.1)',
+                    }
+                  }}
+                >
+                  <RefreshIcon />
+                </IconButton>
+              </Tooltip>
+              
+              {/* Search field */}
+              <TextField
+                size="small"
+                placeholder="Search jobs..."
+                variant="outlined"
+                value={searchTerm}
+                onChange={handleSearchChange}
+                sx={{ width: 240 }}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <SearchIcon fontSize="small" color={darkMode ? 'primary' : 'inherit'} />
+                    </InputAdornment>
+                  ),
+                  sx: {
+                    borderRadius: 2,
+                    backgroundColor: darkMode ? 'rgba(30, 41, 59, 0.5)' : 'rgba(249, 250, 251, 0.9)',
+                    '& .MuiOutlinedInput-notchedOutline': {
+                      borderColor: darkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+                    },
+                    '&:hover .MuiOutlinedInput-notchedOutline': {
+                      borderColor: darkMode ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.2)',
+                    },
+                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                      borderColor: darkMode ? 'primary.main' : 'primary.main',
+                    },
+                    fontSize: '0.875rem',
+                  }
+                }}
+              />
+              
+
               {/* Active Filter Badge */}
               {(tableTypeFilter || scheduleStatusFilter || searchTerm) && (
                 <Box sx={{ 
@@ -752,37 +840,6 @@ const JobsPage = () => {
                   </MenuItem>
                 </Select>
               </Box>
-              
-              {/* Search field */}
-              <TextField
-                size="small"
-                placeholder="Search jobs..."
-                variant="outlined"
-                value={searchTerm}
-                onChange={handleSearchChange}
-                sx={{ width: 240 }}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <SearchIcon fontSize="small" color={darkMode ? 'primary' : 'inherit'} />
-                    </InputAdornment>
-                  ),
-                  sx: {
-                    borderRadius: 2,
-                    backgroundColor: darkMode ? 'rgba(30, 41, 59, 0.5)' : 'rgba(249, 250, 251, 0.9)',
-                    '& .MuiOutlinedInput-notchedOutline': {
-                      borderColor: darkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
-                    },
-                    '&:hover .MuiOutlinedInput-notchedOutline': {
-                      borderColor: darkMode ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.2)',
-                    },
-                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                      borderColor: darkMode ? 'primary.main' : 'primary.main',
-                    },
-                    fontSize: '0.875rem',
-                  }
-                }}
-              />
             </Box>
           </Box>
         </Box>
@@ -1003,10 +1060,12 @@ const JobsPage = () => {
                               handleScheduleChange={handleScheduleChange}
                               handleDateChange={handleDateChange}
                               handleSaveSchedule={handleSaveSchedule}
+                              handleSaveDependency={handleSaveDependency}
                               jobOptions={jobs}
                               darkMode={darkMode}
                               scheduleLoading={scheduleLoading}
                               scheduleSaving={scheduleSaving}
+                              dependencySaving={dependencySaving}
                             />
                           </Collapse>
                         </TableCell>

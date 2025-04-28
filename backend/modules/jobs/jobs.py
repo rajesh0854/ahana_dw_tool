@@ -109,13 +109,13 @@ def get_all_jobs():
                 ELSE NULL
             END AS DPND_JOBSCHID
         FROM 
-            MAP.DWJOBFLW f
+            TRG.DWJOBFLW f
         LEFT JOIN 
             (SELECT 
                  JOBFLWID, 
                  MIN(JOBSCHID) AS JOBSCHID, 
                  MIN(DPND_JOBSCHID) AS DPND_JOBSCHID
-             FROM MAP.DWJOBSCH
+             FROM TRG.DWJOBSCH
              WHERE CURFLG = 'Y'
              GROUP BY JOBFLWID) s
         ON 
@@ -223,110 +223,6 @@ def get_job_schedule_details(job_flow_id):
         print(f"Error in get_job_schedule_details: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
-# save or update job schedule
-@jobs_bp.route('/save_job_schedule', methods=['POST'])
-def save_job_schedule():
-    try:
-        data = request.json
-        
-        # Required fields
-        job_flow_id = data.get('JOBFLWID')
-        map_ref = data.get('MAPREF')
-        frequency_code = data.get('FRQCD')
-        frequency_day = data.get('FRQDD')
-        frequency_hour = data.get('FRQHH')
-        frequency_minute = data.get('FRQMI')
-        start_date = data.get('STRTDT')
-        end_date = data.get('ENDDT')
-        dependent_job = data.get('DPND_JOBSCHID')
-        
-        # Validate required fields
-        if not job_flow_id or not map_ref or not frequency_code or not frequency_day or not frequency_hour or not frequency_minute or not start_date:
-            return jsonify({
-                'success': False,
-                'message': 'Missing required parameters for job schedule'
-            }), 400
-            
-        # For now, just print the data (for debugging/testing)
-        print(f"Received schedule data for job {job_flow_id}:")
-        print(f"Map Ref: {map_ref}")
-        print(f"Frequency: {frequency_code}, Day: {frequency_day}, Hour: {frequency_hour}, Minute: {frequency_minute}")
-        print(f"Start Date: {start_date}, End Date: {end_date}")
-        print(f"Dependent Job: {dependent_job}")
-        
-        # In a real implementation, you would save this to the database
-        # For example:
-        # conn = create_oracle_connection()
-        # try:
-        #     cursor = conn.cursor()
-        #     # Check if job schedule already exists
-        #     check_query = "SELECT COUNT(*) FROM MAP.DWJOBSCH WHERE JOBFLWID = :job_flow_id AND CURFLG = 'Y'"
-        #     cursor.execute(check_query, {'job_flow_id': job_flow_id})
-        #     count = cursor.fetchone()[0]
-        #     
-        #     if count > 0:
-        #         # Update existing schedule
-        #         update_query = """
-        #             UPDATE MAP.DWJOBSCH 
-        #             SET FRQCD = :frqcd, FRQDD = :frqdd, FRQHH = :frqhh, FRQMI = :frqmi, 
-        #                 STRTDT = TO_DATE(:strtdt, 'YYYY-MM-DD'), 
-        #                 ENDDT = TO_DATE(:enddt, 'YYYY-MM-DD'),
-        #                 DPND_JOBSCHID = :dpnd_jobschid,
-        #                 RECUPDT = SYSDATE
-        #             WHERE JOBFLWID = :job_flow_id AND CURFLG = 'Y'
-        #         """
-        #         cursor.execute(update_query, {
-        #             'frqcd': frequency_code,
-        #             'frqdd': frequency_day,
-        #             'frqhh': frequency_hour,
-        #             'frqmi': frequency_minute,
-        #             'strtdt': start_date,
-        #             'enddt': end_date,
-        #             'dpnd_jobschid': dependent_job,
-        #             'job_flow_id': job_flow_id
-        #         })
-        #     else:
-        #         # Insert new schedule
-        #         insert_query = """
-        #             INSERT INTO MAP.DWJOBSCH (
-        #                 JOBSCHID, JOBFLWID, MAPREF, FRQCD, FRQDD, FRQHH, FRQMI, 
-        #                 STRTDT, ENDDT, STFLG, DPND_JOBSCHID, CURFLG, RECCRDT
-        #             ) VALUES (
-        #                 MAP.SEQ_DWJOBSCH.NEXTVAL, :job_flow_id, :map_ref, :frqcd, :frqdd, :frqhh, :frqmi,
-        #                 TO_DATE(:strtdt, 'YYYY-MM-DD'), TO_DATE(:enddt, 'YYYY-MM-DD'),
-        #                 'A', :dpnd_jobschid, 'Y', SYSDATE
-        #             )
-        #         """
-        #         cursor.execute(insert_query, {
-        #             'job_flow_id': job_flow_id,
-        #             'map_ref': map_ref,
-        #             'frqcd': frequency_code,
-        #             'frqdd': frequency_day,
-        #             'frqhh': frequency_hour,
-        #             'frqmi': frequency_minute,
-        #             'strtdt': start_date,
-        #             'enddt': end_date,
-        #             'dpnd_jobschid': dependent_job
-        #         })
-        #     
-        #     conn.commit()
-        # finally:
-        #     conn.close()
-        
-        return jsonify({
-            'success': True,
-            'message': 'Job schedule saved successfully'
-        })
-        
-    except Exception as e:
-        print(f"Error in save_job_schedule: {str(e)}")
-        return jsonify({
-            'success': False,
-            'message': f'An error occurred while saving the job schedule: {str(e)}'
-        }), 500
-
-
-
 
 
 ####################### Scheduled Jobs and Logs #######################
@@ -383,9 +279,9 @@ def get_job_and_process_log_details(mapref):
             DPL.ENDDT as END_DATE,
             DPL.STATUS as STATUS
         FROM 
-            MAP.DWJOBLOG DJL
+            TRG.DWJOBLOG DJL
         INNER JOIN 
-            MAP.DWPRCLOG DPL
+            TRG.DWPRCLOG DPL
         ON 
             DJL.JOBID = DPL.JOBID
         WHERE 
@@ -422,4 +318,164 @@ def get_error_details(job_id):
         })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
+
+
+# save or update job schedule
+@jobs_bp.route('/save_job_schedule', methods=['POST'])
+def save_job_schedule():
+    try:
+        data = request.json
+        
+        # Required fields
+        job_flow_id = data.get('JOBFLWID')
+        map_ref = data.get('MAPREF')
+        frequency_code = data.get('FRQCD')
+        frequency_day = data.get('FRQDD')
+        frequency_hour = data.get('FRQHH')
+        frequency_minute = data.get('FRQMI')
+        start_date = data.get('STRTDT')
+        end_date = data.get('ENDDT')
+        
+        # Validate required fields
+        if not map_ref or not frequency_code or not frequency_day or not frequency_hour or not frequency_minute or not start_date:
+            return jsonify({
+                'success': False,
+                'message': 'Missing required parameters for job schedule'
+            }), 400
+            
+        conn = create_oracle_connection()
+        try:
+            cursor = conn.cursor()
+            
+            # Call the Oracle package function
+            sql = """
+            DECLARE
+                v_jobschid NUMBER;
+            BEGIN
+                v_jobschid := TRG.PKGDWPRC.CREATE_JOB_SCHEDULE(
+                    p_mapref => :p_mapref,
+                    p_frqcd => :p_frqcd,
+                    p_frqdd => :p_frqdd,
+                    p_frqhh => :p_frqhh,
+                    p_frqmi => :p_frqmi,
+                    p_strtdt => TO_DATE(:p_strtdt, 'YYYY-MM-DD'),
+                    p_enddt => TO_DATE(:p_enddt, 'YYYY-MM-DD')
+                );
+                :job_schedule_id := v_jobschid;
+            END;
+            """
+            
+            # Prepare the parameters
+            job_schedule_id = cursor.var(int)
+            
+            # Handle end_date, which can be null
+            end_date_param = end_date if end_date else None
+            
+            # Execute the PL/SQL block
+            cursor.execute(sql, {
+                'p_mapref': map_ref,
+                'p_frqcd': frequency_code,
+                'p_frqdd': frequency_day,
+                'p_frqhh': frequency_hour,
+                'p_frqmi': frequency_minute,
+                'p_strtdt': start_date,
+                'p_enddt': end_date_param,
+                'job_schedule_id': job_schedule_id
+            })
+            
+            # Commit the transaction
+            conn.commit()
+            
+            return jsonify({
+                'success': True,
+                'message': 'Job schedule saved successfully',
+                'job_schedule_id': job_schedule_id.getvalue()
+            })
+            
+        except Exception as e:
+            conn.rollback()
+            error_message = str(e)
+            print(f"Database error in save_job_schedule: {error_message}")
+            return jsonify({
+                'success': False,
+                'message': f'Database error: {error_message}'
+            }), 500
+        finally:
+            conn.close()
+            
+    except Exception as e:
+        print(f"Error in save_job_schedule: {str(e)}")
+        return jsonify({
+            'success': False,
+            'message': f'An error occurred while saving the job schedule: {str(e)}'
+        }), 500
+
+
+
+# save save parent and child job.
+@jobs_bp.route('/save_parent_child_job', methods=['POST'])
+def save_parent_child_job():
+    try:
+        data = request.json
+        
+        # Required fields
+        parent_map_reference = data.get('PARENT_MAP_REFERENCE')
+        child_map_reference = data.get('CHILD_MAP_REFERENCE')
+        
+        # Validate required fields
+        if not parent_map_reference or not child_map_reference:
+            return jsonify({
+                'success': False,
+                'message': 'Missing required parameters: PARENT_MAP_REFERENCE or CHILD_MAP_REFERENCE'
+            }), 400
+            
+        conn = create_oracle_connection()
+        try:
+            cursor = conn.cursor()
+            
+            # Call the Oracle package procedure
+            sql = """
+            BEGIN
+                TRG.PKGDWPRC.CREATE_JOB_DEPENDENCY(
+                    p_parent_mapref => :parent_map_reference,
+                    p_child_mapref => :child_map_reference
+                );
+            END;
+            """
+            
+            # Execute the PL/SQL block
+            cursor.execute(sql, {
+                'parent_map_reference': parent_map_reference,
+                'child_map_reference': child_map_reference
+            })
+            
+            # Commit the transaction
+            conn.commit()
+            
+            return jsonify({
+                'success': True,
+                'message': 'Parent-child job relationship saved successfully'
+            })
+            
+        except Exception as e:
+            conn.rollback()
+            error_message = str(e)
+            print(f"Database error in save_parent_child_job: {error_message}")
+            return jsonify({
+                'success': False,
+                'message': f'Database error: {error_message}'
+            }), 500
+        finally:
+            conn.close()
+            
+    except Exception as e:
+        print(f"Error in save_parent_child_job: {str(e)}")
+        return jsonify({
+            'success': False,
+            'message': f'An error occurred while saving the parent-child job relationship: {str(e)}'
+        }), 500
+
+
 
