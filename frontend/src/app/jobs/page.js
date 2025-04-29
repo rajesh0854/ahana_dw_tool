@@ -41,9 +41,8 @@ import {
   ViewList as ListIcon,
   KeyboardArrowUp as KeyboardArrowUpIcon,
   Search as SearchIcon,
-  FilterListIcon,
-  Refresh as RefreshIcon,
-  AccountTree as AccountTreeIcon
+  FilterList as FilterListIcon,
+  Refresh as RefreshIcon
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import { useTheme } from '@/context/ThemeContext';
@@ -56,6 +55,14 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { format } from 'date-fns';
 import Link from 'next/link';
+import { 
+  StatusIndicator, 
+  MappingDetails, 
+  InlineScheduleConfig,
+  TargetTableDisplay,
+  ScheduleSummary,
+  DependencyDisplay
+} from './components';
 
 // Styled components
 const StyledTableContainer = styled(TableContainer)(({ theme, darkMode }) => ({
@@ -79,13 +86,25 @@ const StyledTableContainer = styled(TableContainer)(({ theme, darkMode }) => ({
   },
 }));
 
-const ActionButton = styled(IconButton)(({ theme, darkMode }) => ({
-  backgroundColor: darkMode ? 'rgba(66, 153, 225, 0.1)' : 'rgba(66, 153, 225, 0.05)',
+// Define ActionButton if it's missing
+const ActionButton = styled(IconButton)(({ theme, darkMode, color = 'primary' }) => ({
+  padding: '4px',
+  marginRight: '4px',
+  backgroundColor: darkMode 
+    ? (color === 'primary' ? 'rgba(59, 130, 246, 0.1)' : color === 'info' ? 'rgba(6, 182, 212, 0.1)' : 'rgba(99, 102, 241, 0.1)') 
+    : (color === 'primary' ? 'rgba(59, 130, 246, 0.05)' : color === 'info' ? 'rgba(6, 182, 212, 0.05)' : 'rgba(99, 102, 241, 0.05)'),
+  color: darkMode 
+    ? (color === 'primary' ? '#60A5FA' : color === 'info' ? '#06B6D4' : '#818CF8')
+    : (color === 'primary' ? '#3B82F6' : color === 'info' ? '#0891B2' : '#6366F1'),
+  border: '1px solid',
+  borderColor: darkMode
+    ? (color === 'primary' ? 'rgba(59, 130, 246, 0.2)' : color === 'info' ? 'rgba(6, 182, 212, 0.2)' : 'rgba(99, 102, 241, 0.2)')
+    : (color === 'primary' ? 'rgba(59, 130, 246, 0.1)' : color === 'info' ? 'rgba(6, 182, 212, 0.1)' : 'rgba(99, 102, 241, 0.1)'),
   '&:hover': {
-    backgroundColor: darkMode ? 'rgba(66, 153, 225, 0.2)' : 'rgba(66, 153, 225, 0.1)',
-  },
-  marginRight: theme.spacing(0.75),
-  padding: 6,
+    backgroundColor: darkMode
+      ? (color === 'primary' ? 'rgba(59, 130, 246, 0.2)' : color === 'info' ? 'rgba(6, 182, 212, 0.2)' : 'rgba(99, 102, 241, 0.2)')
+      : (color === 'primary' ? 'rgba(59, 130, 246, 0.1)' : color === 'info' ? 'rgba(6, 182, 212, 0.1)' : 'rgba(99, 102, 241, 0.1)'),
+  }
 }));
 
 // New styled component for scroll-to-top button
@@ -103,38 +122,43 @@ const ScrollToTopButton = styled(Fab)(({ theme, darkMode }) => ({
 }));
 
 const JobsPage = () => {
+  const { darkMode } = useTheme();
+  const contentRef = useRef(null);
+
+  // State for jobs data
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [successMessage, setSuccessMessage] = useState(null);
+  
+  // State for selected job and dialog
   const [selectedJob, setSelectedJob] = useState(null);
   const [openDialog, setOpenDialog] = useState(false);
   const [openLogicDialog, setOpenLogicDialog] = useState(false);
-  const [expandedRows, setExpandedRows] = useState({});
+  
+  // State for schedule data
   const [scheduleData, setScheduleData] = useState({});
-  const [successMessage, setSuccessMessage] = useState(null);
-  const [viewMode, setViewMode] = useState('list');
-  const [showScrollTop, setShowScrollTop] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
   const [scheduleLoading, setScheduleLoading] = useState({});
   const [scheduleSaving, setScheduleSaving] = useState({});
+  
+  // State for filters
+  const [searchTerm, setSearchTerm] = useState('');
   const [tableTypeFilter, setTableTypeFilter] = useState('');
   const [scheduleStatusFilter, setScheduleStatusFilter] = useState('');
   
-  // New state for dependency saving
-  const [dependencySaving, setDependencySaving] = useState({});
+  // State for UI
+  const [showScrollTop, setShowScrollTop] = useState(false);
+  const [viewMode, setViewMode] = useState('list');
   
-  const contentRef = useRef(null);
-  const { darkMode } = useTheme();
   const muiTheme = useMuiTheme();
 
-  // Check scroll position to show/hide scroll-to-top button
+  // Handle scroll events
   const handleScroll = () => {
     if (contentRef.current) {
-      const scrollTop = contentRef.current.scrollTop;
-      setShowScrollTop(scrollTop > 300);
+      setShowScrollTop(contentRef.current.scrollTop > 300);
     }
   };
-
+  
   // Scroll to top function
   const scrollToTop = () => {
     if (contentRef.current) {
@@ -149,6 +173,38 @@ const JobsPage = () => {
   useEffect(() => {
     fetchJobs();
   }, []);
+
+  // Function to resolve dependency map references after fetching jobs
+  useEffect(() => {
+    // Only process if we have jobs with DPND_JOBSCHID
+    if (jobs.length === 0 || !jobs.some(job => job.DPND_JOBSCHID)) {
+      return;
+    }
+    
+    // For each job with a DPND_JOBSCHID, find the corresponding dependent job
+    let hasChanges = false;
+    const updatedJobs = jobs.map(job => {
+      if (job.DPND_JOBSCHID) {
+        // Find the job with matching JOBSCHID
+        const dependentJob = jobs.find(j => j.JOBSCHID === job.DPND_JOBSCHID);
+        
+        // If found and DPND_MAPREF is not already set correctly, set it
+        if (dependentJob && job.DPND_MAPREF !== dependentJob.MAPREF) {
+          hasChanges = true;
+          return {
+            ...job,
+            DPND_MAPREF: dependentJob.MAPREF
+          };
+        }
+      }
+      return job;
+    });
+    
+    // Only update if there are changes
+    if (hasChanges) {
+      setJobs(updatedJobs);
+    }
+  }, [jobs]);
 
   // Add scroll event listener
   useEffect(() => {
@@ -176,13 +232,9 @@ const JobsPage = () => {
         initialScheduleData[job.JOBFLWID] = {
           JOBFLWID: job.JOBFLWID,
           MAPREF: job.MAPREF || '',
-          FRQCD: '',
-          FRQDD: '',
-          FRQHH: '',
-          FRQMI: '',
-          STRTDT: null,
-          ENDDT: null,
-          DPND_JOBSCHID: job.DPND_JOBSCHID?.toString() || '',
+          TIMEPARAM: '',
+          STRT_DT: null,
+          END_DT: null,
           STFLG: 'A' // Default status is Active
         };
       });
@@ -215,39 +267,19 @@ const JobsPage = () => {
       if (response.data && response.data.length > 0) {
         const scheduleDetails = response.data[0];
         
-        // Create a date object from the date string if it exists
-        let startDate = null;
-        let endDate = null;
-        
-        if (scheduleDetails.STRTDT) {
-          startDate = new Date(scheduleDetails.STRTDT);
+        // Extract time parameter from individual fields if they exist
+        let timeParam = '';
+        if (scheduleDetails.FRQCD) {
+          timeParam = scheduleDetails.FRQCD;
+          
+          if (scheduleDetails.FRQDD) {
+            timeParam += `_${scheduleDetails.FRQDD}`;
+          }
+          
+          if (scheduleDetails.FRQHH !== undefined && scheduleDetails.FRQMI !== undefined) {
+            timeParam += `_${scheduleDetails.FRQHH}:${scheduleDetails.FRQMI}`;
+          }
         }
-        
-        if (scheduleDetails.ENDDT) {
-          endDate = new Date(scheduleDetails.ENDDT);
-        }
-        
-        // Handle dependent job ID (ensure it's a string)
-        let dependentJobId = '';
-        if (scheduleDetails.DPND_JOBSCHID !== null && scheduleDetails.DPND_JOBSCHID !== undefined && scheduleDetails.DPND_JOBSCHID !== '') {
-          dependentJobId = String(scheduleDetails.DPND_JOBSCHID);
-        }
-        
-        // Ensure we have string values for all select fields
-        const frqcd = String(scheduleDetails.FRQCD || '');
-        const frqdd = String(scheduleDetails.FRQDD || '');
-        const frqhh = String(scheduleDetails.FRQHH || '');
-        const frqmi = String(scheduleDetails.FRQMI || '');
-        
-        console.log('Parsed schedule details:', {
-          FRQCD: frqcd,
-          FRQDD: frqdd,
-          FRQHH: frqhh,
-          FRQMI: frqmi,
-          STRTDT: startDate,
-          ENDDT: endDate,
-          DPND_JOBSCHID: dependentJobId
-        });
         
         // Update the schedule data with fetched values
         setScheduleData(prev => ({
@@ -256,14 +288,11 @@ const JobsPage = () => {
             ...prev[jobId],
             JOBFLWID: jobId,
             MAPREF: scheduleDetails.MAPREF || job.MAPREF || '',
-            FRQCD: frqcd,
-            FRQDD: frqdd,
-            FRQHH: frqhh,
-            FRQMI: frqmi,
-            STRTDT: startDate,
-            ENDDT: endDate,
-            DPND_JOBSCHID: dependentJobId,
+            TIMEPARAM: scheduleDetails.TIMEPARAM || timeParam,
+            STRT_DT: scheduleDetails.STRT_DT || scheduleDetails.STRTDT,
+            END_DT: scheduleDetails.END_DT || scheduleDetails.ENDDT,
             STFLG: scheduleDetails.STFLG || '',
+            JOB_SCHEDULE_STATUS: job.JOB_SCHEDULE_STATUS
           }
         }));
       }
@@ -275,54 +304,28 @@ const JobsPage = () => {
     }
   };
 
-  // Handle opening of job details dialog
+  // Handle view details dialog
   const handleViewDetails = (job) => {
     setSelectedJob(job);
     setOpenDialog(true);
   };
-
-  // Handle dialog close
+  
+  // Handle close dialog
   const handleCloseDialog = () => {
     setOpenDialog(false);
     setSelectedJob(null);
   };
-
-  // Handle view logic
+  
+  // Handle view logic dialog
   const handleViewLogic = (job) => {
     setSelectedJob(job);
     setOpenLogicDialog(true);
   };
-
-  // Handle close of view logic dialog
+  
+  // Handle close logic dialog
   const handleCloseLogicDialog = () => {
     setOpenLogicDialog(false);
-  };
-
-  // Handle row expansion
-  const toggleRowExpansion = (jobId) => {
-    // If this row is already expanded, just close it
-    if (expandedRows[jobId]) {
-      setExpandedRows(prev => ({
-        ...prev,
-        [jobId]: false
-      }));
-      return;
-    }
-    
-    // Close all rows and open only the clicked one
-    const newExpandedRows = {};
-    Object.keys(expandedRows).forEach(id => {
-      newExpandedRows[id] = false;
-    });
-    newExpandedRows[jobId] = true;
-    
-    setExpandedRows(newExpandedRows);
-    
-    // Fetch schedule details for the newly expanded row
-    const job = jobs.find(j => j.JOBFLWID === jobId);
-    if (job) {
-      fetchJobScheduleDetails(jobId);
-    }
+    setSelectedJob(null);
   };
 
   // Handle schedule data change
@@ -355,29 +358,42 @@ const JobsPage = () => {
       
       const jobData = scheduleData[jobId];
       
-      // Format dates for API
-      let formattedStartDate = null;
-      let formattedEndDate = null;
-      
-      if (jobData.STRTDT) {
-        formattedStartDate = format(jobData.STRTDT, 'yyyy-MM-dd');
+      // Validate the schedule data before sending to backend
+      const validationError = validateScheduleData(jobData);
+      if (validationError) {
+        setError(validationError);
+        setScheduleSaving(prev => ({ ...prev, [jobId]: false }));
+        return;
       }
       
-      if (jobData.ENDDT) {
-        formattedEndDate = format(jobData.ENDDT, 'yyyy-MM-dd');
+      // Extract time parameter components for backend format
+      const timeParts = jobData.TIMEPARAM ? jobData.TIMEPARAM.split('_') : [];
+      const frequencyCode = timeParts[0] || '';
+      
+      // Get day and time parameters based on frequency type
+      let frequencyDay = '', frequencyHour = '', frequencyMinute = '';
+      
+      if (['WK', 'FN', 'MN', 'HY', 'YR'].includes(frequencyCode)) {
+        frequencyDay = timeParts[1] || '';
+        const timePieces = timeParts[2] ? timeParts[2].split(':') : [];
+        frequencyHour = timePieces[0] || '';
+        frequencyMinute = timePieces[1] || '';
+      } else {
+        const timePieces = timeParts[1] ? timeParts[1].split(':') : [];
+        frequencyHour = timePieces[0] || '';
+        frequencyMinute = timePieces[1] || '';
       }
       
-      // Remove dependency data for the schedule update
+      // Prepare the request data - using the parameter names expected by backend
       const requestData = {
         JOBFLWID: jobId,
         MAPREF: jobData.MAPREF,
-        FRQCD: jobData.FRQCD,
-        FRQDD: jobData.FRQDD,
-        FRQHH: jobData.FRQHH,
-        FRQMI: jobData.FRQMI,
-        STRTDT: formattedStartDate,
-        ENDDT: formattedEndDate
-        // Removed DPND_JOBSCHID as requested
+        FRQCD: frequencyCode,
+        FRQDD: frequencyDay,
+        FRQHH: frequencyHour,
+        FRQMI: frequencyMinute,
+        STRTDT: jobData.STRT_DT,
+        ENDDT: jobData.END_DT
       };
       
       const response = await axios.post(
@@ -392,7 +408,18 @@ const JobsPage = () => {
         setJobs(prevJobs => 
           prevJobs.map(job => 
             job.JOBFLWID === jobId 
-              ? { ...job, JOB_SCHEDULE_STATUS: 'Scheduled' } 
+              ? { 
+                  ...job, 
+                  JOB_SCHEDULE_STATUS: 'Scheduled',
+                  // Add the frequency components to the job object for ScheduleSummary display
+                  "Frequency code": frequencyCode,
+                  "Frequency day": frequencyDay,
+                  "frequency hour": frequencyHour,
+                  "frequency month": frequencyMinute,
+                  "start date": jobData.STRT_DT,
+                  "end date": jobData.END_DT,
+                  JOBSCHID: response.data.job_schedule_id
+                } 
               : job
           )
         );
@@ -412,35 +439,80 @@ const JobsPage = () => {
       }, 3000);
     }
   };
-  
-  // Handle save dependency
-  const handleSaveDependency = async (jobId, dependencyData) => {
-    try {
-      // Set saving state for this specific job's dependency
-      setDependencySaving(prev => ({ ...prev, [jobId]: true }));
-      
-      const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/job/save_parent_child_job`, 
-        dependencyData
-      );
-      
-      if (response.data.success) {
-        setSuccessMessage('Dependency saved successfully');
-      } else {
-        setError(response.data.message || 'Failed to save dependency');
-      }
-    } catch (err) {
-      console.error('Error saving job dependency:', err);
-      setError('Failed to save dependency. Please try again.');
-    } finally {
-      // Clear saving state for this job's dependency
-      setDependencySaving(prev => ({ ...prev, [jobId]: false }));
-      
-      setTimeout(() => {
-        setSuccessMessage(null);
-        setError(null);
-      }, 3000);
+
+  // Validate schedule data based on backend requirements
+  const validateScheduleData = (jobData) => {
+    // Extract time parameter components
+    const timeParts = jobData.TIMEPARAM ? jobData.TIMEPARAM.split('_') : [];
+    const frequencyCode = timeParts[0] || '';
+    
+    // Get day and time parameters based on frequency type
+    let frequencyDay, frequencyHour, frequencyMinute;
+    
+    if (['WK', 'FN', 'MN', 'HY', 'YR'].includes(frequencyCode)) {
+      frequencyDay = timeParts[1] || '';
+      const timePieces = timeParts[2] ? timeParts[2].split(':') : [];
+      frequencyHour = timePieces[0] || '';
+      frequencyMinute = timePieces[1] || '';
+    } else {
+      const timePieces = timeParts[1] ? timeParts[1].split(':') : [];
+      frequencyHour = timePieces[0] || '';
+      frequencyMinute = timePieces[1] || '';
     }
+    
+    // Validate mapping reference
+    if (!jobData.MAPREF) {
+      return 'Mapping reference must be provided.';
+    }
+    
+    // Validate frequency code
+    if (!frequencyCode || !['ID', 'DL', 'WK', 'FN', 'MN', 'HY', 'YR'].includes(frequencyCode)) {
+      return 'Invalid frequency code (Valid: ID,DL,WK,FN,MN,HY,YR).';
+    }
+    
+    // Validate day format for weekly/fortnightly frequency
+    if (['WK', 'FN'].includes(frequencyCode)) {
+      const validDays = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
+      if (!frequencyDay || !validDays.includes(frequencyDay)) {
+        return 'Invalid Frequency Day. For Weekly/Fortlightly frequency, frequency day can be any one of "MON,TUE,WED,THU,FRI,SAT,SUN".';
+      }
+    }
+    
+    // Validate day format for monthly/half-yearly/yearly frequency
+    if (['MN', 'HY', 'YR'].includes(frequencyCode)) {
+      const day = parseInt(frequencyDay, 10);
+      if (isNaN(day) || day < 1 || day > 31) {
+        return 'Invalid frequency day (Valid: 1 .. 31).';
+      }
+    }
+    
+    // Validate hour format (0-23)
+    const hour = parseInt(frequencyHour, 10);
+    if (isNaN(hour) || hour < 0 || hour > 23) {
+      return 'Invalid frequency hour (valid: 0 .. 23).';
+    }
+    
+    // Validate minute format (0-59)
+    const minute = parseInt(frequencyMinute, 10);
+    if (isNaN(minute) || minute < 0 || minute > 59) {
+      return 'Invalid frequency minute (valid: 0 .. 59).';
+    }
+    
+    // Validate start date is provided
+    if (!jobData.STRT_DT) {
+      return 'Schedule start date must be provided.';
+    }
+    
+    // Validate end date is after start date (if provided)
+    if (jobData.END_DT) {
+      const startDate = new Date(jobData.STRT_DT);
+      const endDate = new Date(jobData.END_DT);
+      if (startDate >= endDate) {
+        return 'Schedule start date must be before schedule end date.';
+      }
+    }
+    
+    return null; // No validation errors
   };
 
   // Handle view mode change
@@ -470,7 +542,7 @@ const JobsPage = () => {
     setScheduleStatusFilter('');
   };
 
-  // Apply all filters to jobs
+  // Filter apply to jobs
   const filteredJobs = jobs.filter(job => {
     // Apply search term filter
     if (searchTerm) {
@@ -505,23 +577,42 @@ const JobsPage = () => {
   // Get unique table types for filter dropdown
   const tableTypes = [...new Set(jobs.map(job => job.TRGTBTYP))].filter(Boolean).sort();
 
-  // Filter out non-scheduled jobs for dependency tree view
-  const scheduledJobs = filteredJobs.filter(job => job.JOB_SCHEDULE_STATUS === 'Scheduled');
-
-  // Table header columns (updated to show JOBSCHID instead of JOBFLWID)
+  // Define columns for table
   const columns = [
-    { id: 'JOBSCHID', label: 'Job Schedule ID' },
-    { id: 'MAPREF', label: 'Mapping Reference' },
-    { id: 'TARGET', label: 'Target Table' },
-    { id: 'TRGTBTYP', label: 'Table Type' },
-    { id: 'STATUS', label: 'Schedule Status' },
-    { id: 'dependentJobs', label: 'Dependent Jobs' },
-    { id: 'actions', label: 'Actions' },
-    { id: 'schedule', label: 'Schedule' },
+    { id: 'MAPREF', label: 'Job Mapping Reference', width: '18%' },
+    { id: 'TRGTBNM', label: 'Target Table', width: '16%' },
+    { id: 'TRGTBTYP', label: 'Type', width: '6%' },
+    { id: 'STATUS', label: 'Status', width: '6%' },
+    { id: 'SCHEDULE', label: 'Schedule Configuration', width: '16%' },
+    { id: 'SUMMARY', label: 'Schedule Summary', width: '16%' },
+    { id: 'DEPENDENCY', label: 'Dependency', width: '12%' },
+    { id: 'actions', label: 'View Details', width: '10%' },
   ];
 
   const handleRefresh = () => {
     fetchJobs();
+  };
+
+  // Function to handle dependency updates
+  const handleDependencyUpdated = (jobId, dependencyMapRef) => {
+    // Find the job with this map reference to get its JOBSCHID
+    const dependentJob = jobs.find(j => j.MAPREF === dependencyMapRef);
+    
+    // Update jobs list with the dependency info
+    setJobs(prevJobs => 
+      prevJobs.map(job => 
+        job.JOBFLWID === jobId 
+          ? { 
+              ...job, 
+              DPND_MAPREF: dependencyMapRef,
+              DPND_JOBSCHID: dependentJob?.JOBSCHID || null
+            } 
+          : job
+      )
+    );
+    
+    // Show success message
+    setSuccessMessage('Dependency saved successfully');
   };
 
   return (
@@ -532,55 +623,6 @@ const JobsPage = () => {
       transition={{ duration: 0.5 }}
       style={{ height: '100%', display: 'flex', flexDirection: 'column' }}
     >
-        <Box mb={3}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Typography 
-              variant="h4" 
-              component="h1" 
-              gutterBottom 
-              color={darkMode ? 'white' : 'text.primary'}
-              sx={{ 
-                fontSize: { xs: '1.5rem', md: '1.75rem' },
-                fontWeight: 600,
-                letterSpacing: '-0.025em',
-                mb: 0
-              }}
-            >
-              Jobs Management
-            </Typography>
-            
-            <Button 
-              variant="contained" 
-              color="primary"
-              component={Link}
-              href="/jobs/dependency-graph"
-              startIcon={<AccountTreeIcon />}
-              sx={{ 
-                borderRadius: '8px',
-                textTransform: 'none',
-                fontWeight: 500,
-                px: 2,
-                py: 1,
-                boxShadow: darkMode ? '0 4px 12px rgba(59, 130, 246, 0.2)' : '0 4px 12px rgba(59, 130, 246, 0.15)',
-                '&:hover': {
-                  boxShadow: darkMode ? '0 6px 16px rgba(59, 130, 246, 0.3)' : '0 6px 16px rgba(59, 130, 246, 0.25)',
-                }
-              }}
-            >
-              View Dependency Graph
-            </Button>
-          </Box>
-          
-          {/* <Typography 
-            variant="body1" 
-            color={darkMode ? 'gray.300' : 'text.secondary'} 
-            mb={2}
-            sx={{ fontSize: '0.9375rem' }}
-          >
-          View and manage all your data warehouse jobs
-        </Typography> */}
-      </Box>
-
       {error && (
         <Alert 
           severity="error" 
@@ -599,26 +641,26 @@ const JobsPage = () => {
         </Alert>
       )}
 
-        <Snackbar
-          open={!!successMessage}
-          autoHideDuration={3000}
-          onClose={() => setSuccessMessage(null)}
-          anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      <Snackbar
+        open={!!successMessage}
+        autoHideDuration={3000}
+        onClose={() => setSuccessMessage(null)}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert 
+          severity="success" 
+          variant="filled"
+          sx={{
+            borderRadius: 2,
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)'
+          }}
         >
-          <Alert 
-            severity="success" 
-            variant="filled"
-            sx={{
-              borderRadius: 2,
-              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)'
-            }}
-          >
-            {successMessage}
-          </Alert>
-        </Snackbar>
+          {successMessage}
+        </Alert>
+      </Snackbar>
 
       <Paper 
-          elevation={darkMode ? 2 : 1} 
+        elevation={darkMode ? 2 : 1} 
         sx={{ 
           borderRadius: 2, 
           overflow: 'hidden',
@@ -635,213 +677,229 @@ const JobsPage = () => {
           flexGrow: 1
         }}
       >
-        {/* View Toggle Tabs */}
+        {/* Filter controls with better spacing */}
         <Box sx={{ 
-          borderBottom: 1, 
-          borderColor: darkMode ? 'rgba(255, 255, 255, 0.1)' : 'divider', 
-          px: 2,
-          backgroundColor: darkMode ? 'rgba(17, 24, 39, 0.7)' : 'rgba(255, 255, 255, 0.8)',
-          backdropFilter: 'blur(8px)',
-          position: 'sticky',
-          top: 0,
-          zIndex: 10,
+          px: 3,
+          py: 2,
+          backgroundColor: darkMode ? 'rgba(17, 24, 39, 0.5)' : 'rgba(249, 250, 251, 0.7)',
+          borderBottom: '1px solid',
+          borderColor: darkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          flexWrap: { xs: 'wrap', md: 'nowrap' },
+          gap: 2
         }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              <ListIcon sx={{ mr: 1.5, color: darkMode ? 'primary.light' : 'primary.main' }} />
-              <Typography variant="subtitle1" fontWeight={600} color={darkMode ? 'primary.light' : 'primary.main'}>
-                Jobs List View
-              </Typography>
+          {/* Left side controls - Search and Active Filters */}
+          <Box sx={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: 2,
+            flexGrow: 1,
+            flexBasis: { xs: '100%', md: '60%' },
+            order: { xs: 2, md: 1 },
+            mt: { xs: 2, md: 0 }
+          }}>
+            {/* Search field */}
+            <TextField
+              size="small"
+              placeholder="Search jobs..."
+              variant="outlined"
+              value={searchTerm}
+              onChange={handleSearchChange}
+              sx={{ 
+                width: { xs: '100%', sm: 240 },
+                flexGrow: { xs: 1, sm: 0 }
+              }}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon fontSize="small" color={darkMode ? 'primary' : 'inherit'} />
+                  </InputAdornment>
+                ),
+                sx: {
+                  borderRadius: 2,
+                  backgroundColor: darkMode ? 'rgba(30, 41, 59, 0.6)' : 'rgba(255, 255, 255, 0.8)',
+                  '& .MuiOutlinedInput-notchedOutline': {
+                    borderColor: darkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+                  },
+                  '&:hover .MuiOutlinedInput-notchedOutline': {
+                    borderColor: darkMode ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.2)',
+                  },
+                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                    borderColor: darkMode ? 'primary.main' : 'primary.main',
+                  },
+                  fontSize: '0.875rem',
+                }
+              }}
+            />
+            
+            {/* Active Filter Badge */}
+            {(tableTypeFilter || scheduleStatusFilter || searchTerm) && (
+              <Box sx={{ 
+                display: 'flex',
+                alignItems: 'center',
+                backgroundColor: darkMode ? 'rgba(59, 130, 246, 0.15)' : 'rgba(59, 130, 246, 0.08)',
+                color: darkMode ? '#60A5FA' : '#3B82F6',
+                borderRadius: 8,
+                px: 1.5,
+                py: 0.3,
+                height: 38,
+                fontSize: '0.75rem',
+                fontWeight: 600,
+                border: '1px solid',
+                borderColor: darkMode ? 'rgba(59, 130, 246, 0.3)' : 'rgba(59, 130, 246, 0.15)',
+                cursor: 'pointer',
+                '&:hover': {
+                  backgroundColor: darkMode ? 'rgba(59, 130, 246, 0.25)' : 'rgba(59, 130, 246, 0.15)',
+                }
+              }}
+              onClick={clearAllFilters}
+              >
+                <FilterListIcon fontSize="small" sx={{ mr: 0.5, fontSize: 16 }} />
+                {(tableTypeFilter ? 1 : 0) + (scheduleStatusFilter ? 1 : 0) + (searchTerm ? 1 : 0)} 
+                {' Filter' + ((tableTypeFilter && scheduleStatusFilter) || 
+                            (tableTypeFilter && searchTerm) || 
+                            (scheduleStatusFilter && searchTerm) ? 's' : '')} 
+                Active (Clear)
+              </Box>
+            )}
+          </Box>
+          
+          {/* Right side controls - Filters and Refresh */}
+          <Box sx={{ 
+            display: 'flex', 
+            justifyContent: 'flex-end', 
+            alignItems: 'center', 
+            gap: 2,
+            flexBasis: { xs: '100%', md: '40%' },
+            order: { xs: 1, md: 2 }
+          }}>
+            {/* Table Type Filter */}
+            <Box sx={{ 
+              backgroundColor: darkMode ? 'rgba(30, 41, 59, 0.6)' : 'rgba(255, 255, 255, 0.8)',
+              borderRadius: 2,
+              border: '1px solid',
+              borderColor: darkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+              display: 'flex',
+              alignItems: 'center',
+              position: 'relative',
+              minWidth: 140,
+              height: '38px'
+            }}>
+              <Select
+                value={tableTypeFilter}
+                onChange={handleTableTypeFilterChange}
+                displayEmpty
+                variant="standard"
+                sx={{ 
+                  fontSize: '0.875rem',
+                  '& .MuiSelect-select': {
+                    pl: 2,
+                    pr: 4,
+                    py: 1,
+                    backgroundColor: 'transparent',
+                  },
+                  '&:before, &:after': {
+                    display: 'none'
+                  },
+                  '& .MuiSelect-icon': {
+                    right: 8
+                  },
+                  width: '100%'
+                }}
+                MenuProps={{ 
+                  PaperProps: { 
+                    sx: { 
+                      maxHeight: 300,
+                      mt: 0.5
+                    } 
+                  } 
+                }}
+              >
+                <MenuItem value=""><em>Table Type: All ({jobs.length})</em></MenuItem>
+                {tableTypes.map(type => {
+                  const count = jobs.filter(job => job.TRGTBTYP === type).length;
+                  return (
+                    <MenuItem key={type} value={type}>
+                      {type} ({count})
+                    </MenuItem>
+                  );
+                })}
+              </Select>
             </Box>
             
-            {/* Filters and Search */}
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3, flexWrap: 'wrap' }}>
-
-              {/* Refresh button */}
-              <Tooltip title="Refresh Jobs">
-                <IconButton 
-                  onClick={handleRefresh}
-                  sx={{ 
-                    backgroundColor: darkMode ? 'rgba(59, 130, 246, 0.1)' : 'rgba(59, 130, 246, 0.05)',
-                    color: darkMode ? '#60A5FA' : '#3B82F6',
-                    '&:hover': {
-                      backgroundColor: darkMode ? 'rgba(59, 130, 246, 0.2)' : 'rgba(59, 130, 246, 0.1)',
-                    }
-                  }}
-                >
-                  <RefreshIcon />
-                </IconButton>
-              </Tooltip>
-              
-              {/* Search field */}
-              <TextField
-                size="small"
-                placeholder="Search jobs..."
-                variant="outlined"
-                value={searchTerm}
-                onChange={handleSearchChange}
-                sx={{ width: 240 }}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <SearchIcon fontSize="small" color={darkMode ? 'primary' : 'inherit'} />
-                    </InputAdornment>
-                  ),
-                  sx: {
-                    borderRadius: 2,
-                    backgroundColor: darkMode ? 'rgba(30, 41, 59, 0.5)' : 'rgba(249, 250, 251, 0.9)',
-                    '& .MuiOutlinedInput-notchedOutline': {
-                      borderColor: darkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
-                    },
-                    '&:hover .MuiOutlinedInput-notchedOutline': {
-                      borderColor: darkMode ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.2)',
-                    },
-                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                      borderColor: darkMode ? 'primary.main' : 'primary.main',
-                    },
-                    fontSize: '0.875rem',
-                  }
+            {/* Schedule Status Filter */}
+            <Box sx={{ 
+              backgroundColor: darkMode ? 'rgba(30, 41, 59, 0.6)' : 'rgba(255, 255, 255, 0.8)',
+              borderRadius: 2,
+              border: '1px solid',
+              borderColor: darkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+              display: 'flex',
+              alignItems: 'center',
+              position: 'relative',
+              minWidth: 160,
+              height: '38px'
+            }}>
+              <Select
+                value={scheduleStatusFilter}
+                onChange={handleScheduleStatusFilterChange}
+                displayEmpty
+                variant="standard"
+                sx={{ 
+                  fontSize: '0.875rem',
+                  '& .MuiSelect-select': {
+                    pl: 2,
+                    pr: 4,
+                    py: 1,
+                    backgroundColor: 'transparent',
+                  },
+                  '&:before, &:after': {
+                    display: 'none'
+                  },
+                  '& .MuiSelect-icon': {
+                    right: 8
+                  },
+                  width: '100%'
                 }}
-              />
-              
-
-              {/* Active Filter Badge */}
-              {(tableTypeFilter || scheduleStatusFilter || searchTerm) && (
-                <Box sx={{ 
-                  display: 'flex',
-                  alignItems: 'center',
-                  mr: 1,
-                  backgroundColor: darkMode ? 'rgba(59, 130, 246, 0.15)' : 'rgba(59, 130, 246, 0.08)',
-                  color: darkMode ? '#60A5FA' : '#3B82F6',
-                  borderRadius: 8,
-                  px: 1.5,
-                  py: 0.3,
-                  fontSize: '0.75rem',
-                  fontWeight: 600,
-                  border: '1px solid',
-                  borderColor: darkMode ? 'rgba(59, 130, 246, 0.3)' : 'rgba(59, 130, 246, 0.15)',
-                  cursor: 'pointer',
-                  '&:hover': {
-                    backgroundColor: darkMode ? 'rgba(59, 130, 246, 0.25)' : 'rgba(59, 130, 246, 0.15)',
-                  }
+                MenuProps={{ 
+                  PaperProps: { 
+                    sx: { 
+                      maxHeight: 300,
+                      mt: 0.5
+                    } 
+                  } 
                 }}
-                onClick={clearAllFilters}
-                >
-                  <FilterListIcon fontSize="small" sx={{ mr: 0.5, fontSize: 16 }} />
-                  {(tableTypeFilter ? 1 : 0) + (scheduleStatusFilter ? 1 : 0) + (searchTerm ? 1 : 0)} 
-                  {' Filter' + ((tableTypeFilter && scheduleStatusFilter) || 
-                               (tableTypeFilter && searchTerm) || 
-                               (scheduleStatusFilter && searchTerm) ? 's' : '')} 
-                  Active (Clear)
-                </Box>
-              )}
-              
-              {/* Table Type Filter */}
-              <Box sx={{ 
-                backgroundColor: darkMode ? 'rgba(30, 41, 59, 0.5)' : 'rgba(249, 250, 251, 0.9)',
-                borderRadius: 2,
-                border: '1px solid',
-                borderColor: darkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
-                display: 'flex',
-                alignItems: 'center',
-                position: 'relative',
-                minWidth: 140,
-                height: '38px'
-              }}>
-                <Select
-                  value={tableTypeFilter}
-                  onChange={handleTableTypeFilterChange}
-                  displayEmpty
-                  variant="standard"
-                  sx={{ 
-                    fontSize: '0.875rem',
-                    '& .MuiSelect-select': {
-                      pl: 2,
-                      pr: 4,
-                      py: 1,
-                      backgroundColor: 'transparent',
-                    },
-                    '&:before, &:after': {
-                      display: 'none'
-                    },
-                    '& .MuiSelect-icon': {
-                      right: 8
-                    },
-                    width: '100%'
-                  }}
-                  MenuProps={{ 
-                    PaperProps: { 
-                      sx: { 
-                        maxHeight: 300,
-                        mt: 0.5
-                      } 
-                    } 
-                  }}
-                >
-                  <MenuItem value=""><em>Table Type: All ({jobs.length})</em></MenuItem>
-                  {tableTypes.map(type => {
-                    const count = jobs.filter(job => job.TRGTBTYP === type).length;
-                    return (
-                      <MenuItem key={type} value={type}>
-                        {type} ({count})
-                      </MenuItem>
-                    );
-                  })}
-                </Select>
-              </Box>
-              
-              {/* Schedule Status Filter */}
-              <Box sx={{ 
-                backgroundColor: darkMode ? 'rgba(30, 41, 59, 0.5)' : 'rgba(249, 250, 251, 0.9)',
-                borderRadius: 2,
-                border: '1px solid',
-                borderColor: darkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
-                display: 'flex',
-                alignItems: 'center',
-                position: 'relative',
-                minWidth: 160,
-                height: '38px'
-              }}>
-                <Select
-                  value={scheduleStatusFilter}
-                  onChange={handleScheduleStatusFilterChange}
-                  displayEmpty
-                  variant="standard"
-                  sx={{ 
-                    fontSize: '0.875rem',
-                    '& .MuiSelect-select': {
-                      pl: 2,
-                      pr: 4,
-                      py: 1,
-                      backgroundColor: 'transparent',
-                    },
-                    '&:before, &:after': {
-                      display: 'none'
-                    },
-                    '& .MuiSelect-icon': {
-                      right: 8
-                    },
-                    width: '100%'
-                  }}
-                  MenuProps={{ 
-                    PaperProps: { 
-                      sx: { 
-                        maxHeight: 300,
-                        mt: 0.5
-                      } 
-                    } 
-                  }}
-                >
-                  <MenuItem value=""><em>Status: All ({jobs.length})</em></MenuItem>
-                  <MenuItem value="Scheduled">
-                    Scheduled ({jobs.filter(job => job.JOB_SCHEDULE_STATUS === 'Scheduled').length})
-                  </MenuItem>
-                  <MenuItem value="Not Scheduled">
-                    Not Scheduled ({jobs.filter(job => job.JOB_SCHEDULE_STATUS !== 'Scheduled').length})
-                  </MenuItem>
-                </Select>
-              </Box>
+              >
+                <MenuItem value=""><em>Status: All ({jobs.length})</em></MenuItem>
+                <MenuItem value="Scheduled">
+                  Scheduled ({jobs.filter(job => job.JOB_SCHEDULE_STATUS === 'Scheduled').length})
+                </MenuItem>
+                <MenuItem value="Not Scheduled">
+                  Not Scheduled ({jobs.filter(job => job.JOB_SCHEDULE_STATUS !== 'Scheduled').length})
+                </MenuItem>
+              </Select>
             </Box>
+            
+            {/* Refresh button */}
+            <Tooltip title="Refresh Jobs">
+              <IconButton 
+                onClick={handleRefresh}
+                sx={{ 
+                  backgroundColor: darkMode ? 'rgba(30, 41, 59, 0.6)' : 'rgba(255, 255, 255, 0.8)',
+                  border: '1px solid',
+                  borderColor: darkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+                  color: darkMode ? '#60A5FA' : '#3B82F6',
+                  '&:hover': {
+                    backgroundColor: darkMode ? 'rgba(30, 41, 59, 0.8)' : 'rgba(255, 255, 255, 0.9)',
+                  },
+                  height: '38px',
+                  width: '38px'
+                }}
+              >
+                <RefreshIcon />
+              </IconButton>
+            </Tooltip>
           </Box>
         </Box>
 
@@ -880,16 +938,10 @@ const JobsPage = () => {
                     {columns.map((column) => (
                       <TableCell
                         key={column.id}
-                        align={column.id === 'actions' || column.id === 'schedule' ? 'center' : 'left'}
+                        align={column.id === 'actions' || column.id === 'STATUS' ? 'center' : 'left'}
                         sx={{ 
-                          minWidth: column.id === 'actions' ? 90 : 
-                                  column.id === 'schedule' ? 70 : 
-                                  column.id === 'STATUS' ? 120 :
-                                  column.id === 'TRGTBTYP' ? 100 :
-                                  column.id === 'MAPREF' ? 140 :
-                                  column.id === 'dependentJobs' ? 160 :
-                                  130,
-                          px: column.id === 'actions' || column.id === 'schedule' ? 1 : 2,
+                          width: column.width,
+                          px: column.id === 'actions' ? 1 : 2,
                           position: 'sticky',
                           top: 0,
                           zIndex: 1,
@@ -906,108 +958,79 @@ const JobsPage = () => {
                 </TableHead>
                 <TableBody>
                   {filteredJobs.map((job) => {
-                    // Find dependent jobs for this job
-                    const childJobs = jobs.filter(j => j.DPND_JOBSCHID === job.JOBSCHID && j.JOB_SCHEDULE_STATUS === 'Scheduled');
-                    
                     return (
                       <React.Fragment key={job.JOBID}>
-                        <TableRow hover sx={{ cursor: 'pointer' }}>
-                          <TableCell sx={{ fontWeight: 500 }}>
-                            {job.JOBSCHID || 'Not Scheduled'}
-                          </TableCell>
-                          <TableCell>{job.MAPREF}</TableCell>
+                        <TableRow hover>
+                          {/* Job Details - Mapping Reference */}
                           <TableCell>
-                            <Box component="span" sx={{ 
-                              fontSize: '0.8125rem',
-                              color: darkMode ? 'primary.light' : 'primary.main', 
-                              fontFamily: 'monospace', 
-                              fontWeight: 500,
-                              backgroundColor: darkMode ? 'rgba(59, 130, 246, 0.1)' : 'rgba(59, 130, 246, 0.05)',
-                              py: 0.5, 
-                              px: 1, 
-                              borderRadius: 1,
-                              border: '1px solid',
-                              borderColor: darkMode ? 'rgba(59, 130, 246, 0.2)' : 'rgba(59, 130, 246, 0.1)'
-                            }}>
-                              {`${job.TRGSCHM}.${job.TRGTBNM}`}
-                            </Box>
+                            <MappingDetails
+                              mapRef={job.MAPREF}
+                              darkMode={darkMode}
+                            />
                           </TableCell>
-                          <TableCell>{job.TRGTBTYP}</TableCell>
+
+                          {/* Target Table Details */}
                           <TableCell>
+                            <TargetTableDisplay
+                              targetSchema={job.TRGSCHM}
+                              targetTable={job.TRGTBNM}
+                              tableType={job.TRGTBTYP}
+                              darkMode={darkMode}
+                            />
+                          </TableCell>
+
+                          {/* Table Type */}
+                          <TableCell sx={{ pr: 1 }}>{job.TRGTBTYP}</TableCell>
+
+                          {/* Status - Display as icon */}
+                          <TableCell align="center" sx={{ pl: 1 }}>
                             <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-                              <Box component="span" sx={{ 
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                fontSize: '0.75rem',
-                                fontWeight: 600,
-                                px: 1.5,
-                                py: 0.5,
-                                width: 'fit-content',
-                                minWidth: '90px',
-                                borderRadius: 8,
-                                backgroundColor: job.JOB_SCHEDULE_STATUS === 'Scheduled' 
-                                  ? (darkMode ? 'rgba(16, 185, 129, 0.15)' : 'rgba(16, 185, 129, 0.08)') 
-                                  : (darkMode ? 'rgba(245, 158, 11, 0.15)' : 'rgba(245, 158, 11, 0.08)'),
-                                color: job.JOB_SCHEDULE_STATUS === 'Scheduled' 
-                                  ? (darkMode ? '#34D399' : '#059669') 
-                                  : (darkMode ? '#FBBF24' : '#D97706'),
-                                border: '1px solid',
-                                borderColor: job.JOB_SCHEDULE_STATUS === 'Scheduled' 
-                                  ? (darkMode ? 'rgba(16, 185, 129, 0.3)' : 'rgba(16, 185, 129, 0.2)') 
-                                  : (darkMode ? 'rgba(245, 158, 11, 0.3)' : 'rgba(245, 158, 11, 0.2)'),
-                                textAlign: 'center',
-                                boxShadow: job.JOB_SCHEDULE_STATUS === 'Scheduled' 
-                                  ? (darkMode ? '0 1px 3px rgba(16, 185, 129, 0.1)' : 'none')
-                                  : (darkMode ? '0 1px 3px rgba(245, 158, 11, 0.1)' : 'none'),
-                              }}>
-                                {job.JOB_SCHEDULE_STATUS === 'Scheduled' ? (
-                                  <>
-                                    <CheckCircleIcon sx={{ fontSize: 14, mr: 0.5 }} />
-                                    Scheduled
-                                  </>
-                                ) : (
-                                  <>
-                                    <AccessTimeIcon sx={{ fontSize: 14, mr: 0.5 }} />
-                                    Not Scheduled
-                                  </>
-                                )}
-                              </Box>
+                              <StatusIndicator 
+                                status={job.JOB_SCHEDULE_STATUS} 
+                                darkMode={darkMode} 
+                              />
                             </Box>
                           </TableCell>
-                          
-                          {/* New cell for dependent jobs */}
+
+                          {/* Schedule Configuration */}
                           <TableCell>
-                            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75, maxWidth: 160 }}>
-                              {job.JOB_SCHEDULE_STATUS === 'Scheduled' && childJobs.length > 0 ? (
-                                childJobs.map(childJob => (
-                                  <Tooltip key={childJob.JOBSCHID} title={`${childJob.TRGSCHM}.${childJob.TRGTBNM}`}>
-                                    <Chip
-                                      label={childJob.MAPREF}
-                                      size="small"
-                                      sx={{
-                                        height: 22,
-                                        fontSize: '0.7rem',
-                                        fontWeight: 500,
-                                        backgroundColor: darkMode ? 'rgba(16, 185, 129, 0.15)' : 'rgba(16, 185, 129, 0.08)',
-                                        color: darkMode ? '#34D399' : '#059669',
-                                        border: '1px solid',
-                                        borderColor: darkMode ? 'rgba(16, 185, 129, 0.3)' : 'rgba(16, 185, 129, 0.2)',
-                                        '& .MuiChip-label': {
-                                          px: 1
-                                        }
-                                      }}
-                                    />
-                                  </Tooltip>
-                                ))
-                              ) : (
-                                <Typography variant="caption" color={darkMode ? 'gray.400' : 'gray.500'} fontSize="0.75rem">
-                                  {job.JOB_SCHEDULE_STATUS === 'Scheduled' ? 'No dependent jobs' : 'Not applicable'}
-                                </Typography>
-                              )}
-                            </Box>
+                            <InlineScheduleConfig
+                              jobId={job.JOBFLWID}
+                              scheduleData={scheduleData}
+                              handleScheduleChange={handleScheduleChange}
+                              handleDateChange={handleDateChange}
+                              handleSaveSchedule={handleSaveSchedule}
+                              isScheduled={job.JOB_SCHEDULE_STATUS === 'Scheduled'}
+                              darkMode={darkMode}
+                              scheduleLoading={scheduleLoading}
+                              scheduleSaving={scheduleSaving}
+                            />
                           </TableCell>
                           
+                          {/* Schedule Summary */}
+                          <TableCell>
+                            <ScheduleSummary
+                              scheduleData={scheduleData}
+                              jobId={job.JOBFLWID}
+                              darkMode={darkMode}
+                              job={job}
+                            />
+                          </TableCell>
+                          
+                          {/* Dependency */}
+                          <TableCell>
+                            <DependencyDisplay
+                              jobId={job.JOBFLWID}
+                              mapRef={job.MAPREF}
+                              dependency={job.DPND_MAPREF}
+                              darkMode={darkMode}
+                              onDependencyUpdated={(dependencyMapRef) => handleDependencyUpdated(job.JOBFLWID, dependencyMapRef)}
+                              job={job}
+                              allJobs={jobs}
+                            />
+                          </TableCell>
+                          
+                          {/* Actions */}
                           <TableCell align="center">
                             <Box sx={{ display: 'flex', justifyContent: 'center' }}>
                               <Tooltip title="View Details">
@@ -1038,45 +1061,6 @@ const JobsPage = () => {
                                 </ActionButton>
                               </Tooltip>
                             </Box>
-                          </TableCell>
-                          <TableCell align="center">
-                            <IconButton
-                                  size="small"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                  toggleRowExpansion(job.JOBFLWID);
-                                }}
-                                sx={{ 
-                                  color: darkMode ? 'primary.light' : 'primary.main',
-                                  padding: 0.5,
-                                  backgroundColor: expandedRows[job.JOBFLWID] ? 
-                                    (darkMode ? 'rgba(59, 130, 246, 0.2)' : 'rgba(59, 130, 246, 0.1)') : 
-                                    'transparent'
-                                }}
-                              >
-                                {expandedRows[job.JOBFLWID] ? <ExpandLessIcon sx={{ fontSize: 18 }} /> : <ExpandMoreIcon sx={{ fontSize: 18 }} />}
-                              </IconButton>
-                          </TableCell>
-                        </TableRow>
-                        
-                        {/* Expanded row with schedule configuration */}
-                        <TableRow>
-                          <TableCell colSpan={8} sx={{ p: 0, border: 0 }}>
-                            <Collapse in={expandedRows[job.JOBFLWID]} timeout="auto" unmountOnExit>
-                              <ScheduleConfiguration
-                                jobId={job.JOBFLWID}
-                                scheduleData={scheduleData}
-                                handleScheduleChange={handleScheduleChange}
-                                handleDateChange={handleDateChange}
-                                handleSaveSchedule={handleSaveSchedule}
-                                handleSaveDependency={handleSaveDependency}
-                                jobOptions={jobs}
-                                darkMode={darkMode}
-                                scheduleLoading={scheduleLoading}
-                                scheduleSaving={scheduleSaving}
-                                dependencySaving={dependencySaving}
-                              />
-                            </Collapse>
                           </TableCell>
                         </TableRow>
                       </React.Fragment>

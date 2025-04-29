@@ -314,12 +314,9 @@ const JobDetailsDialog = ({ open, onClose, job, allJobs = [] }) => {
                           sx={{
                             display: 'flex',
                             alignItems: 'center',
-                            mb: 1.5,
+                            mb: 0.5,
                             fontWeight: 600,
                             fontSize: '0.85rem',
-                            borderBottom: '1px solid',
-                            borderColor: darkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
-                            pb: 0.5
                           }}
                         >
                           <ArrowUpwardIcon sx={{ mr: 0.5, fontSize: 16 }} />
@@ -331,7 +328,7 @@ const JobDetailsDialog = ({ open, onClose, job, allJobs = [] }) => {
                             sx={{ 
                               display: 'flex',
                               alignItems: 'center',
-                              gap: 1.5,
+                              gap: 1,
                               px: 1
                             }}
                           >
@@ -390,7 +387,7 @@ const JobDetailsDialog = ({ open, onClose, job, allJobs = [] }) => {
                         )}
                       </Box>
                       
-                      {/* Child Jobs Section */}
+                      {/* Child Jobs Section - COMPACT VERSION */}
                       <Box>
                         <Typography 
                           variant="subtitle2" 
@@ -398,12 +395,9 @@ const JobDetailsDialog = ({ open, onClose, job, allJobs = [] }) => {
                           sx={{
                             display: 'flex',
                             alignItems: 'center',
-                            mb: 1.5,
+                            mb: 0.5,
                             fontWeight: 600,
                             fontSize: '0.85rem',
-                            borderBottom: '1px solid',
-                            borderColor: darkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
-                            pb: 0.5
                           }}
                         >
                           <ArrowDownwardIcon sx={{ mr: 0.5, fontSize: 16 }} />
@@ -411,36 +405,13 @@ const JobDetailsDialog = ({ open, onClose, job, allJobs = [] }) => {
                         </Typography>
                         
                         {childJobs.length > 0 ? (
-                          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, px: 1 }}>
+                          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75, px: 1, maxHeight: '60px', overflow: 'auto' }}>
                             {childJobs.map(childJob => (
-                              <Box 
-                                key={childJob.JOBSCHID}
-                                sx={{ 
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  gap: 1,
-                                  backgroundColor: darkMode ? 'rgba(15, 23, 42, 0.4)' : 'rgba(243, 244, 246, 0.5)',
-                                  py: 0.75,
-                                  px: 1.5,
-                                  borderRadius: 1.5,
-                                  border: '1px solid',
-                                  borderColor: darkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
-                                }}
+                              <Tooltip 
+                                key={childJob.JOBSCHID} 
+                                title={`${childJob.TRGTBNM} (ID: ${childJob.JOBSCHID})`}
+                                placement="top"
                               >
-                                <Chip
-                                  label={`ID: ${childJob.JOBSCHID}`}
-                                  size="small"
-                                  sx={{
-                                    height: 20,
-                                    fontSize: '0.7rem',
-                                    fontWeight: 600,
-                                    backgroundColor: darkMode ? 'rgba(16, 185, 129, 0.15)' : 'rgba(16, 185, 129, 0.08)',
-                                    color: darkMode ? '#34D399' : '#059669',
-                                    border: '1px solid',
-                                    borderColor: darkMode ? 'rgba(16, 185, 129, 0.3)' : 'rgba(16, 185, 129, 0.2)',
-                                  }}
-                                />
-                                
                                 <Chip
                                   label={childJob.MAPREF}
                                   size="small"
@@ -454,11 +425,7 @@ const JobDetailsDialog = ({ open, onClose, job, allJobs = [] }) => {
                                     borderColor: darkMode ? 'rgba(16, 185, 129, 0.25)' : 'rgba(16, 185, 129, 0.15)',
                                   }}
                                 />
-                                
-                                <Typography variant="caption" fontWeight="500" fontSize="0.7rem">
-                                  {childJob.TRGTBNM}
-                                </Typography>
-                              </Box>
+                              </Tooltip>
                             ))}
                           </Box>
                         ) : (

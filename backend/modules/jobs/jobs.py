@@ -88,7 +88,8 @@ def get_all_jobs():
     try:
         conn = create_oracle_connection()
         query_job_flow = """
-        SELECT 
+        
+         SELECT 
             f.JOBFLWID,
             f.MAPREF,
             f.TRGSCHM,
@@ -100,28 +101,58 @@ def get_all_jobs():
                 WHEN s.JOBFLWID IS NOT NULL THEN 'Scheduled'
                 ELSE 'Not Scheduled'
             END AS JOB_SCHEDULE_STATUS,
+            s.JOBSCHID,
+            s.DPND_JOBSCHID,
             CASE 
-                WHEN s.JOBFLWID IS NOT NULL THEN s.JOBSCHID
+                WHEN s.JOBFLWID IS NOT NULL THEN s.FRQCD
                 ELSE NULL
-            END AS JOBSCHID,
+            END AS "Frequency code",
             CASE 
-                WHEN s.JOBFLWID IS NOT NULL THEN s.DPND_JOBSCHID
+                WHEN s.JOBFLWID IS NOT NULL THEN s.FRQDD
                 ELSE NULL
-            END AS DPND_JOBSCHID
+            END AS "Frequency day",
+            CASE 
+                WHEN s.JOBFLWID IS NOT NULL THEN s.FRQHH
+                ELSE NULL
+            END AS "frequency hour",
+            CASE 
+                WHEN s.JOBFLWID IS NOT NULL THEN s.FRQMI
+                ELSE NULL
+            END AS "frequency month",
+            CASE 
+                WHEN s.JOBFLWID IS NOT NULL THEN s.STRTDT
+                ELSE NULL
+            END AS "start date",
+            CASE 
+                WHEN s.JOBFLWID IS NOT NULL THEN s.ENDDT
+                ELSE NULL
+            END AS "end date"
         FROM 
             TRG.DWJOBFLW f
         LEFT JOIN 
-            (SELECT 
-                 JOBFLWID, 
-                 MIN(JOBSCHID) AS JOBSCHID, 
-                 MIN(DPND_JOBSCHID) AS DPND_JOBSCHID
-             FROM TRG.DWJOBSCH
-             WHERE CURFLG = 'Y'
-             GROUP BY JOBFLWID) s
+            (
+                SELECT 
+                    JOBFLWID, 
+                    MIN(JOBSCHID) AS JOBSCHID, 
+                    MIN(DPND_JOBSCHID) AS DPND_JOBSCHID,
+                    MIN(FRQCD) AS FRQCD,
+                    MIN(FRQDD) AS FRQDD,
+                    MIN(FRQHH) AS FRQHH,
+                    MIN(FRQMI) AS FRQMI,
+                    MIN(STRTDT) AS STRTDT,
+                    MIN(ENDDT) AS ENDDT
+                FROM 
+                    TRG.DWJOBSCH
+                WHERE 
+                    CURFLG = 'Y'
+                GROUP BY 
+                    JOBFLWID
+            ) s
         ON 
             f.JOBFLWID = s.JOBFLWID
         WHERE 
             f.CURFLG = 'Y'
+
         """
         cursor = conn.cursor()
         cursor.execute(query_job_flow)
