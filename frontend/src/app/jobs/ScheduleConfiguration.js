@@ -101,7 +101,7 @@ const ScheduleConfiguration = ({
   dependencySaving
 }) => {
   // State for validation errors
-  const [dateError, setDateError] = useState(null);
+  const [errors, setErrors] = useState({});
   
   // For debugging
   console.log(`ScheduleConfiguration for job ${jobId}:`, {
@@ -124,7 +124,7 @@ const ScheduleConfiguration = ({
 
   // Generate day options based on frequency
   const getDayOptions = (freqCode) => {
-    if (freqCode === 'WK') {
+    if (freqCode === 'WK' || freqCode === 'FN') {
       return [
         { value: 'MON', label: 'Monday (MON)' },
         { value: 'TUE', label: 'Tuesday (TUE)' },
@@ -147,10 +147,6 @@ const ScheduleConfiguration = ({
   const getHourOptions = (freqCode) => {
     const hours = [];
     
-    if (freqCode === 'ID') {
-      hours.push({ value: '-1', label: '-1 (Intraday)' });
-    }
-    
     for (let i = 0; i <= 23; i++) {
       hours.push({ value: i.toString().padStart(2, '0'), label: i.toString().padStart(2, '0') });
     }
@@ -166,24 +162,70 @@ const ScheduleConfiguration = ({
     return minutes;
   };
 
-  // Validate date ranges whenever start or end date changes
-  useEffect(() => {
-    const startDate = scheduleData[jobId]?.STRTDT;
-    const endDate = scheduleData[jobId]?.ENDDT;
+  // Validate all required fields and conditions
+  const validateForm = () => {
+    const newErrors = {};
+    const jobData = scheduleData[jobId];
     
-    if (startDate && endDate) {
-      const start = new Date(startDate);
-      const end = new Date(endDate);
-      
-      if (end < start) {
-        setDateError('End date cannot be earlier than start date');
-      } else {
-        setDateError(null);
-      }
-    } else {
-      setDateError(null);
+    if (!jobData) return { hasErrors: true, errors: { general: 'Job data not found' } };
+    
+    // Validate mapping reference (should be already present, but checking anyway)
+    if (!jobData.MAPREF) {
+      newErrors.mapref = 'Mapping reference must be provided.';
     }
-  }, [scheduleData, jobId]);
+    
+    // Validate frequency code
+    const validFreqCodes = ['ID', 'DL', 'WK', 'FN', 'MN', 'HY', 'YR'];
+    if (!jobData.FRQCD || !validFreqCodes.includes(jobData.FRQCD)) {
+      newErrors.frqcd = 'Invalid frequency code (Valid: ID,DL,WK,FN,MN,HY,YR).';
+    }
+    
+    // Validate frequency day based on frequency code
+    if (jobData.FRQCD === 'WK' || jobData.FRQCD === 'FN') {
+      const validWeekDays = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
+      if (!jobData.FRQDD || !validWeekDays.includes(jobData.FRQDD)) {
+        newErrors.frqdd = 'For Weekly/Fortnightly frequency, day must be one of MON,TUE,WED,THU,FRI,SAT,SUN.';
+      }
+    } else if (['MN', 'HY', 'YR'].includes(jobData.FRQCD)) {
+      // For monthly/half-yearly/yearly, freq day must be calendar day
+      const day = parseInt(jobData.FRQDD, 10);
+      if (isNaN(day) || day < 1 || day > 31) {
+        newErrors.frqdd = 'Invalid frequency day (Valid: 1 .. 31).';
+      }
+    }
+    
+    // Validate hour (0-23)
+    const hour = parseInt(jobData.FRQHH, 10);
+    if (isNaN(hour) || hour < 0 || hour > 23) {
+      newErrors.frqhh = 'Invalid frequency hour (valid: 0 .. 23).';
+    }
+    
+    // Validate minute (0-59)
+    const minute = parseInt(jobData.FRQMI, 10);
+    if (isNaN(minute) || minute < 0 || minute > 59) {
+      newErrors.frqmi = 'Invalid frequency minute (valid: 0 .. 59).';
+    }
+    
+    // Validate start date
+    if (!jobData.STRTDT) {
+      newErrors.strtdt = 'Schedule start date must be provided.';
+    }
+    
+    // Validate end date (if provided)
+    if (jobData.STRTDT && jobData.ENDDT && new Date(jobData.STRTDT) >= new Date(jobData.ENDDT)) {
+      newErrors.enddt = 'Schedule start date must be before schedule end date.';
+    }
+    
+    setErrors(newErrors);
+    return { hasErrors: Object.keys(newErrors).length > 0, errors: newErrors };
+  };
+
+  // Run validation when schedule data changes
+  useEffect(() => {
+    if (scheduleData[jobId]) {
+      validateForm();
+    }
+  }, [scheduleData[jobId]]);
 
   // Find the current job to check if it's scheduled
   const job = jobOptions.find(j => j.JOBFLWID === jobId);
@@ -192,13 +234,33 @@ const ScheduleConfiguration = ({
   const isSaving = scheduleSaving?.[jobId] === true;
   const isDependencySaving = dependencySaving?.[jobId] === true;
 
-  // Determine if form has changes compared to initial data
-  const hasRequiredScheduleFields = scheduleData[jobId]?.FRQCD && 
-                           scheduleData[jobId]?.FRQDD && 
-                           scheduleData[jobId]?.FRQHH && 
-                           scheduleData[jobId]?.FRQMI && 
-                           scheduleData[jobId]?.STRTDT &&
-                           !dateError;
+  // Determine if form has required fields filled
+  const areAllRequiredFieldsFilled = 
+    scheduleData[jobId]?.FRQCD && 
+    scheduleData[jobId]?.FRQHH && 
+    scheduleData[jobId]?.FRQMI && 
+    scheduleData[jobId]?.STRTDT;
+  
+  // For Weekly/Fortnightly, we need FRQDD to be a day name
+  // For Monthly/Half-yearly/Yearly, we need FRQDD to be a number
+  const isFreqDayValid = () => {
+    if (!scheduleData[jobId]?.FRQCD) return false;
+    
+    if (['WK', 'FN'].includes(scheduleData[jobId]?.FRQCD)) {
+      return ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'].includes(scheduleData[jobId]?.FRQDD);
+    } else if (['MN', 'HY', 'YR'].includes(scheduleData[jobId]?.FRQCD)) {
+      const day = parseInt(scheduleData[jobId]?.FRQDD, 10);
+      return !isNaN(day) && day >= 1 && day <= 31;
+    } else if (['DL', 'ID'].includes(scheduleData[jobId]?.FRQCD)) {
+      // For Daily and Intraday, frequency day is not required
+      return true;
+    }
+    
+    return false;
+  };
+  
+  // Check if form has errors before saving
+  const hasValidationErrors = Object.keys(errors).length > 0;
                            
   const hasDependencyData = scheduleData[jobId]?.DPND_JOBSCHID;
 
@@ -216,6 +278,9 @@ const ScheduleConfiguration = ({
       handleSaveDependency(jobId, dependencyData);
     }
   };
+  
+  // Determine if form is valid for saving
+  const isFormValid = areAllRequiredFieldsFilled && isFreqDayValid() && !hasValidationErrors;
 
   return (
     <Paper
@@ -288,20 +353,26 @@ const ScheduleConfiguration = ({
         )}
       </Box>
 
-      {/* Error message */}
-      {dateError && (
+      {/* Error messages */}
+      {hasValidationErrors && (
         <Alert 
           severity="error" 
           icon={<ErrorIcon fontSize="small" />} 
           sx={{ 
             mb: 1.5, 
-            py: 0,
-            px: 1,
+            py: 0.5,
+            px: 1.5,
             fontSize: '0.75rem',
             '& .MuiAlert-icon': { fontSize: '0.875rem', mr: 1 }
           }}
         >
-          {dateError}
+          <Box>
+            {Object.values(errors).map((error, index) => (
+              <Typography key={index} variant="caption" display="block" sx={{ mb: 0.25 }}>
+                • {error}
+              </Typography>
+            ))}
+          </Box>
         </Alert>
       )}
       
@@ -319,12 +390,14 @@ const ScheduleConfiguration = ({
       >
         {/* Frequency */}
         <Box sx={{ width: '8%', minWidth: '65px' }}>
-          <CompactFormControl fullWidth size="small">
+          <CompactFormControl fullWidth size="small" error={!!errors.frqcd}>
             <InputLabel sx={{ fontSize: '0.75rem' }}>Frequency</InputLabel>
             <CompactSelect
               value={scheduleData[jobId]?.FRQCD || ''}
               onChange={(e) => {
                 handleScheduleChange(jobId, 'FRQCD', e.target.value);
+                // Reset FRQDD when changing frequency type
+                handleScheduleChange(jobId, 'FRQDD', '');
               }}
               label="Frequency"
               darkMode={darkMode}
@@ -342,13 +415,13 @@ const ScheduleConfiguration = ({
         
         {/* Day */}
         <Box sx={{ width: '7%', minWidth: '55px' }}>
-          <CompactFormControl fullWidth size="small">
+          <CompactFormControl fullWidth size="small" error={!!errors.frqdd}>
             <InputLabel sx={{ fontSize: '0.75rem' }}>Day</InputLabel>
             <CompactSelect
               value={scheduleData[jobId]?.FRQDD || ''}
               onChange={(e) => handleScheduleChange(jobId, 'FRQDD', e.target.value)}
               label="Day"
-              disabled={!scheduleData[jobId]?.FRQCD}
+              disabled={!scheduleData[jobId]?.FRQCD || ['DL', 'ID'].includes(scheduleData[jobId]?.FRQCD)}
               darkMode={darkMode}
               MenuProps={{ PaperProps: { sx: { maxHeight: 300 } } }}
             >
@@ -364,7 +437,7 @@ const ScheduleConfiguration = ({
         
         {/* Hour */}
         <Box sx={{ width: '6%', minWidth: '45px' }}>
-          <CompactFormControl fullWidth size="small">
+          <CompactFormControl fullWidth size="small" error={!!errors.frqhh}>
             <InputLabel sx={{ fontSize: '0.75rem' }}>Hour</InputLabel>
             <CompactSelect
               value={scheduleData[jobId]?.FRQHH || ''}
@@ -386,7 +459,7 @@ const ScheduleConfiguration = ({
         
         {/* Minute */}
         <Box sx={{ width: '6%', minWidth: '45px' }}>
-          <CompactFormControl fullWidth size="small">
+          <CompactFormControl fullWidth size="small" error={!!errors.frqmi}>
             <InputLabel sx={{ fontSize: '0.75rem' }}>Minute</InputLabel>
             <CompactSelect
               value={scheduleData[jobId]?.FRQMI || ''}
@@ -419,7 +492,7 @@ const ScheduleConfiguration = ({
               textField: {
                 size: "small",
                 fullWidth: true,
-                error: dateError && scheduleData[jobId]?.STRTDT !== null,
+                error: !!errors.strtdt,
                 InputLabelProps: {
                   sx: { fontSize: '0.75rem' }
                 },
@@ -451,7 +524,7 @@ const ScheduleConfiguration = ({
               textField: {
                 size: "small",
                 fullWidth: true,
-                error: !!dateError,
+                error: !!errors.enddt,
                 InputLabelProps: {
                   sx: { fontSize: '0.75rem' }
                 },
@@ -482,9 +555,14 @@ const ScheduleConfiguration = ({
               <SaveIcon sx={{ fontSize: 14 }} />
             )}
             size="small"
-            onClick={() => handleSaveSchedule(jobId)}
+            onClick={() => {
+              const { hasErrors } = validateForm();
+              if (!hasErrors) {
+                handleSaveSchedule(jobId);
+              }
+            }}
             disabled={
-              !hasRequiredScheduleFields ||
+              !isFormValid ||
               isLoading ||
               isSaving
             }
@@ -503,7 +581,7 @@ const ScheduleConfiguration = ({
           <Box sx={{ flexGrow: 1, minWidth: '150px' }}>
             <Autocomplete
               size="small"
-              options={jobOptions.filter(j => j.JOBFLWID !== jobId)}
+              options={jobOptions.filter(j => j.JOBFLWID !== jobId && j.JOB_SCHEDULE_STATUS === 'Scheduled')}
               getOptionLabel={(option) => option.MAPREF}
               isOptionEqualToValue={(option, value) => 
                 option.JOBFLWID.toString() === value.JOBFLWID.toString()

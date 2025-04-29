@@ -339,11 +339,11 @@ def save_job_schedule():
         end_date = data.get('ENDDT')
         
         # Validate required fields
-        if not map_ref or not frequency_code or not frequency_day or not frequency_hour or not frequency_minute or not start_date:
-            return jsonify({
-                'success': False,
-                'message': 'Missing required parameters for job schedule'
-            }), 400
+        # if not map_ref or not frequency_code or not frequency_day or not frequency_hour or not frequency_minute or not start_date:
+        #     return jsonify({
+        #         'success': False,
+        #         'message': 'Missing required parameters for job schedule'
+        #     }), 400
             
         conn = create_oracle_connection()
         try:

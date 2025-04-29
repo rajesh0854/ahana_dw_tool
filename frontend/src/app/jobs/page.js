@@ -27,7 +27,8 @@ import {
   Select,
   MenuItem,
   FormControl,
-  InputLabel
+  InputLabel,
+  Chip
 } from '@mui/material';
 import { styled, useTheme as useMuiTheme } from '@mui/material/styles';
 import { 
@@ -37,24 +38,24 @@ import {
   ExpandLess as ExpandLessIcon,
   CheckCircleOutline as CheckCircleIcon,
   AccessTime as AccessTimeIcon,
-  AccountTree as TreeIcon,
   ViewList as ListIcon,
   KeyboardArrowUp as KeyboardArrowUpIcon,
   Search as SearchIcon,
   FilterListIcon,
-  Refresh as RefreshIcon
+  Refresh as RefreshIcon,
+  AccountTree as AccountTreeIcon
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import { useTheme } from '@/context/ThemeContext';
 import JobDetailsDialog from './JobDetailsDialog';
 import ScheduleConfiguration from './ScheduleConfiguration';
-import JobDependencyTree from './JobDependencyTree';
 import { Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { format } from 'date-fns';
+import Link from 'next/link';
 
 // Styled components
 const StyledTableContainer = styled(TableContainer)(({ theme, darkMode }) => ({
@@ -111,7 +112,7 @@ const JobsPage = () => {
   const [expandedRows, setExpandedRows] = useState({});
   const [scheduleData, setScheduleData] = useState({});
   const [successMessage, setSuccessMessage] = useState(null);
-  const [viewMode, setViewMode] = useState('tree'); // New state for view mode: 'tree' or 'list'
+  const [viewMode, setViewMode] = useState('list');
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [scheduleLoading, setScheduleLoading] = useState({});
@@ -514,6 +515,7 @@ const JobsPage = () => {
     { id: 'TARGET', label: 'Target Table' },
     { id: 'TRGTBTYP', label: 'Table Type' },
     { id: 'STATUS', label: 'Schedule Status' },
+    { id: 'dependentJobs', label: 'Dependent Jobs' },
     { id: 'actions', label: 'Actions' },
     { id: 'schedule', label: 'Schedule' },
   ];
@@ -531,27 +533,52 @@ const JobsPage = () => {
       style={{ height: '100%', display: 'flex', flexDirection: 'column' }}
     >
         <Box mb={3}>
-          <Typography 
-            variant="h4" 
-            component="h1" 
-            gutterBottom 
-            color={darkMode ? 'white' : 'text.primary'}
-            sx={{ 
-              fontSize: { xs: '1.5rem', md: '1.75rem' },
-              fontWeight: 600,
-              letterSpacing: '-0.025em'
-            }}
-          >
-          Jobs Management
-        </Typography>
-          <Typography 
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Typography 
+              variant="h4" 
+              component="h1" 
+              gutterBottom 
+              color={darkMode ? 'white' : 'text.primary'}
+              sx={{ 
+                fontSize: { xs: '1.5rem', md: '1.75rem' },
+                fontWeight: 600,
+                letterSpacing: '-0.025em',
+                mb: 0
+              }}
+            >
+              Jobs Management
+            </Typography>
+            
+            <Button 
+              variant="contained" 
+              color="primary"
+              component={Link}
+              href="/jobs/dependency-graph"
+              startIcon={<AccountTreeIcon />}
+              sx={{ 
+                borderRadius: '8px',
+                textTransform: 'none',
+                fontWeight: 500,
+                px: 2,
+                py: 1,
+                boxShadow: darkMode ? '0 4px 12px rgba(59, 130, 246, 0.2)' : '0 4px 12px rgba(59, 130, 246, 0.15)',
+                '&:hover': {
+                  boxShadow: darkMode ? '0 6px 16px rgba(59, 130, 246, 0.3)' : '0 6px 16px rgba(59, 130, 246, 0.25)',
+                }
+              }}
+            >
+              View Dependency Graph
+            </Button>
+          </Box>
+          
+          {/* <Typography 
             variant="body1" 
             color={darkMode ? 'gray.300' : 'text.secondary'} 
             mb={2}
             sx={{ fontSize: '0.9375rem' }}
           >
           View and manage all your data warehouse jobs
-        </Typography>
+        </Typography> */}
       </Box>
 
       {error && (
@@ -620,38 +647,12 @@ const JobsPage = () => {
           zIndex: 10,
         }}>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Tabs 
-              value={viewMode} 
-              onChange={handleViewModeChange} 
-              aria-label="job view mode tabs"
-              sx={{
-                '& .MuiTabs-indicator': {
-                  backgroundColor: darkMode ? 'primary.main' : 'primary.main',
-                },
-                '& .MuiTab-root': {
-                  fontSize: '0.875rem',
-                  fontWeight: 500,
-                  color: darkMode ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)',
-                  '&.Mui-selected': {
-                    color: darkMode ? 'primary.light' : 'primary.main',
-                    fontWeight: 600,
-                  }
-                }
-              }}
-            >
-              <Tab 
-                icon={<TreeIcon fontSize="small" />} 
-                iconPosition="start" 
-                label="Dependency Tree" 
-                value="tree" 
-              />
-              <Tab 
-                icon={<ListIcon fontSize="small" />} 
-                iconPosition="start" 
-                label="List View" 
-                value="list" 
-              />
-            </Tabs>
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <ListIcon sx={{ mr: 1.5, color: darkMode ? 'primary.light' : 'primary.main' }} />
+              <Typography variant="subtitle1" fontWeight={600} color={darkMode ? 'primary.light' : 'primary.main'}>
+                Jobs List View
+              </Typography>
+            </Box>
             
             {/* Filters and Search */}
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3, flexWrap: 'wrap' }}>
@@ -872,38 +873,8 @@ const JobsPage = () => {
               }
             }}
           >
-            {/* Tree View */}
-            {viewMode === 'tree' && (
-              <Box sx={{ p: 3 }}>
-                <JobDependencyTree 
-                  jobs={scheduledJobs}
-                  darkMode={darkMode}
-                  handleViewDetails={handleViewDetails}
-                  handleViewLogic={handleViewLogic}
-                />
-
-                {scheduledJobs.length === 0 && (
-                  <Box sx={{ 
-                    textAlign: 'center', 
-                    py: 4, 
-                    backgroundColor: darkMode ? 'rgba(30, 41, 59, 0.4)' : 'rgba(243, 244, 246, 0.6)',
-                    borderRadius: 2,
-                    mt: 2
-                  }}>
-                    <Typography variant="body1" color={darkMode ? 'gray.300' : 'gray.600'}>
-                      {searchTerm || tableTypeFilter || scheduleStatusFilter ? 
-                        "No matching jobs found with current filters" : 
-                        "No scheduled jobs found to display"}
-                    </Typography>
-                  </Box>
-                )}
-              </Box>
-            )}
-            
-            {/* List View */}
-            {viewMode === 'list' && (
-              <StyledTableContainer darkMode={darkMode}>
-                <Table stickyHeader size="small" aria-label="jobs table">
+            <StyledTableContainer darkMode={darkMode}>
+              <Table stickyHeader size="small" aria-label="jobs table">
                 <TableHead>
                   <TableRow>
                     {columns.map((column) => (
@@ -912,11 +883,12 @@ const JobsPage = () => {
                         align={column.id === 'actions' || column.id === 'schedule' ? 'center' : 'left'}
                         sx={{ 
                           minWidth: column.id === 'actions' ? 90 : 
-                                   column.id === 'schedule' ? 70 : 
-                                   column.id === 'STATUS' ? 120 :
-                                   column.id === 'TRGTBTYP' ? 100 :
-                                   column.id === 'MAPREF' ? 140 :
-                                   130,
+                                  column.id === 'schedule' ? 70 : 
+                                  column.id === 'STATUS' ? 120 :
+                                  column.id === 'TRGTBTYP' ? 100 :
+                                  column.id === 'MAPREF' ? 140 :
+                                  column.id === 'dependentJobs' ? 160 :
+                                  130,
                           px: column.id === 'actions' || column.id === 'schedule' ? 1 : 2,
                           position: 'sticky',
                           top: 0,
@@ -933,148 +905,186 @@ const JobsPage = () => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {filteredJobs.map((job) => (
-                    <React.Fragment key={job.JOBID}>
-                      <TableRow hover sx={{ cursor: 'pointer' }}>
-                        <TableCell sx={{ fontWeight: 500 }}>
-                          {job.JOBSCHID || 'Not Scheduled'}
-                        </TableCell>
-                        <TableCell>{job.MAPREF}</TableCell>
-                        <TableCell>
-                          <Box component="span" sx={{ 
-                            fontSize: '0.8125rem',
-                            color: darkMode ? 'primary.light' : 'primary.main', 
-                            fontFamily: 'monospace', 
-                            fontWeight: 500,
-                            backgroundColor: darkMode ? 'rgba(59, 130, 246, 0.1)' : 'rgba(59, 130, 246, 0.05)',
-                            py: 0.5, 
-                            px: 1, 
-                            borderRadius: 1,
-                            border: '1px solid',
-                            borderColor: darkMode ? 'rgba(59, 130, 246, 0.2)' : 'rgba(59, 130, 246, 0.1)'
-                          }}>
-                            {`${job.TRGSCHM}.${job.TRGTBNM}`}
-                          </Box>
-                        </TableCell>
-                        <TableCell>{job.TRGTBTYP}</TableCell>
-                        <TableCell>
-                          <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+                  {filteredJobs.map((job) => {
+                    // Find dependent jobs for this job
+                    const childJobs = jobs.filter(j => j.DPND_JOBSCHID === job.JOBSCHID && j.JOB_SCHEDULE_STATUS === 'Scheduled');
+                    
+                    return (
+                      <React.Fragment key={job.JOBID}>
+                        <TableRow hover sx={{ cursor: 'pointer' }}>
+                          <TableCell sx={{ fontWeight: 500 }}>
+                            {job.JOBSCHID || 'Not Scheduled'}
+                          </TableCell>
+                          <TableCell>{job.MAPREF}</TableCell>
+                          <TableCell>
                             <Box component="span" sx={{ 
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              fontSize: '0.75rem',
-                              fontWeight: 600,
-                              px: 1.5,
-                              py: 0.5,
-                              width: 'fit-content',
-                              minWidth: '90px',
-                              borderRadius: 8,
-                              backgroundColor: job.JOB_SCHEDULE_STATUS === 'Scheduled' 
-                                ? (darkMode ? 'rgba(16, 185, 129, 0.15)' : 'rgba(16, 185, 129, 0.08)') 
-                                : (darkMode ? 'rgba(245, 158, 11, 0.15)' : 'rgba(245, 158, 11, 0.08)'),
-                              color: job.JOB_SCHEDULE_STATUS === 'Scheduled' 
-                                ? (darkMode ? '#34D399' : '#059669') 
-                                : (darkMode ? '#FBBF24' : '#D97706'),
+                              fontSize: '0.8125rem',
+                              color: darkMode ? 'primary.light' : 'primary.main', 
+                              fontFamily: 'monospace', 
+                              fontWeight: 500,
+                              backgroundColor: darkMode ? 'rgba(59, 130, 246, 0.1)' : 'rgba(59, 130, 246, 0.05)',
+                              py: 0.5, 
+                              px: 1, 
+                              borderRadius: 1,
                               border: '1px solid',
-                              borderColor: job.JOB_SCHEDULE_STATUS === 'Scheduled' 
-                                ? (darkMode ? 'rgba(16, 185, 129, 0.3)' : 'rgba(16, 185, 129, 0.2)') 
-                                : (darkMode ? 'rgba(245, 158, 11, 0.3)' : 'rgba(245, 158, 11, 0.2)'),
-                              textAlign: 'center',
-                              boxShadow: job.JOB_SCHEDULE_STATUS === 'Scheduled' 
-                                ? (darkMode ? '0 1px 3px rgba(16, 185, 129, 0.1)' : 'none')
-                                : (darkMode ? '0 1px 3px rgba(245, 158, 11, 0.1)' : 'none'),
+                              borderColor: darkMode ? 'rgba(59, 130, 246, 0.2)' : 'rgba(59, 130, 246, 0.1)'
                             }}>
-                              {job.JOB_SCHEDULE_STATUS === 'Scheduled' ? (
-                                <>
-                                  <CheckCircleIcon sx={{ fontSize: 14, mr: 0.5 }} />
-                                  Scheduled
-                                </>
+                              {`${job.TRGSCHM}.${job.TRGTBNM}`}
+                            </Box>
+                          </TableCell>
+                          <TableCell>{job.TRGTBTYP}</TableCell>
+                          <TableCell>
+                            <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+                              <Box component="span" sx={{ 
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                fontSize: '0.75rem',
+                                fontWeight: 600,
+                                px: 1.5,
+                                py: 0.5,
+                                width: 'fit-content',
+                                minWidth: '90px',
+                                borderRadius: 8,
+                                backgroundColor: job.JOB_SCHEDULE_STATUS === 'Scheduled' 
+                                  ? (darkMode ? 'rgba(16, 185, 129, 0.15)' : 'rgba(16, 185, 129, 0.08)') 
+                                  : (darkMode ? 'rgba(245, 158, 11, 0.15)' : 'rgba(245, 158, 11, 0.08)'),
+                                color: job.JOB_SCHEDULE_STATUS === 'Scheduled' 
+                                  ? (darkMode ? '#34D399' : '#059669') 
+                                  : (darkMode ? '#FBBF24' : '#D97706'),
+                                border: '1px solid',
+                                borderColor: job.JOB_SCHEDULE_STATUS === 'Scheduled' 
+                                  ? (darkMode ? 'rgba(16, 185, 129, 0.3)' : 'rgba(16, 185, 129, 0.2)') 
+                                  : (darkMode ? 'rgba(245, 158, 11, 0.3)' : 'rgba(245, 158, 11, 0.2)'),
+                                textAlign: 'center',
+                                boxShadow: job.JOB_SCHEDULE_STATUS === 'Scheduled' 
+                                  ? (darkMode ? '0 1px 3px rgba(16, 185, 129, 0.1)' : 'none')
+                                  : (darkMode ? '0 1px 3px rgba(245, 158, 11, 0.1)' : 'none'),
+                              }}>
+                                {job.JOB_SCHEDULE_STATUS === 'Scheduled' ? (
+                                  <>
+                                    <CheckCircleIcon sx={{ fontSize: 14, mr: 0.5 }} />
+                                    Scheduled
+                                  </>
+                                ) : (
+                                  <>
+                                    <AccessTimeIcon sx={{ fontSize: 14, mr: 0.5 }} />
+                                    Not Scheduled
+                                  </>
+                                )}
+                              </Box>
+                            </Box>
+                          </TableCell>
+                          
+                          {/* New cell for dependent jobs */}
+                          <TableCell>
+                            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75, maxWidth: 160 }}>
+                              {job.JOB_SCHEDULE_STATUS === 'Scheduled' && childJobs.length > 0 ? (
+                                childJobs.map(childJob => (
+                                  <Tooltip key={childJob.JOBSCHID} title={`${childJob.TRGSCHM}.${childJob.TRGTBNM}`}>
+                                    <Chip
+                                      label={childJob.MAPREF}
+                                      size="small"
+                                      sx={{
+                                        height: 22,
+                                        fontSize: '0.7rem',
+                                        fontWeight: 500,
+                                        backgroundColor: darkMode ? 'rgba(16, 185, 129, 0.15)' : 'rgba(16, 185, 129, 0.08)',
+                                        color: darkMode ? '#34D399' : '#059669',
+                                        border: '1px solid',
+                                        borderColor: darkMode ? 'rgba(16, 185, 129, 0.3)' : 'rgba(16, 185, 129, 0.2)',
+                                        '& .MuiChip-label': {
+                                          px: 1
+                                        }
+                                      }}
+                                    />
+                                  </Tooltip>
+                                ))
                               ) : (
-                                <>
-                                  <AccessTimeIcon sx={{ fontSize: 14, mr: 0.5 }} />
-                                  Not Scheduled
-                                </>
+                                <Typography variant="caption" color={darkMode ? 'gray.400' : 'gray.500'} fontSize="0.75rem">
+                                  {job.JOB_SCHEDULE_STATUS === 'Scheduled' ? 'No dependent jobs' : 'Not applicable'}
+                                </Typography>
                               )}
                             </Box>
-                          </Box>
-                        </TableCell>
-                        <TableCell align="center">
-                          <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-                            <Tooltip title="View Details">
-                              <ActionButton
-                                size="small"
-                                color="primary"
-                                darkMode={darkMode}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleViewDetails(job);
-                                }}
-                              >
-                                <VisibilityIcon fontSize="small" sx={{ fontSize: 18 }} />
-                              </ActionButton>
-                            </Tooltip>
+                          </TableCell>
+                          
+                          <TableCell align="center">
+                            <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+                              <Tooltip title="View Details">
+                                <ActionButton
+                                  size="small"
+                                  color="primary"
+                                  darkMode={darkMode}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleViewDetails(job);
+                                  }}
+                                >
+                                  <VisibilityIcon fontSize="small" sx={{ fontSize: 18 }} />
+                                </ActionButton>
+                              </Tooltip>
 
-                            <Tooltip title="View SQL Logic">
-                              <ActionButton
-                                size="small"
-                                color="info"
-                                darkMode={darkMode}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleViewLogic(job);
+                              <Tooltip title="View SQL Logic">
+                                <ActionButton
+                                  size="small"
+                                  color="info"
+                                  darkMode={darkMode}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleViewLogic(job);
+                                  }}
+                                >
+                                  <CodeIcon fontSize="small" sx={{ fontSize: 18 }} />
+                                </ActionButton>
+                              </Tooltip>
+                            </Box>
+                          </TableCell>
+                          <TableCell align="center">
+                            <IconButton
+                                  size="small"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                  toggleRowExpansion(job.JOBFLWID);
+                                }}
+                                sx={{ 
+                                  color: darkMode ? 'primary.light' : 'primary.main',
+                                  padding: 0.5,
+                                  backgroundColor: expandedRows[job.JOBFLWID] ? 
+                                    (darkMode ? 'rgba(59, 130, 246, 0.2)' : 'rgba(59, 130, 246, 0.1)') : 
+                                    'transparent'
                                 }}
                               >
-                                <CodeIcon fontSize="small" sx={{ fontSize: 18 }} />
-                              </ActionButton>
-                            </Tooltip>
-                          </Box>
-                        </TableCell>
-                        <TableCell align="center">
-                          <IconButton
-                                size="small"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                toggleRowExpansion(job.JOBFLWID);
-                              }}
-                              sx={{ 
-                                color: darkMode ? 'primary.light' : 'primary.main',
-                                padding: 0.5,
-                                backgroundColor: expandedRows[job.JOBFLWID] ? 
-                                  (darkMode ? 'rgba(59, 130, 246, 0.2)' : 'rgba(59, 130, 246, 0.1)') : 
-                                  'transparent'
-                              }}
-                            >
-                              {expandedRows[job.JOBFLWID] ? <ExpandLessIcon sx={{ fontSize: 18 }} /> : <ExpandMoreIcon sx={{ fontSize: 18 }} />}
-                            </IconButton>
-                        </TableCell>
-                      </TableRow>
-                      
-                      {/* Expanded row with schedule configuration */}
-                      <TableRow>
-                        <TableCell colSpan={7} sx={{ p: 0, border: 0 }}>
-                          <Collapse in={expandedRows[job.JOBFLWID]} timeout="auto" unmountOnExit>
-                            <ScheduleConfiguration
-                              jobId={job.JOBFLWID}
-                              scheduleData={scheduleData}
-                              handleScheduleChange={handleScheduleChange}
-                              handleDateChange={handleDateChange}
-                              handleSaveSchedule={handleSaveSchedule}
-                              handleSaveDependency={handleSaveDependency}
-                              jobOptions={jobs}
-                              darkMode={darkMode}
-                              scheduleLoading={scheduleLoading}
-                              scheduleSaving={scheduleSaving}
-                              dependencySaving={dependencySaving}
-                            />
-                          </Collapse>
-                        </TableCell>
-                      </TableRow>
-                    </React.Fragment>
-                  ))}
+                                {expandedRows[job.JOBFLWID] ? <ExpandLessIcon sx={{ fontSize: 18 }} /> : <ExpandMoreIcon sx={{ fontSize: 18 }} />}
+                              </IconButton>
+                          </TableCell>
+                        </TableRow>
+                        
+                        {/* Expanded row with schedule configuration */}
+                        <TableRow>
+                          <TableCell colSpan={8} sx={{ p: 0, border: 0 }}>
+                            <Collapse in={expandedRows[job.JOBFLWID]} timeout="auto" unmountOnExit>
+                              <ScheduleConfiguration
+                                jobId={job.JOBFLWID}
+                                scheduleData={scheduleData}
+                                handleScheduleChange={handleScheduleChange}
+                                handleDateChange={handleDateChange}
+                                handleSaveSchedule={handleSaveSchedule}
+                                handleSaveDependency={handleSaveDependency}
+                                jobOptions={jobs}
+                                darkMode={darkMode}
+                                scheduleLoading={scheduleLoading}
+                                scheduleSaving={scheduleSaving}
+                                dependencySaving={dependencySaving}
+                              />
+                            </Collapse>
+                          </TableCell>
+                        </TableRow>
+                      </React.Fragment>
+                    );
+                  })}
                   {filteredJobs.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
+                      <TableCell colSpan={8} align="center" sx={{ py: 4 }}>
                         {searchTerm || tableTypeFilter || scheduleStatusFilter ? (
                           <Typography variant="body1" color={darkMode ? 'gray.300' : 'gray.600'}>
                             No matching jobs found with current filters
@@ -1090,7 +1100,6 @@ const JobsPage = () => {
                 </TableBody>
               </Table>
             </StyledTableContainer>
-            )}
           </Box>
         )}
         

@@ -50,7 +50,7 @@ const JobDetailsDialog = ({ open, onClose, job, allJobs = [] }) => {
 
   // Find parent and child jobs based on dependencies
   const parentJob = allJobs.find(j => job?.DPND_JOBSCHID === j.JOBSCHID);
-  const childJobs = allJobs.filter(j => j.DPND_JOBSCHID === job?.JOBSCHID);
+  const childJobs = allJobs.filter(j => j.DPND_JOBSCHID === job?.JOBSCHID && j.JOB_SCHEDULE_STATUS === 'Scheduled');
 
   // Function to fetch job details
   const fetchJobDetails = async (mapref) => {
@@ -269,7 +269,7 @@ const JobDetailsDialog = ({ open, onClose, job, allJobs = [] }) => {
         ) : (
           <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
             <Box sx={{ mb: 4, mt: 1 }}>
-              {/* Job Dependency Information - NEW SECTION */}
+              {/* Job Dependency Information - UPDATED SECTION */}
               {job?.JOB_SCHEDULE_STATUS === 'Scheduled' && (
                 <>
                   <Typography 
@@ -305,178 +305,165 @@ const JobDetailsDialog = ({ open, onClose, job, allJobs = [] }) => {
                       border: darkMode ? '1px solid rgba(255, 255, 255, 0.05)' : '1px solid rgba(0, 0, 0, 0.05)',
                     }}
                   >
-                    <Box sx={{ display: 'flex', flexDirection: 'row', gap: 2 }}>
-                      {/* Parent Job */}
-                      <Box sx={{ flex: 1 }}>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                      {/* Parent Job Section */}
+                      <Box>
                         <Typography 
                           variant="subtitle2" 
                           color={darkMode ? 'primary.light' : 'primary.main'} 
                           sx={{
                             display: 'flex',
                             alignItems: 'center',
-                            mb: 1,
+                            mb: 1.5,
                             fontWeight: 600,
-                            fontSize: '0.8rem'
+                            fontSize: '0.85rem',
+                            borderBottom: '1px solid',
+                            borderColor: darkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+                            pb: 0.5
                           }}
                         >
                           <ArrowUpwardIcon sx={{ mr: 0.5, fontSize: 16 }} />
-                          Parent Job
+                          Depends on (Parent Job)
                         </Typography>
                         
                         {parentJob ? (
                           <Box 
                             sx={{ 
-                              backgroundColor: darkMode ? 'rgba(45, 55, 72, 0.6)' : 'rgba(243, 244, 246, 0.8)',
-                              p: 1.5,
-                              borderRadius: 1,
-                              border: '1px solid',
-                              borderColor: darkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
                               display: 'flex',
                               alignItems: 'center',
-                              justifyContent: 'space-between',
-                              height: '60px'
+                              gap: 1.5,
+                              px: 1
                             }}
                           >
-                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                              <Box sx={{ 
-                                backgroundColor: darkMode ? 'rgba(15, 23, 42, 0.6)' : 'rgba(229, 231, 235, 0.7)',
-                                borderRadius: '50%',
-                                width: 28,
-                                height: 28,
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                mr: 1.5
-                              }}>
-                                <Typography variant="subtitle2" fontWeight="bold" color={darkMode ? 'primary.light' : 'primary.main'} fontSize="0.75rem">
-                                  {parentJob.JOBSCHID}
-                                </Typography>
-                              </Box>
-                              
-                              <Box>
-                                <Typography variant="body2" fontWeight="500" fontSize="0.8rem">
-                                  {`${parentJob.TRGSCHM}.${parentJob.TRGTBNM}`}
-                                </Typography>
-                                <Typography variant="caption" color={darkMode ? 'gray.400' : 'gray.600'} fontSize="0.7rem">
-                                  {parentJob.MAPREF}
-                                </Typography>
-                              </Box>
-                            </Box>
-                            
                             <Chip
-                              label="Parent"
+                              label={`ID: ${parentJob.JOBSCHID}`}
                               size="small"
                               sx={{
-                                backgroundColor: darkMode ? 'rgba(59, 130, 246, 0.2)' : 'rgba(59, 130, 246, 0.1)',
-                                color: darkMode ? '#60A5FA' : '#3B82F6',
+                                height: 24,
+                                fontSize: '0.75rem',
                                 fontWeight: 600,
-                                fontSize: '0.65rem',
-                                height: '20px'
+                                backgroundColor: darkMode ? 'rgba(59, 130, 246, 0.15)' : 'rgba(59, 130, 246, 0.08)',
+                                color: darkMode ? '#60A5FA' : '#3B82F6',
+                                border: '1px solid',
+                                borderColor: darkMode ? 'rgba(59, 130, 246, 0.3)' : 'rgba(59, 130, 246, 0.15)',
                               }}
                             />
+                            
+                            <Chip
+                              label={parentJob.MAPREF}
+                              size="small"
+                              sx={{
+                                height: 24,
+                                fontSize: '0.75rem',
+                                fontWeight: 500,
+                                backgroundColor: darkMode ? 'rgba(79, 70, 229, 0.15)' : 'rgba(79, 70, 229, 0.08)',
+                                color: darkMode ? '#818CF8' : '#4F46E5',
+                                border: '1px solid',
+                                borderColor: darkMode ? 'rgba(79, 70, 229, 0.3)' : 'rgba(79, 70, 229, 0.15)',
+                              }}
+                            />
+                            
+                            <Typography
+                              variant="body2"
+                              sx={{
+                                fontSize: '0.8125rem',
+                                color: darkMode ? 'primary.light' : 'primary.main', 
+                                fontFamily: 'monospace', 
+                                fontWeight: 500,
+                                backgroundColor: darkMode ? 'rgba(59, 130, 246, 0.1)' : 'rgba(59, 130, 246, 0.05)',
+                                py: 0.5, 
+                                px: 1, 
+                                borderRadius: 1,
+                                border: '1px solid',
+                                borderColor: darkMode ? 'rgba(59, 130, 246, 0.2)' : 'rgba(59, 130, 246, 0.1)'
+                              }}
+                            >
+                              {`${parentJob.TRGSCHM}.${parentJob.TRGTBNM}`}
+                            </Typography>
                           </Box>
                         ) : (
-                          <Box 
-                            sx={{ 
-                              backgroundColor: darkMode ? 'rgba(45, 55, 72, 0.3)' : 'rgba(243, 244, 246, 0.5)',
-                              p: 1.5,
-                              borderRadius: 1,
-                              border: '1px dashed',
-                              borderColor: darkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
-                              textAlign: 'center',
-                              height: '60px',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center'
-                            }}
-                          >
-                            <Typography variant="body2" color={darkMode ? 'gray.400' : 'gray.600'} fontSize="0.75rem">
-                              No parent dependencies
+                          <Box sx={{ px: 1 }}>
+                            <Typography variant="body2" color={darkMode ? 'gray.400' : 'gray.600'} fontSize="0.8rem">
+                              This job doesn't depend on any other job
                             </Typography>
                           </Box>
                         )}
                       </Box>
                       
-                      {/* Vertical Divider */}
-                      <Divider orientation="vertical" flexItem sx={{ borderColor: darkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)' }} />
-                      
-                      {/* Child Jobs */}
-                      <Box sx={{ flex: 2 }}>
+                      {/* Child Jobs Section */}
+                      <Box>
                         <Typography 
                           variant="subtitle2" 
                           color={darkMode ? 'primary.light' : 'primary.main'} 
                           sx={{
                             display: 'flex',
                             alignItems: 'center',
-                            mb: 1,
+                            mb: 1.5,
                             fontWeight: 600,
-                            fontSize: '0.8rem'
+                            fontSize: '0.85rem',
+                            borderBottom: '1px solid',
+                            borderColor: darkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+                            pb: 0.5
                           }}
                         >
                           <ArrowDownwardIcon sx={{ mr: 0.5, fontSize: 16 }} />
-                          Child Jobs ({childJobs.length})
+                          Dependent Jobs ({childJobs.length})
                         </Typography>
                         
                         {childJobs.length > 0 ? (
-                          <Box 
-                            sx={{ 
-                              backgroundColor: darkMode ? 'rgba(45, 55, 72, 0.6)' : 'rgba(243, 244, 246, 0.8)',
-                              p: 1.5,
-                              borderRadius: 1,
-                              border: '1px solid',
-                              borderColor: darkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
-                              height: '60px',
-                              overflow: 'auto'
-                            }}
-                          >
-                            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                              {childJobs.map(childJob => (
-                                <Box 
-                                  key={childJob.JOBSCHID}
-                                  sx={{ 
-                                    backgroundColor: darkMode ? 'rgba(15, 23, 42, 0.6)' : 'rgba(229, 231, 235, 0.7)',
-                                    px: 1,
-                                    py: 0.75,
-                                    borderRadius: 1,
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: 1,
+                          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, px: 1 }}>
+                            {childJobs.map(childJob => (
+                              <Box 
+                                key={childJob.JOBSCHID}
+                                sx={{ 
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: 1,
+                                  backgroundColor: darkMode ? 'rgba(15, 23, 42, 0.4)' : 'rgba(243, 244, 246, 0.5)',
+                                  py: 0.75,
+                                  px: 1.5,
+                                  borderRadius: 1.5,
+                                  border: '1px solid',
+                                  borderColor: darkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
+                                }}
+                              >
+                                <Chip
+                                  label={`ID: ${childJob.JOBSCHID}`}
+                                  size="small"
+                                  sx={{
+                                    height: 20,
+                                    fontSize: '0.7rem',
+                                    fontWeight: 600,
+                                    backgroundColor: darkMode ? 'rgba(16, 185, 129, 0.15)' : 'rgba(16, 185, 129, 0.08)',
+                                    color: darkMode ? '#34D399' : '#059669',
                                     border: '1px solid',
-                                    borderColor: darkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
+                                    borderColor: darkMode ? 'rgba(16, 185, 129, 0.3)' : 'rgba(16, 185, 129, 0.2)',
                                   }}
-                                >
-                                  <Typography variant="caption" fontWeight="bold" color={darkMode ? 'success.light' : 'success.main'} fontSize="0.7rem">
-                                    {childJob.JOBSCHID}
-                                  </Typography>
-                                  
-                                  <Divider orientation="vertical" flexItem sx={{ 
-                                    height: '16px', 
-                                    borderColor: darkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'
-                                  }} />
-                                  
-                                  <Typography variant="caption" fontWeight="500" fontSize="0.7rem">
-                                    {childJob.TRGTBNM}
-                                  </Typography>
-                                </Box>
-                              ))}
-                            </Box>
+                                />
+                                
+                                <Chip
+                                  label={childJob.MAPREF}
+                                  size="small"
+                                  sx={{
+                                    height: 20,
+                                    fontSize: '0.7rem',
+                                    fontWeight: 500,
+                                    backgroundColor: darkMode ? 'rgba(16, 185, 129, 0.1)' : 'rgba(16, 185, 129, 0.05)',
+                                    color: darkMode ? '#34D399' : '#059669',
+                                    border: '1px solid',
+                                    borderColor: darkMode ? 'rgba(16, 185, 129, 0.25)' : 'rgba(16, 185, 129, 0.15)',
+                                  }}
+                                />
+                                
+                                <Typography variant="caption" fontWeight="500" fontSize="0.7rem">
+                                  {childJob.TRGTBNM}
+                                </Typography>
+                              </Box>
+                            ))}
                           </Box>
                         ) : (
-                          <Box 
-                            sx={{ 
-                              backgroundColor: darkMode ? 'rgba(45, 55, 72, 0.3)' : 'rgba(243, 244, 246, 0.5)',
-                              p: 1.5,
-                              borderRadius: 1,
-                              border: '1px dashed',
-                              borderColor: darkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
-                              textAlign: 'center',
-                              height: '60px',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center'
-                            }}
-                          >
-                            <Typography variant="body2" color={darkMode ? 'gray.400' : 'gray.600'} fontSize="0.75rem">
+                          <Box sx={{ px: 1 }}>
+                            <Typography variant="body2" color={darkMode ? 'gray.400' : 'gray.600'} fontSize="0.8rem">
                               No jobs depend on this job
                             </Typography>
                           </Box>
