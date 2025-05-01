@@ -345,21 +345,97 @@ const ReferenceTable = ({ handleEditReference, handleCreateNewReference }) => {
           darkMode ? 'text-gray-100' : 'text-gray-800'
         }`}
       >
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-3">
-          <Typography
-            variant="h5"
-            className={`text-xl font-semibold ${
-              darkMode ? 'text-blue-400' : 'text-blue-600'
-            } relative`}
-          >
-            Mapper References
-            <span
-              className={`block h-1 w-16 mt-1 ${
-                darkMode ? 'bg-blue-500' : 'bg-blue-600'
-              } rounded-full`}
-            ></span>
-          </Typography>
+        {/* Reorganized header section - all elements in a single row */}
+        <div className="flex items-center justify-between mb-3 gap-2">
+          {/* Search field - now in line with other controls */}
+          <div className="flex items-center flex-grow gap-2 max-w-xl">
+            <TextField
+              placeholder="Search references..."
+              variant="outlined"
+              size="small"
+              fullWidth
+              value={searchQuery}
+              onChange={handleReferenceSearch}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon fontSize="small" />
+                  </InputAdornment>
+                ),
+                endAdornment: searchQuery && (
+                  <InputAdornment position="end">
+                    <IconButton
+                      size="small"
+                      onClick={() => {
+                        setSearchQuery('')
+                        applyFiltersWithQuery('')
+                      }}
+                      edge="end"
+                    >
+                      <ClearIcon fontSize="small" />
+                    </IconButton>
+                  </InputAdornment>
+                ),
+                style: { borderRadius: '8px' },
+              }}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  height: '40px',
+                  backgroundColor: darkMode ? 'rgba(31, 41, 55, 0.5)' : 'white',
+                  '&:hover fieldset': {
+                    borderColor: darkMode
+                      ? 'rgba(147, 197, 253, 0.5)'
+                      : 'rgba(59, 130, 246, 0.5)',
+                  },
+                  fontSize: 'clamp(0.8rem, 0.875vw, 0.875rem)', // Responsive font sizing
+                },
+              }}
+            />
 
+            {/* Filter Button */}
+            <Tooltip title="Filter References">
+              <IconButton
+                onClick={handleFilterClick}
+                sx={{
+                  backgroundColor: darkMode ? 'rgba(31, 41, 55, 0.5)' : 'white',
+                  border: '1px solid',
+                  borderColor: darkMode
+                    ? 'rgba(75, 85, 99, 0.2)'
+                    : 'rgba(229, 231, 235, 1)',
+                  borderRadius: '8px',
+                  height: '40px',
+                  width: '40px',
+                  '&:hover': {
+                    backgroundColor: darkMode
+                      ? 'rgba(55, 65, 81, 0.7)'
+                      : 'rgba(249, 250, 251, 0.9)',
+                  },
+                  position: 'relative',
+                }}
+              >
+                <SettingsIcon fontSize="small" />
+                {/* Indicator dot if filters are active */}
+                {(filters.tableType.length > 0 ||
+                  filters.status.length > 0 ||
+                  filters.sourceSystem.length > 0 ||
+                  filters.logicVerification.length > 0) && (
+                  <Box
+                    sx={{
+                      position: 'absolute',
+                      top: 8,
+                      right: 8,
+                      width: 8,
+                      height: 8,
+                      borderRadius: '50%',
+                      backgroundColor: '#2563EB',
+                    }}
+                  />
+                )}
+              </IconButton>
+            </Tooltip>
+          </div>
+
+          {/* Create New Reference Button */}
           <Button
             variant="contained"
             startIcon={<AddIcon />}
@@ -374,100 +450,12 @@ const ReferenceTable = ({ handleEditReference, handleCreateNewReference }) => {
               boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
               px: 2,
               py: 1,
+              height: '40px',
               fontSize: 'clamp(0.8rem, 0.875vw, 0.875rem)', // Responsive font sizing
             }}
           >
             Create New Reference
           </Button>
-        </div>
-
-        {/* Add search field */}
-        <div className="mb-3 flex items-center gap-2">
-          <TextField
-            placeholder="Search references..."
-            variant="outlined"
-            size="small"
-            fullWidth
-            value={searchQuery}
-            onChange={handleReferenceSearch}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon fontSize="small" />
-                </InputAdornment>
-              ),
-              endAdornment: searchQuery && (
-                <InputAdornment position="end">
-                  <IconButton
-                    size="small"
-                    onClick={() => {
-                      setSearchQuery('')
-                      applyFiltersWithQuery('')
-                    }}
-                    edge="end"
-                  >
-                    <ClearIcon fontSize="small" />
-                  </IconButton>
-                </InputAdornment>
-              ),
-              style: { borderRadius: '8px' },
-            }}
-            sx={{
-              maxWidth: '400px',
-              '& .MuiOutlinedInput-root': {
-                height: '40px',
-                backgroundColor: darkMode ? 'rgba(31, 41, 55, 0.5)' : 'white',
-                '&:hover fieldset': {
-                  borderColor: darkMode
-                    ? 'rgba(147, 197, 253, 0.5)'
-                    : 'rgba(59, 130, 246, 0.5)',
-                },
-                fontSize: 'clamp(0.8rem, 0.875vw, 0.875rem)', // Responsive font sizing
-              },
-            }}
-          />
-
-          {/* Filter Button */}
-          <Tooltip title="Filter References">
-            <IconButton
-              onClick={handleFilterClick}
-              sx={{
-                backgroundColor: darkMode ? 'rgba(31, 41, 55, 0.5)' : 'white',
-                border: '1px solid',
-                borderColor: darkMode
-                  ? 'rgba(75, 85, 99, 0.2)'
-                  : 'rgba(229, 231, 235, 1)',
-                borderRadius: '8px',
-                height: '40px',
-                width: '40px',
-                '&:hover': {
-                  backgroundColor: darkMode
-                    ? 'rgba(55, 65, 81, 0.7)'
-                    : 'rgba(249, 250, 251, 0.9)',
-                },
-                position: 'relative',
-              }}
-            >
-              <SettingsIcon fontSize="small" />
-              {/* Indicator dot if filters are active */}
-              {(filters.tableType.length > 0 ||
-                filters.status.length > 0 ||
-                filters.sourceSystem.length > 0 ||
-                filters.logicVerification.length > 0) && (
-                <Box
-                  sx={{
-                    position: 'absolute',
-                    top: 8,
-                    right: 8,
-                    width: 8,
-                    height: 8,
-                    borderRadius: '50%',
-                    backgroundColor: '#2563EB',
-                  }}
-                />
-              )}
-            </IconButton>
-          </Tooltip>
         </div>
 
         <div
