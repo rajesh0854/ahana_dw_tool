@@ -48,8 +48,7 @@ const InlineScheduleConfig = ({
   // Determine if schedule is complete
   const canSaveSchedule = 
     jobSchedule.TIMEPARAM && 
-    jobSchedule.STRT_DT && 
-    jobSchedule.END_DT;
+    jobSchedule.STRT_DT;
   
   const isUpdate = Boolean(jobSchedule.JOB_SCHEDULE_STATUS === 'Scheduled');
   
@@ -204,10 +203,10 @@ const InlineScheduleConfig = ({
           py: 0.5,
           px: 1,
           backgroundColor: darkMode ? 'rgba(17, 24, 39, 0.4)' : 'rgba(255, 255, 255, 0.9)',
-          borderColor: (jobSchedule.STRT_DT && jobSchedule.END_DT) ? 
+          borderColor: jobSchedule.STRT_DT ? 
             (darkMode ? 'rgba(59, 130, 246, 0.5)' : 'rgba(59, 130, 246, 0.5)') : 
             (darkMode ? 'rgba(75, 85, 99, 0.4)' : 'rgba(209, 213, 219, 0.8)'),
-          color: (jobSchedule.STRT_DT && jobSchedule.END_DT) ? 
+          color: jobSchedule.STRT_DT ? 
             (darkMode ? 'rgba(59, 130, 246, 0.9)' : 'rgba(59, 130, 246, 0.9)') : 
             (darkMode ? 'rgba(156, 163, 175, 0.9)' : 'rgba(107, 114, 128, 0.8)'),
           minWidth: 0,

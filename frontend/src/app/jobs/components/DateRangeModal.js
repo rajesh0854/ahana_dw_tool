@@ -49,14 +49,17 @@ const DateRangeModal = ({
   // Validate dates
   const validateDates = () => {
     const newErrors = {};
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Set to beginning of the day for proper comparison
 
     if (!startDate) {
       newErrors.startDate = 'Start date is required';
+    } else if (startDate < today) {
+      newErrors.startDate = 'Start date cannot be in the past';
     }
 
-    if (!endDate) {
-      newErrors.endDate = 'End date is required';
-    } else if (startDate && endDate && endDate < startDate) {
+    // End date is optional but if provided, must be after start date
+    if (startDate && endDate && endDate < startDate) {
       newErrors.endDate = 'End date must be after start date';
     }
 
@@ -139,6 +142,7 @@ const DateRangeModal = ({
                 <DatePicker 
                   value={startDate}
                   onChange={(newDate) => setStartDate(newDate)}
+                  minDate={new Date()} // Setting minimum date to today
                   slotProps={{
                     textField: {
                       size: "small",
@@ -167,11 +171,12 @@ const DateRangeModal = ({
                     color: darkMode ? 'rgba(156, 163, 175, 0.9)' : 'rgba(75, 85, 99, 0.9)',
                   }}
                 >
-                  End Date
+                  End Date (Optional)
                 </Typography>
                 <DatePicker 
                   value={endDate}
                   onChange={(newDate) => setEndDate(newDate)}
+                  minDate={startDate || new Date()} // Ensure end date isn't before start date
                   slotProps={{
                     textField: {
                       size: "small",
@@ -220,9 +225,10 @@ const DateRangeModal = ({
                     color: darkMode ? 'white' : 'text.primary'
                   }}
                 >
-                  {startDate && endDate ? (
+                  {startDate ? (
                     <>
-                      {format(startDate, 'yyyy-MM-dd')} to {format(endDate, 'yyyy-MM-dd')}
+                      {format(startDate, 'yyyy-MM-dd')}
+                      {endDate ? ` to ${format(endDate, 'yyyy-MM-dd')}` : ''}
                     </>
                   ) : (
                     <span style={{ color: darkMode ? 'rgba(156, 163, 175, 0.7)' : 'rgba(107, 114, 128, 0.7)' }}>

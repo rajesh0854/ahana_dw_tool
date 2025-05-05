@@ -209,6 +209,15 @@ const ScheduleConfiguration = ({
     // Validate start date
     if (!jobData.STRTDT) {
       newErrors.strtdt = 'Schedule start date must be provided.';
+    } else {
+      // Validate start date is not in the past
+      const today = new Date();
+      today.setHours(0, 0, 0, 0); // Set to beginning of the day for proper comparison
+      const startDate = new Date(jobData.STRTDT);
+      
+      if (startDate < today) {
+        newErrors.strtdt = 'Schedule start date cannot be in the past.';
+      }
     }
     
     // Validate end date (if provided)
@@ -485,6 +494,7 @@ const ScheduleConfiguration = ({
             label="Start Date"
             value={scheduleData[jobId]?.STRTDT}
             onChange={(date) => handleDateChange(jobId, 'STRTDT', date)}
+            minDate={new Date()}
             slots={{
               openPickerIcon: () => <CalendarIcon fontSize="small" sx={{ fontSize: '0.875rem' }} />
             }}
@@ -493,6 +503,7 @@ const ScheduleConfiguration = ({
                 size: "small",
                 fullWidth: true,
                 error: !!errors.strtdt,
+                helperText: errors.strtdt || '',
                 InputLabelProps: {
                   sx: { fontSize: '0.75rem' }
                 },
@@ -513,7 +524,7 @@ const ScheduleConfiguration = ({
         {/* End Date */}
         <Box sx={{ width: '13%', minWidth: '105px' }}>
           <DatePicker
-            label="End Date"
+            label="End Date (Optional)"
             value={scheduleData[jobId]?.ENDDT}
             onChange={(date) => handleDateChange(jobId, 'ENDDT', date)}
             minDate={scheduleData[jobId]?.STRTDT ? new Date(scheduleData[jobId]?.STRTDT) : null}
@@ -525,6 +536,7 @@ const ScheduleConfiguration = ({
                 size: "small",
                 fullWidth: true,
                 error: !!errors.enddt,
+                helperText: errors.enddt || '',
                 InputLabelProps: {
                   sx: { fontSize: '0.75rem' }
                 },

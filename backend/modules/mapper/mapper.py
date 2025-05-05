@@ -573,13 +573,15 @@ def activate_deactivate_mapping():
     
 
 
+## By Rajesh
+
 # Get all the mapper reference details
 @mapper_bp.route('/get-all-mapper-reference', methods=['GET'])
 def get_all_mapper_reference():
     try:
         conn = create_oracle_connection()
         query="""
-        SELECT MAPREF, MAPDESC,TRGSCHM,TRGTBTYP,FRQCD,SRCSYSTM,LGVRFYFLG,STFLG
+        SELECT MAPREF, MAPDESC,TRGSCHM,TRGTBTYP,FRQCD,SRCSYSTM,LGVRFYFLG,STFLG,CRTDBY,UPTDBY
         FROM DWMAPR
         WHERE CURFLG = 'Y'
         """

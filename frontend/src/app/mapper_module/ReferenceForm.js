@@ -204,6 +204,10 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference }) => {
   // Add new state for tracking warnings
   const [rowWarnings, setRowWarnings] = useState({})
 
+  // Add state for job creation tracking
+  const [isJobCreating, setIsJobCreating] = useState(false)
+  const [isJobCreated, setIsJobCreated] = useState(false)
+
   // Add constants for select options
   const TABLE_TYPES = [
     { value: 'NRM', label: 'Normal' },
@@ -307,6 +311,9 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference }) => {
     }
 
     try {
+      // Show loading state during activation
+      message.loading({ content: 'Activating mapper...', key: 'activateMapper' })
+      
       // Call the activate-deactivate API
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/mapper/activate-deactivate`,
@@ -325,22 +332,47 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference }) => {
       const data = await response.json()
 
       if (data.success) {
+        // Set activation states
         setIsActivated(true)
         setIsActivationSuccessful(true) // Set activation success flag
-        message.success(data.message || 'Mapper activated successfully')
+        
+        message.success({ 
+          content: data.message || 'Mapper activated successfully',
+          key: 'activateMapper' 
+        })
+        
+        // Disable the activate button and keep validate disabled
+        setShowValidateButton(false)
+        
+        // Make sure job creation is reset when activating again
+        setIsJobCreated(false)
+        
+        console.log('Activation successful, states set:', {
+          isActivated: true,
+          isActivationSuccessful: true,
+          showValidateButton: false,
+          isJobCreated: false
+        });
       } else {
+        setIsActivated(false)
         setIsActivationSuccessful(false) // Reset activation success flag
-        message.error(data.message || 'Failed to activate mapper')
+        message.error({ 
+          content: data.message || 'Failed to activate mapper',
+          key: 'activateMapper'
+        })
+        
+        // Keep validate button enabled to allow retry
+        setShowValidateButton(true)
       }
-
-      // Keep the validate button visible regardless of success/failure
-      setShowValidateButton(true)
     } catch (error) {
+      setIsActivated(false)
       setIsActivationSuccessful(false) // Reset activation success flag on error
-      message.error(
-        'Failed to activate mapper: ' + (error.message || 'Unknown error')
-      )
-      // Keep the validate button visible even on error
+      message.error({
+        content: 'Failed to activate mapper: ' + (error.message || 'Unknown error'),
+        key: 'activateMapper'
+      })
+      
+      // Keep validate button enabled to allow retry
       setShowValidateButton(true)
     }
   }
@@ -772,7 +804,7 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference }) => {
     setIsActivated(false)
   }
 
-  // Modified handleSave to return to reference table after successful save
+  // Modified handleSave to not return to reference table after successful save
   const handleSave = async () => {
     // Validate form fields
     try {
@@ -909,10 +941,14 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference }) => {
       setOriginalFormData({ ...formData })
       setOriginalRows([...rows])
 
-      // After saving, navigate back to the reference table
-      setTimeout(() => {
-        handleReturnToReferenceTable()
-      }, 1500) // Short delay to allow user to see success message
+      // Enable validate button after successful save/update
+      setShowValidateButton(true)
+      
+      // Reset validation and activation states
+      setHasBeenValidated(false)
+      setAllRowsValidated(false)
+      setIsActivated(false)
+      setIsActivationSuccessful(false)
     } catch (error) {
       console.error('Error saving mapper:', error)
       message.error(
@@ -930,15 +966,89 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference }) => {
     setSqlError(null)
   }
 
-  const handleSaveSql = () => {
-    const newRows = [...rows]
-    newRows[selectedRowIndex] = {
-      ...newRows[selectedRowIndex],
-      logic: sqlEditorContent,
+  // Add function to handle logic change in SQL editor
+  const handleLogicChange = (newLogic) => {
+    if (selectedRowIndex !== null) {
+      const newRows = [...rows]
+      newRows[selectedRowIndex] = {
+        ...newRows[selectedRowIndex],
+        logic: newLogic,
+        // Reset LogicVerFlag when logic is changed
+        LogicVerFlag: '',
+      }
+      setRows(newRows)
+      setSelectedRowLogic(newLogic)
+
+      // Track modifications if this is an update
+      if (originalRows) {
+        // Check if the row is already in modifiedRows
+        const isAlreadyModified = modifiedRows.includes(selectedRowIndex)
+
+        // Check if the current logic value is different from the original
+        const isLogicModified =
+          JSON.stringify(originalRows[selectedRowIndex]?.logic) !==
+          JSON.stringify(newLogic)
+
+        // Add to modifiedRows if not already there and the logic is modified
+        if (!isAlreadyModified && isLogicModified) {
+          setModifiedRows((prev) => [...prev, selectedRowIndex])
+        }
+      }
+
+      // Reset validation status for this row
+      setValidationStatus((prev) => ({
+        ...prev,
+        [selectedRowIndex]: undefined,
+      }))
+
+      // Set hasUnsavedChanges to true and reset validation states when logic is changed
+      setHasUnsavedChanges(true)
+      setShowValidateButton(false)
+      setHasBeenValidated(false)
+      setAllRowsValidated(false)
+      setIsActivated(false)
     }
-    setRows(newRows)
-    setShowSqlEditor(false)
-    message.success('SQL logic saved successfully')
+  }
+
+  // Modify handleSaveSql to set hasUnsavedChanges when SQL is saved
+  const handleSaveSql = () => {
+    if (selectedRowIndex !== null) {
+      const newRows = [...rows]
+      const originalLogic = newRows[selectedRowIndex].logic;
+      
+      // Check if logic has actually changed
+      if (originalLogic !== sqlEditorContent) {
+        newRows[selectedRowIndex] = {
+          ...newRows[selectedRowIndex],
+          logic: sqlEditorContent,
+          // Reset LogicVerFlag when logic is changed
+          LogicVerFlag: '',
+        }
+        setRows(newRows)
+        
+        // Track modifications and update state
+        if (originalRows) {
+          // If not already in modifiedRows, add it
+          if (!modifiedRows.includes(selectedRowIndex)) {
+            setModifiedRows((prev) => [...prev, selectedRowIndex])
+          }
+        }
+        
+        // Set hasUnsavedChanges to true since logic has been modified
+        setHasUnsavedChanges(true)
+        setShowValidateButton(false)
+        setHasBeenValidated(false)
+        setAllRowsValidated(false)
+        setIsActivated(false)
+        setIsActivationSuccessful(false)
+        
+        message.success('SQL logic saved and changes detected')
+      } else {
+        message.info('No changes were made to SQL logic')
+      }
+      
+      setShowSqlEditor(false)
+    }
   }
 
   const handleFileUpload = async (event) => {
@@ -1167,49 +1277,6 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference }) => {
   const handleRowClick = (index) => {
     setSelectedRowIndex(index)
     setSelectedRowLogic(rows[index].logic || '')
-  }
-
-  // Add function to update logic for selected row
-  const handleLogicChange = (newLogic) => {
-    if (selectedRowIndex !== null) {
-      const newRows = [...rows]
-      newRows[selectedRowIndex] = {
-        ...newRows[selectedRowIndex],
-        logic: newLogic,
-        // Reset LogicVerFlag when logic is changed
-        LogicVerFlag: '',
-      }
-      setRows(newRows)
-      setSelectedRowLogic(newLogic)
-
-      // Track modifications if this is an update
-      if (originalRows) {
-        // Check if the row is already in modifiedRows
-        const isAlreadyModified = modifiedRows.includes(selectedRowIndex)
-
-        // Check if the current logic value is different from the original
-        const isLogicModified =
-          JSON.stringify(originalRows[selectedRowIndex]?.logic) !==
-          JSON.stringify(newLogic)
-
-        // Add to modifiedRows if not already there and the logic is modified
-        if (!isAlreadyModified && isLogicModified) {
-          setModifiedRows((prev) => [...prev, selectedRowIndex])
-        }
-      }
-
-      // Reset validation status for this row
-      setValidationStatus((prev) => ({
-        ...prev,
-        [selectedRowIndex]: undefined,
-      }))
-
-      // Set hasUnsavedChanges to true and reset validation states when logic is changed
-      setHasUnsavedChanges(true)
-      setShowValidateButton(false)
-      setHasBeenValidated(false)
-      setAllRowsValidated(false)
-    }
   }
 
   // Function to show logs for a specific row
@@ -1446,20 +1513,26 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference }) => {
       // Update rows state with all validation results
       setRows(newRows)
 
+      // Update validation states
+      setHasBeenValidated(true)
+      setAllRowsValidated(allValid)
+      
+      // Reset activation states
+      setIsActivated(false)
+      setIsActivationSuccessful(false)
+
       // Show final messages
       if (allValid) {
         message.success({
           content: 'All rows validated successfully',
           key: 'validateAll',
         })
-        // Set validation workflow states
-        setHasBeenValidated(true)
-        setAllRowsValidated(true)
-        // Reset activation state when validation is performed
-        setIsActivated(false)
-        setIsActivationSuccessful(false)
+        
+        // Disable validate button when validation is successful
+        // This forces the user to move to the next step (activation)
+        setShowValidateButton(false)
       } else {
-        message.error({
+      message.error({
           content: (
             <div>
               <div>Some rows failed validation:</div>
@@ -1473,12 +1546,9 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference }) => {
           key: 'validateAll',
           duration: 5, // Show for longer since there might be multiple messages
         })
-        // Set validation workflow states
-        setHasBeenValidated(true)
-        setAllRowsValidated(false)
-        // Reset activation state when validation fails
-        setIsActivated(false)
-        setIsActivationSuccessful(false)
+        
+        // Keep validate button enabled to allow retry when validation fails
+        setShowValidateButton(true)
       }
     } catch (error) {
       message.error({
@@ -1490,9 +1560,13 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference }) => {
       // Set validation workflow states on error
       setHasBeenValidated(true)
       setAllRowsValidated(false)
-      // Reset activation state on error
+      
+      // Reset activation states on error
       setIsActivated(false)
       setIsActivationSuccessful(false)
+      
+      // Keep validate button enabled to allow retry
+      setShowValidateButton(true)
     } finally {
       // Set validating state to false when done
       setIsValidating(false)
@@ -1591,14 +1665,25 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference }) => {
   // Update this reference to use the consolidated function
   const handleCreateJob = async () => {
     // Double check conditions before proceeding
-    if (!allRowsValidated || !hasBeenValidated || !isActivationSuccessful) {
+    if (!allRowsValidated || !hasBeenValidated || !isActivated) { // Change from isActivationSuccessful to isActivated
       message.error(
         'Mapper must be validated and activated successfully before creating a job'
       )
       return
     }
-
+    
+    // Skip if job is already created
+    if (isJobCreated) {
+      message.info('Job has already been created')
+      return
+    }
+    
+    setIsJobCreating(true)
+    
     try {
+      // Show loading message
+      message.loading({ content: 'Creating job...', key: 'createJob' })
+      
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/job/create-update`,
         {
@@ -1615,14 +1700,26 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference }) => {
       const data = await response.json()
 
       if (data.success) {
-        message.success(data.message || 'Job created successfully')
+        message.success({ 
+          content: data.message || 'Job created successfully',
+          key: 'createJob'
+        })
+        
+        // Set job as created - this will disable the create job button
+        setIsJobCreated(true)
       } else {
-        message.error(data.message || 'Failed to create job')
+        message.error({ 
+          content: data.message || 'Failed to create job',
+          key: 'createJob'
+        })
       }
     } catch (error) {
-      message.error(
-        'Failed to create job: ' + (error.message || 'Unknown error')
-      )
+      message.error({
+        content: 'Failed to create job: ' + (error.message || 'Unknown error'),
+        key: 'createJob'
+      })
+    } finally {
+      setIsJobCreating(false)
     }
   }
 
@@ -1721,6 +1818,20 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference }) => {
   const [logsDialogTitle, setLogsDialogTitle] = useState('')
   const [currentLogMessage, setCurrentLogMessage] = useState('')
 
+  // Add useEffect to debug button states
+  useEffect(() => {
+    console.log('Button state update:', { 
+      isActivated, 
+      isActivationSuccessful, 
+      isJobCreated,
+      hasBeenValidated,
+      allRowsValidated,
+      showValidateButton,
+      hasUnsavedChanges,
+      modifiedRows: modifiedRows.length
+    });
+  }, [isActivated, isActivationSuccessful, isJobCreated, hasBeenValidated, allRowsValidated, showValidateButton, hasUnsavedChanges, modifiedRows]);
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -1799,7 +1910,7 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference }) => {
               </Button>
             </div>
 
-            {/* Right side buttons - Always show with disabled state */}
+            {/* Right side buttons - Updated for proper workflow */}
             <div className="flex items-center gap-2">
               {/* Save/Update Button */}
               <Tooltip
@@ -1815,7 +1926,7 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference }) => {
                   <Button
                     variant="contained"
                     onClick={handleSave}
-                    disabled={isSaving}
+                    disabled={isSaving || (!hasUnsavedChanges && modifiedRows.length === 0)}
                     sx={{
                       height: '30px',
                       minWidth: '70px',
@@ -1831,6 +1942,16 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference }) => {
                           ? 'linear-gradient(45deg, #047857, #059669)'
                           : 'linear-gradient(45deg, #1D4ED8, #2563EB)',
                       },
+                      '&.Mui-disabled': {
+                        background: isUpdateMode
+                          ? darkMode
+                            ? 'rgba(5, 150, 105, 0.3)'
+                            : 'rgba(5, 150, 105, 0.3)'
+                          : darkMode
+                            ? 'rgba(37, 99, 235, 0.3)'
+                            : 'rgba(37, 99, 235, 0.3)',
+                        color: 'rgba(255, 255, 255, 0.5)'
+                      }
                     }}
                     startIcon={
                       isSaving ? (
@@ -1850,14 +1971,16 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference }) => {
                 title={
                   hasUnsavedChanges
                     ? 'Save changes before validating'
-                    : 'Validate all rows'
+                    : showValidateButton
+                      ? 'Validate all rows' 
+                      : 'Validation completed successfully'
                 }
               >
                 <span>
                   <Button
                     variant="contained"
                     onClick={validateAll}
-                    disabled={isValidating || hasUnsavedChanges}
+                    disabled={isValidating || hasUnsavedChanges || !showValidateButton}
                     sx={{
                       height: '30px',
                       minWidth: '70px',
@@ -1895,14 +2018,16 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference }) => {
                 title={
                   !hasBeenValidated || !allRowsValidated
                     ? 'All rows must be validated successfully before activation'
-                    : 'Activate mapper configuration'
+                    : isActivated 
+                      ? 'Mapper is already activated'
+                      : 'Activate mapper configuration'
                 }
               >
                 <span>
                   <Button
                     variant="contained"
                     onClick={handleActivate}
-                    disabled={!hasBeenValidated || !allRowsValidated}
+                    disabled={!hasBeenValidated || !allRowsValidated || isActivated}
                     sx={{
                       height: '30px',
                       minWidth: '70px',
@@ -1929,19 +2054,21 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference }) => {
                 </span>
               </Tooltip>
 
-              {/* Create Job Button - Always show but disable when not activated */}
+              {/* Create Job Button - Always show but disable when not activated or already created */}
               <Tooltip
                 title={
-                  !isActivationSuccessful
+                  !isActivated // Change from isActivationSuccessful to isActivated
                     ? 'Mapper must be activated before creating a job'
-                    : 'Create job for this mapper configuration'
+                    : isJobCreated
+                      ? 'Job has been created successfully'
+                      : 'Create job for this mapper configuration'
                 }
               >
                 <span>
                   <Button
                     variant="contained"
                     onClick={handleCreateJob}
-                    disabled={!isActivationSuccessful}
+                    disabled={!isActivated || isJobCreated || isJobCreating} // Change from isActivationSuccessful to isActivated
                     sx={{
                       height: '30px',
                       minWidth: '70px',
@@ -1961,9 +2088,9 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference }) => {
                           : 'rgba(255, 255, 255, 0.7)'
                       }
                     }}
-                    startIcon={<PlayArrowIcon fontSize="small" />}
+                    startIcon={isJobCreating ? <CircularProgress size={16} color="inherit" /> : <PlayArrowIcon fontSize="small" />}
                   >
-                    Create Job
+                    {isJobCreating ? 'Creating...' : 'Create Job'}
                   </Button>
                 </span>
               </Tooltip>
@@ -3433,7 +3560,62 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference }) => {
                 size="small"
                 onClick={() => {
                   if (selectedRowIndex !== null) {
-                    handleValidateRow(selectedRowIndex)
+                    // Create a temporary row with current edited content for validation
+                    const tempRow = {
+                      ...rows[selectedRowIndex],
+                      logic: sqlEditorContent // Use the current editor content
+                    };
+                    
+                    // Call validation API with the temporary row
+                    const validateUnsavedLogic = async () => {
+                      try {
+                        const response = await fetch(
+                          `${process.env.NEXT_PUBLIC_API_URL}/mapper/validate-logic`,
+                          {
+                            method: 'POST',
+                            headers: {
+                              'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                              p_logic: tempRow.logic,
+                              p_keyclnm: tempRow.keyColumn,
+                              p_valclnm: tempRow.valColumn,
+                            }),
+                          }
+                        );
+                        
+                        const data = await response.json();
+                        if (data.status === 'success') {
+                          if (data.is_valid === 'Y') {
+                            message.success('Logic validation successful');
+                            setSqlError(null);
+                          } else {
+                            message.error(data.message || 'Logic validation failed');
+                            setSqlError(data.message || 'Logic validation failed');
+                          }
+                        } else {
+                          throw new Error(data.message || 'Validation failed');
+                        }
+                      } catch (error) {
+                        message.error(error.message || 'Error validating logic');
+                        setSqlError(error.message || 'Error validating logic');
+                      }
+                    };
+                    
+                    // Check if required fields are filled
+                    if (!tempRow.keyColumn || !tempRow.valColumn) {
+                      message.error('Please fill in Key Column and Value Column in the main form first');
+                      setSqlError('Key Column and Value Column are required for validation');
+                      return;
+                    }
+                    
+                    if (!tempRow.logic) {
+                      message.error('Please enter SQL Logic');
+                      setSqlError('SQL Logic is required for validation');
+                      return;
+                    }
+                    
+                    validateUnsavedLogic();
                   }
                 }}
                 sx={{

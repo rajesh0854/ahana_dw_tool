@@ -503,9 +503,17 @@ const JobsPage = () => {
       return 'Schedule start date must be provided.';
     }
     
+    // Validate start date is not in the past
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Set to beginning of the day for proper comparison
+    const startDate = new Date(jobData.STRT_DT);
+    
+    if (startDate < today) {
+      return 'Schedule start date cannot be in the past.';
+    }
+    
     // Validate end date is after start date (if provided)
     if (jobData.END_DT) {
-      const startDate = new Date(jobData.STRT_DT);
       const endDate = new Date(jobData.END_DT);
       if (startDate >= endDate) {
         return 'Schedule start date must be before schedule end date.';
