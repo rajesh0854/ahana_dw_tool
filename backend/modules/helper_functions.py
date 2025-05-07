@@ -1,4 +1,3 @@
-
 import oracledb
 
 def get_parameter_mapping(conn):
@@ -642,6 +641,103 @@ def call_create_update_job(connection, p_mapref):
         print(error_message)
         return None, error_message
     
+    finally:
+        if cursor:
+            cursor.close()
+
+def call_delete_mapping(connection, p_mapref):
+    cursor = None
+    try:
+        cursor = connection.cursor()
+        
+        # Define the output parameter for error message
+        p_err = cursor.var(oracledb.STRING, 2000)  # Assuming error message can be up to 2000 chars
+        
+        # SQL to execute with named parameters
+        sql = """
+        BEGIN
+            PKGDWMAPR.DELETE_MAPPING(
+                p_mapref => :p_mapref,
+                p_err => :p_err
+            );
+        END;
+        """
+        
+        # Execute with named parameters
+        cursor.execute(
+            sql,
+            p_mapref=p_mapref,
+            p_err=p_err
+        )
+        connection.commit()
+        
+        # Get the error message (if any)
+        error_message = p_err.getvalue()
+        
+        if error_message:
+            return False, error_message
+        else:
+            return True, f"Mapping {p_mapref} successfully deleted"
+    
+    except Exception as e:
+        error_message = f"Exception while deleting mapping: {str(e)}"
+        return False, error_message
+    finally:
+        if cursor:
+            cursor.close()
+
+def call_delete_mapping_details(connection, p_mapref, p_trgclnm):
+    """
+    Calls the Oracle procedure DELETE_MAPPING_DETAILS
+    
+    Args:
+        connection: Oracle connection object
+        p_mapref: Mapping reference
+        p_trgclnm: Target column name
+    
+    Returns:
+        tuple: A tuple containing (success, message) where:
+            - success: Boolean indicating if the operation was successful
+            - message: Success or error message
+    """
+    cursor = None
+    try:
+        cursor = connection.cursor()
+        
+        # Define the output parameter for error message
+        p_err = cursor.var(oracledb.STRING, 2000)  # Assuming error message can be up to 2000 chars
+        
+        # SQL to execute with named parameters
+        sql = """
+        BEGIN
+            PKGDWMAPR.DELETE_MAPPING_DETAILS(
+                p_mapref => :p_mapref,
+                p_trgclnm => :p_trgclnm,
+                p_err => :p_err
+            );
+        END;
+        """
+        
+        # Execute with named parameters
+        cursor.execute(
+            sql,
+            p_mapref=p_mapref,
+            p_trgclnm=p_trgclnm,
+            p_err=p_err
+        )
+        connection.commit()
+        
+        # Get the error message (if any)
+        error_message = p_err.getvalue()
+        
+        if error_message:
+            return False, error_message
+        else:
+            return True, f"Mapping detail {p_mapref}-{p_trgclnm} successfully deleted"
+    
+    except Exception as e:
+        error_message = f"Exception while deleting mapping detail: {str(e)}"
+        return False, error_message
     finally:
         if cursor:
             cursor.close()

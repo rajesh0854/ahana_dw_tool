@@ -67,6 +67,11 @@ import {
   Settings as SettingsIcon,
   Storage as StorageIcon,
   KeyboardArrowLeft as KeyboardArrowLeftIcon,
+  MoreVert as MoreVertIcon,
+  ContentCopy as DuplicateIcon,
+  ImportExport as ExportIcon,
+  InsertDriveFile as FileIcon,
+  TableChart as TableIcon,
 } from '@mui/icons-material'
 import { message } from 'antd'
 import { useTheme } from '@/context/ThemeContext'
@@ -230,6 +235,8 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference }) => {
   const [templateAnchorEl, setTemplateAnchorEl] = useState(null)
   const [downloadAnchorEl, setDownloadAnchorEl] = useState(null)
   const [uploadAnchorEl, setUploadAnchorEl] = useState(null)
+  // Add export menu state
+  const [exportAnchorEl, setExportAnchorEl] = useState(null)
 
   // Add loading state
   const [isSaving, setIsSaving] = useState(false)
@@ -1596,8 +1603,18 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference }) => {
     handleTemplateClose()
   }
 
-  // Consolidated download function that handles both empty template and existing data
-  const handleDownloadTemplate = async (downloadType = 'empty') => {
+  // Add export menu open handler
+  const handleExportClick = (event) => {
+    setExportAnchorEl(event.currentTarget)
+  }
+
+  // Add export menu close handler
+  const handleExportClose = () => {
+    setExportAnchorEl(null)
+  }
+
+  // Modify the existing handleDownloadTemplate function to accept format parameter
+  const handleDownloadTemplate = async (downloadType = 'empty', format = 'xlsx') => {
     try {
       const messageKey = 'downloadTemplate'
       message.loading({
@@ -1610,13 +1627,14 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference }) => {
       if (downloadType === 'empty') {
         // Download empty template
         response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/mapper/download-template`
+          `${process.env.NEXT_PUBLIC_API_URL}/mapper/download-template?format=${format}`
         )
       } else {
         // Download with current data
         const payload = {
           formData: formData,
           rows: rows,
+          format: format
         }
 
         response = await fetch(
@@ -1640,8 +1658,8 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference }) => {
       const a = document.createElement('a')
       a.href = url
       a.download = downloadType === 'empty' 
-        ? 'mapper_template.csv' 
-        : `${formData.reference || 'mapper'}_template.csv`
+        ? `mapper_template.${format}` 
+        : `${formData.reference || 'mapper'}_template.${format}`
       document.body.appendChild(a)
       a.click()
       document.body.removeChild(a)
@@ -1650,7 +1668,7 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference }) => {
       message.success({
         content: downloadType === 'empty' 
           ? 'Template downloaded successfully' 
-          : 'Current template downloaded successfully',
+          : `Current data exported successfully as ${format.toUpperCase()}`,
         key: messageKey,
       })
     } catch (error) {
@@ -1660,6 +1678,12 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference }) => {
       })
       console.error('Download error:', error)
     }
+  }
+
+  // Add handler for exporting the current data
+  const handleExportData = (format) => {
+    handleDownloadTemplate('current', format)
+    handleExportClose()
   }
 
   // Update this reference to use the consolidated function
@@ -1832,6 +1856,146 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference }) => {
     });
   }, [isActivated, isActivationSuccessful, isJobCreated, hasBeenValidated, allRowsValidated, showValidateButton, hasUnsavedChanges, modifiedRows]);
 
+  // Add state for row actions menu
+  const [rowMenuAnchorEl, setRowMenuAnchorEl] = useState(null);
+  const [selectedActionRowIndex, setSelectedActionRowIndex] = useState(null);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [rowToDelete, setRowToDelete] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  // Handle row menu open
+  const handleRowMenuOpen = (event, index) => {
+    event.stopPropagation();
+    setRowMenuAnchorEl(event.currentTarget);
+    setSelectedActionRowIndex(index);
+  };
+
+  // Handle row menu close
+  const handleRowMenuClose = () => {
+    setRowMenuAnchorEl(null);
+  };
+
+  // Handle duplicate row
+  const handleDuplicateRow = () => {
+    if (selectedActionRowIndex !== null) {
+      const rowToDuplicate = rows[selectedActionRowIndex];
+      
+      // Create a new row based on the selected row, clearing the ID
+      const newRow = {
+        ...rowToDuplicate,
+        mapdtlid: '', // Clear the ID so it will be treated as a new row
+        LogicVerFlag: '', // Reset validation flag
+      };
+      
+      // Insert the duplicated row after the selected row
+      const newRows = [...rows];
+      newRows.splice(selectedActionRowIndex + 1, 0, newRow);
+      setRows(newRows);
+      
+      // Set hasUnsavedChanges to true and reset validation states
+      setHasUnsavedChanges(true);
+      setShowValidateButton(false);
+      setHasBeenValidated(false);
+      setAllRowsValidated(false);
+      setIsActivated(false);
+      setIsActivationSuccessful(false);
+      
+      message.success('Row duplicated successfully');
+      handleRowMenuClose();
+    }
+  };
+
+  // Handle delete row dialog open
+  const handleDeleteRowDialogOpen = () => {
+    if (selectedActionRowIndex !== null) {
+      const rowToDelete = rows[selectedActionRowIndex];
+      
+      // Only show delete dialog if the row has data and a field name
+      if (rowToDelete.fieldName) {
+        setRowToDelete(rowToDelete);
+        setShowDeleteDialog(true);
+      } else {
+        // If the row is empty, just remove it directly
+        handleDeleteEmptyRow();
+      }
+      
+      handleRowMenuClose();
+    }
+  };
+
+  // Handle delete empty row (no confirmation needed)
+  const handleDeleteEmptyRow = () => {
+    if (selectedActionRowIndex !== null) {
+      const newRows = [...rows];
+      newRows.splice(selectedActionRowIndex, 1);
+      setRows(newRows);
+      
+      message.info('Row removed');
+      
+      // Ensure we always have at least one row
+      if (newRows.length === 0) {
+        addRow();
+      }
+    }
+  };
+
+  // Handle cancel delete
+  const handleCancelDelete = () => {
+    setShowDeleteDialog(false);
+    setRowToDelete(null);
+  };
+
+  // Handle confirm delete
+  const handleConfirmDelete = async () => {
+    if (!rowToDelete || !rowToDelete.fieldName || !formData.reference) {
+      handleCancelDelete();
+      return;
+    }
+    
+    setIsDeleting(true);
+    
+    try {
+      // Call the API to delete the row
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/mapper/delete-mapping-detail`,
+        {
+          mapref: formData.reference,
+          trgclnm: rowToDelete.fieldName
+        }
+      );
+      
+      if (response.data.success) {
+        // Remove the row from the state
+        const newRows = [...rows];
+        newRows.splice(selectedActionRowIndex, 1);
+        setRows(newRows);
+        
+        message.success(response.data.message || 'Row deleted successfully');
+        
+        // Ensure we always have at least one row
+        if (newRows.length === 0) {
+          addRow();
+        }
+        
+        // Set hasUnsavedChanges to true and reset validation states
+        setHasUnsavedChanges(true);
+        setShowValidateButton(false);
+        setHasBeenValidated(false);
+        setAllRowsValidated(false);
+        setIsActivated(false);
+        setIsActivationSuccessful(false);
+      } else {
+        message.error(response.data.message || 'Failed to delete row');
+      }
+    } catch (error) {
+      console.error('Error deleting row:', error);
+      message.error(error.response?.data?.message || 'Failed to delete row');
+    } finally {
+      setIsDeleting(false);
+      handleCancelDelete();
+    }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -1907,6 +2071,37 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference }) => {
                 endIcon={<KeyboardArrowDownIcon fontSize="small" />}
               >
                 Template
+              </Button>
+
+              {/* Add Export button */}
+              <Button
+                variant="outlined"
+                onClick={handleExportClick}
+                className="transition-all duration-200"
+                sx={{
+                  height: '30px',
+                  minWidth: '85px',
+                  textTransform: 'none',
+                  borderRadius: '6px',
+                  borderWidth: '1px',
+                  fontSize: '0.8rem',
+                  borderColor: darkMode
+                    ? 'rgba(96, 165, 250, 0.5)'
+                    : 'rgba(37, 99, 235, 0.5)',
+                  color: darkMode ? 'rgb(96, 165, 250)' : 'rgb(37, 99, 235)',
+                  '&:hover': {
+                    borderColor: darkMode
+                      ? 'rgb(96, 165, 250)'
+                      : 'rgb(37, 99, 235)',
+                    backgroundColor: darkMode
+                      ? 'rgba(96, 165, 250, 0.08)'
+                      : 'rgba(37, 99, 235, 0.04)',
+                  },
+                }}
+                endIcon={<KeyboardArrowDownIcon fontSize="small" />}
+                startIcon={<ExportIcon fontSize="small" />}
+              >
+                Export
               </Button>
             </div>
 
@@ -2177,7 +2372,7 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference }) => {
             <MenuItem
               onClick={() => {
                 handleTemplateClose()
-                handleDownloadTemplate('empty')
+                handleDownloadTemplate('empty', 'xlsx')
               }}
               className={
                 darkMode
@@ -2193,11 +2388,27 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference }) => {
               </ListItemIcon>
               <ListItemText>Download Template</ListItemText>
             </MenuItem>
+          </Menu>
+
+          {/* Add Export menu */}
+          <Menu
+            anchorEl={exportAnchorEl}
+            open={Boolean(exportAnchorEl)}
+            onClose={handleExportClose}
+            anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+            transformOrigin={{ vertical: 'top', horizontal: 'left' }}
+            PaperProps={{
+              elevation: 3,
+              sx: {
+                backgroundColor: darkMode ? 'rgb(31, 41, 55)' : 'white',
+                minWidth: '200px',
+                borderRadius: '8px',
+                mt: 1,
+              },
+            }}
+          >
             <MenuItem
-              onClick={() => {
-                handleTemplateClose()
-                handleDownloadTemplate('current')
-              }}
+              onClick={() => handleExportData('xlsx')}
               className={
                 darkMode
                   ? 'text-gray-200 hover:bg-gray-700'
@@ -2205,12 +2416,28 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference }) => {
               }
             >
               <ListItemIcon>
-                <FileCopyIcon
-                  className={darkMode ? 'text-gray-400' : 'text-gray-600'}
+                <TableIcon
+                  className={darkMode ? 'text-green-400' : 'text-green-600'}
                   fontSize="small"
                 />
               </ListItemIcon>
-              <ListItemText>Save Data Template</ListItemText>
+              <ListItemText>Export as Excel (.xlsx)</ListItemText>
+            </MenuItem>
+            <MenuItem
+              onClick={() => handleExportData('csv')}
+              className={
+                darkMode
+                  ? 'text-gray-200 hover:bg-gray-700'
+                  : 'hover:bg-blue-50'
+              }
+            >
+              <ListItemIcon>
+                <FileIcon
+                  className={darkMode ? 'text-blue-400' : 'text-blue-600'}
+                  fontSize="small"
+                />
+              </ListItemIcon>
+              <ListItemText>Export as CSV (.csv)</ListItemText>
             </MenuItem>
           </Menu>
 
@@ -2752,6 +2979,26 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference }) => {
                     }}
                   >
                     Valid
+                  </TableCell>
+                  {/* Add Actions column header */}
+                  <TableCell
+                    align="center"
+                    className={`
+                        font-medium py-1 px-1
+                        ${
+                          darkMode
+                            ? 'bg-gray-800 text-gray-200'
+                            : 'bg-gray-50/90'
+                        }
+                        sticky top-0 z-10
+                      `}
+                    sx={{ 
+                      fontSize: 'clamp(0.65rem, 0.7vw, 0.7rem)',
+                      width: '40px',
+                      padding: '6px 2px'
+                    }}
+                  >
+                    Actions
                   </TableCell>
                 </TableRow>
               </TableHead>
@@ -3356,6 +3603,26 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference }) => {
                         </IconButton>
                       </Tooltip>
                     </TableCell>
+                    {/* Add Actions cell */}
+                    <TableCell className="py-0 px-0" align="center" sx={{ padding: '0px 2px' }}>
+                      <IconButton
+                        onClick={(e) => handleRowMenuOpen(e, index + page * 10)}
+                        size="small"
+                        sx={{
+                          padding: '2px',
+                          color: darkMode
+                            ? 'rgba(156, 163, 175, 0.9)'
+                            : 'rgba(75, 85, 99, 0.9)',
+                          '&:hover': {
+                            color: darkMode
+                              ? 'rgba(156, 163, 175, 1)'
+                              : 'rgba(75, 85, 99, 1)',
+                          },
+                        }}
+                      >
+                        <MoreVertIcon fontSize="small" sx={{ fontSize: '16px' }} />
+                      </IconButton>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -3661,6 +3928,109 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference }) => {
               Save
             </Button>
           </div>
+        </DialogActions>
+      </Dialog>
+
+      {/* Row actions menu */}
+      <Menu
+        anchorEl={rowMenuAnchorEl}
+        open={Boolean(rowMenuAnchorEl)}
+        onClose={handleRowMenuClose}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+        transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+        PaperProps={{
+          elevation: 3,
+          sx: {
+            backgroundColor: darkMode ? 'rgb(31, 41, 55)' : 'white',
+            minWidth: '180px',
+            borderRadius: '8px',
+            mt: 1,
+          },
+        }}
+      >
+        <MenuItem
+          onClick={handleDuplicateRow}
+          className={
+            darkMode
+              ? 'text-gray-200 hover:bg-gray-700'
+              : 'hover:bg-blue-50'
+          }
+        >
+          <ListItemIcon>
+            <DuplicateIcon
+              className={darkMode ? 'text-gray-400' : 'text-gray-600'}
+              fontSize="small"
+            />
+          </ListItemIcon>
+          <ListItemText>Duplicate Row</ListItemText>
+        </MenuItem>
+        <MenuItem
+          onClick={handleDeleteRowDialogOpen}
+          className={
+            darkMode
+              ? 'text-gray-200 hover:bg-gray-700'
+              : 'hover:bg-blue-50'
+          }
+        >
+          <ListItemIcon>
+            <DeleteIcon
+              className={darkMode ? 'text-red-400' : 'text-red-600'}
+              fontSize="small"
+            />
+          </ListItemIcon>
+          <ListItemText>Delete Row</ListItemText>
+        </MenuItem>
+      </Menu>
+      
+      {/* Delete row confirmation dialog */}
+      <Dialog
+        open={showDeleteDialog}
+        onClose={handleCancelDelete}
+        PaperProps={{
+          style: {
+            backgroundColor: darkMode ? '#1F2937' : 'white',
+            borderRadius: '12px',
+            padding: '8px',
+          },
+        }}
+      >
+        <DialogTitle sx={{ color: darkMode ? 'white' : 'inherit' }}>
+          Confirm Row Deletion
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText sx={{ color: darkMode ? '#D1D5DB' : 'inherit' }}>
+            Are you sure you want to delete the row with field name "{rowToDelete?.fieldName}"?
+            This operation cannot be undone.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions sx={{ padding: '16px' }}>
+          <Button
+            onClick={handleCancelDelete}
+            sx={{
+              textTransform: 'none',
+              color: darkMode ? '#9CA3AF' : 'inherit',
+            }}
+            disabled={isDeleting}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleConfirmDelete}
+            variant="contained"
+            color="error"
+            disabled={isDeleting}
+            startIcon={
+              isDeleting ? (
+                <CircularProgress size={20} color="inherit" />
+              ) : null
+            }
+            sx={{
+              textTransform: 'none',
+              borderRadius: '8px',
+            }}
+          >
+            {isDeleting ? 'Deleting...' : 'Delete'}
+          </Button>
         </DialogActions>
       </Dialog>
     </motion.div>

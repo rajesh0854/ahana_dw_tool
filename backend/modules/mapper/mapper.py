@@ -12,7 +12,7 @@ import traceback
 from openpyxl import Workbook, load_workbook
 from openpyxl.styles import PatternFill, Font, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
-from modules.helper_functions import create_update_mapping, create_update_mapping_detail, validate_logic2, validate_all_mapping_details,  get_mapping_ref  ,get_mapping_details,get_error_messages_list,get_parameter_mapping_datatype,get_parameter_mapping_scd_type,call_activate_deactivate_mapping
+from modules.helper_functions import create_update_mapping, create_update_mapping_detail, validate_logic2, validate_all_mapping_details,  get_mapping_ref  ,get_mapping_details,get_error_messages_list,get_parameter_mapping_datatype,get_parameter_mapping_scd_type,call_activate_deactivate_mapping, call_delete_mapping, call_delete_mapping_details
 
 
 # Create blueprint
@@ -27,6 +27,11 @@ TABLE_FIELDS = ["primaryKey","pkSeq","fieldName","dataType","fieldDesc","scdType
 @mapper_bp.route('/download-template', methods=['GET'])
 def download_template():
     try:
+        # Check if format parameter is provided, default to xlsx
+        export_format = request.args.get('format', 'xlsx').lower()
+        if export_format not in ['xlsx', 'csv']:
+            export_format = 'xlsx'  # Default to xlsx if format is invalid
+            
         # Create a new workbook
         wb = Workbook()
         ws = wb.active
@@ -114,17 +119,216 @@ def download_template():
  
         # Save to BytesIO buffer
         excel_buffer = io.BytesIO()
-        wb.save(excel_buffer)
-        excel_buffer.seek(0)
+        
+        if export_format == 'csv':
+            # Create DataFrame from workbook data to save as CSV
+            form_headers = [ws.cell(row=2, column=i).value for i in range(1, len(FORM_FIELDS) + 1)]
+            form_data = [ws.cell(row=3, column=i).value or '' for i in range(1, len(FORM_FIELDS) + 1)]
+            
+            table_headers = [ws.cell(row=current_row, column=i).value for i in range(1, len(TABLE_FIELDS) + 1)]
+            table_data = []
+            for row in range(current_row + 1, current_row + 11):
+                row_data = []
+                for col in range(1, len(TABLE_FIELDS) + 1):
+                    row_data.append(ws.cell(row=row, column=col).value or '')
+                table_data.append(row_data)
+            
+            # First save form data
+            form_df = pd.DataFrame([form_data], columns=form_headers)
+            
+            # Then save table data
+            table_df = pd.DataFrame(table_data, columns=table_headers)
+            
+            # Combine them with a separator row
+            combined_csv = form_df.to_csv(index=False) + "\n\n" + table_df.to_csv(index=False)
+            
+            # Convert to bytes and prepare response
+            excel_buffer = io.BytesIO(combined_csv.encode())
+            mimetype = 'text/csv'
+            download_name = 'mapper_template.csv'
+        else:  # xlsx format
+            wb.save(excel_buffer)
+            excel_buffer.seek(0)
+            mimetype = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            download_name = 'mapper_template.xlsx'
  
         return send_file(
             excel_buffer,
-            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            mimetype=mimetype,
             as_attachment=True,
-            download_name='mapper_template.xlsx'
+            download_name=download_name
         )
     except Exception as e:
         print(f"Error in download_template: {str(e)}")
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+
+@mapper_bp.route('/download-current', methods=['POST'])
+def download_current():
+    try:
+        data = request.json
+        form_data = data.get('formData', {})
+        rows_data = data.get('rows', [])
+        
+        # Check if format parameter is provided, default to xlsx
+        export_format = data.get('format', 'xlsx').lower()
+        if export_format not in ['xlsx', 'csv']:
+            export_format = 'xlsx'  # Default to xlsx if format is invalid
+            
+        # Filter out rows without field names
+        rows_data = [row for row in rows_data if row.get('fieldName')]
+            
+        # Create a new workbook
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "Mapping Template"
+ 
+        # Define styles
+        header_fill = PatternFill(start_color="00B050", end_color="00B050", fill_type="solid")
+        header_font = Font(bold=True, color="FFFFFF")
+        header_alignment = Alignment(horizontal="center", vertical="center")
+        border = Border(
+            left=Side(style='thin'),
+            right=Side(style='thin'),
+            top=Side(style='thin'),
+            bottom=Side(style='thin')
+        )
+ 
+        # Write Form Fields section
+        ws['A1'] = "Form Fields"
+        ws.merge_cells('A1:H1')
+        ws['A1'].fill = header_fill
+        ws['A1'].font = header_font
+        ws['A1'].alignment = header_alignment
+ 
+        # Write Form Fields headers
+        for col, field in enumerate(FORM_FIELDS, 1):
+            cell = ws.cell(row=2, column=col)
+            cell.value = field
+            cell.fill = header_fill
+            cell.font = header_font
+            cell.alignment = header_alignment
+            cell.border = border
+ 
+        # Write Form Fields values
+        for col, field in enumerate(FORM_FIELDS, 1):
+            cell = ws.cell(row=3, column=col)
+            cell.value = form_data.get(field, '')
+            cell.border = border
+ 
+        # Add space between sections
+        ws.append([])
+ 
+        # Write Table Fields section
+        current_row = 5
+        ws.cell(row=current_row, column=1, value="Table Fields")
+        ws.merge_cells(f'A{current_row}:K{current_row}')
+        ws.cell(row=current_row, column=1).fill = header_fill
+        ws.cell(row=current_row, column=1).font = header_font
+        ws.cell(row=current_row, column=1).alignment = header_alignment
+ 
+        # Write Table Fields headers
+        current_row += 1
+        for col, field in enumerate(TABLE_FIELDS, 1):
+            cell = ws.cell(row=current_row, column=col)
+            cell.value = field
+            cell.fill = header_fill
+            cell.font = header_font
+            cell.alignment = header_alignment
+            cell.border = border
+ 
+        # Add rows with data
+        for row_idx, row_data in enumerate(rows_data, current_row + 1):
+            # Map the field names to match TABLE_FIELDS
+            field_mapping = {
+                'primaryKey': 'primaryKey',
+                'pkSeq': 'pkSeq',
+                'fieldName': 'fieldName',
+                'dataType': 'dataType',
+                'fieldDesc': 'fieldDesc',
+                'scdType': 'scdType',
+                'keyColumn': 'keyColumn',
+                'valColumn': 'valColumn',
+                'logic': 'logic',
+                'mapCombineCode': 'mapCombineCode',
+                'execSequence': 'execSequence',
+            }
+            
+            for col_idx, field in enumerate(TABLE_FIELDS, 1):
+                cell = ws.cell(row=row_idx, column=col_idx)
+                
+                # Get the mapped field name
+                mapped_field = field_mapping.get(field, field)
+                
+                # Handle boolean fields like primaryKey separately
+                if field == 'primaryKey':
+                    cell.value = 'Yes' if row_data.get(mapped_field, False) else 'No'
+                else:
+                    cell.value = row_data.get(mapped_field, '')
+                
+                cell.border = border
+ 
+        # Adjust column widths
+        for col_idx in range(1, max(len(FORM_FIELDS), len(TABLE_FIELDS)) + 1):
+            max_length = 0
+            column_letter = get_column_letter(col_idx)
+ 
+            # Check all rows for maximum value length
+            for row in range(2, ws.max_row + 1):
+                cell_value = ws.cell(row=row, column=col_idx).value
+                if cell_value:
+                    cell_value_str = str(cell_value)
+                    # Limit preview length for very long values
+                    max_length = max(max_length, min(len(cell_value_str), 50))
+ 
+            # Set the column width
+            adjusted_width = max(max_length + 2, 12)  # Minimum width of 12
+            ws.column_dimensions[column_letter].width = adjusted_width
+ 
+        # Save to BytesIO buffer
+        excel_buffer = io.BytesIO()
+        
+        if export_format == 'csv':
+            # Create DataFrame from workbook data to save as CSV
+            form_headers = [ws.cell(row=2, column=i).value for i in range(1, len(FORM_FIELDS) + 1)]
+            form_data_values = [ws.cell(row=3, column=i).value or '' for i in range(1, len(FORM_FIELDS) + 1)]
+            
+            table_headers = [ws.cell(row=current_row, column=i).value for i in range(1, len(TABLE_FIELDS) + 1)]
+            table_data = []
+            for row in range(current_row + 1, current_row + 1 + len(rows_data)):
+                row_data = []
+                for col in range(1, len(TABLE_FIELDS) + 1):
+                    row_data.append(ws.cell(row=row, column=col).value or '')
+                table_data.append(row_data)
+            
+            # First save form data
+            form_df = pd.DataFrame([form_data_values], columns=form_headers)
+            
+            # Then save table data
+            table_df = pd.DataFrame(table_data, columns=table_headers)
+            
+            # Combine them with a separator row
+            combined_csv = form_df.to_csv(index=False) + "\n\n" + table_df.to_csv(index=False)
+            
+            # Convert to bytes and prepare response
+            excel_buffer = io.BytesIO(combined_csv.encode())
+            mimetype = 'text/csv'
+            download_name = f"{form_data.get('reference', 'mapper')}_data.csv"
+        else:  # xlsx format
+            wb.save(excel_buffer)
+            excel_buffer.seek(0)
+            mimetype = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            download_name = f"{form_data.get('reference', 'mapper')}_data.xlsx"
+ 
+        return send_file(
+            excel_buffer,
+            mimetype=mimetype,
+            as_attachment=True,
+            download_name=download_name
+        )
+        
+    except Exception as e:
+        print(f"Error in download_current: {str(e)}")
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
@@ -598,48 +802,65 @@ def get_all_mapper_reference():
 
 
 # Delete the mapper reference
-
 @mapper_bp.route('/delete-mapper-reference', methods=['POST'])
 def delete_mapper_reference():
     try:
         data = request.json
         p_mapref = data.get('mapref')
         conn = create_oracle_connection()
-
-        # Check if job is already created for the mapper reference
-        query="""
-        SELECT COUNT(*)
-        FROM DWJOB
-        WHERE MAPREF = :p_mapref
-        """
-        cursor = conn.cursor()
-        cursor.execute(query, (p_mapref,))
-        result = cursor.fetchone()
-        cursor.close()
-
-        if result[0] > 0:
-            return jsonify({
-                'success': False,
-                'message': 'Job is already created for the mapper reference. Please delete the job first.'
-            }), 400
         
-        # Delete the mapper reference
-        query="""
-        UPDATE DWMAPR
-        SET CURFLG = 'N'
-        WHERE MAPREF = :p_mapref
-        """
-        cursor = conn.cursor()
-        cursor.execute(query, (p_mapref,))
-        conn.commit()
-        cursor.close()
-
-        return jsonify({
-            'success': True,
-            'message': 'Mapper reference deleted successfully.'
-        })
+        try:
+            # Call the Oracle procedure instead of executing the query directly
+            success, message = call_delete_mapping(conn, p_mapref)
+            
+            if success:
+                return jsonify({
+                    'success': True,
+                    'message': message
+                })
+            else:
+                return jsonify({
+                    'success': False,
+                    'message': message
+                }), 400
+        finally:
+            conn.close()
     except Exception as e:
         print(f"Error in delete_mapper_reference: {str(e)}")
         return jsonify({'error': str(e)}), 500
+
+# Delete mapping detail row
+@mapper_bp.route('/delete-mapping-detail', methods=['POST'])
+def delete_mapping_detail():
+    try:
+        data = request.json
+        p_mapref = data.get('mapref')
+        p_trgclnm = data.get('trgclnm')
+        
+        if not p_mapref or not p_trgclnm:
+            return jsonify({
+                'success': False,
+                'message': 'Missing required parameters. Please provide mapref and trgclnm.'
+            }), 400
+            
+        conn = create_oracle_connection()
+        try:
+            # Call the Oracle procedure through our helper function
+            success, message = call_delete_mapping_details(conn, p_mapref, p_trgclnm)
+            
+            return jsonify({
+                'success': success,
+                'message': message
+            })
+        finally:
+            conn.close()
+            
+    except Exception as e:
+        print(f"Error in delete_mapping_detail: {str(e)}")
+        traceback.print_exc()
+        return jsonify({
+            'success': False,
+            'message': f'An error occurred while deleting the mapping detail: {str(e)}'
+        }), 500
 
 
