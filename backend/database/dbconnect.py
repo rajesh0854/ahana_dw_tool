@@ -17,15 +17,21 @@ db_sid = os.getenv('DB_SID')
 sqlite_engine = create_engine(os.getenv('SQLITE_DATABASE_URL'))
 
 def create_oracle_connection():
-    """
-    Creates and returns a connection to the Oracle database.
-    
-    Returns:
-        oracledb.Connection: An Oracle database connection object
-        
-    Raises:
-        Exception: If connection cannot be established
-    """
+    try:
+        connection = oracledb.connect(
+            user=db_user,
+            password=db_password,
+            dsn=f"{db_host}:{db_port}/{db_sid}"
+        )
+        print("Oracle connection established successfully")
+        return connection
+    except Exception as e:
+        print(f"Error establishing Oracle connection: {str(e)}")
+        raise 
+
+
+
+def create_oracle_connection_dwapp():
     try:
         connection = oracledb.connect(
             user=db_user,

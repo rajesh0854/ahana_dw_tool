@@ -12,7 +12,7 @@ import traceback
 from openpyxl import Workbook, load_workbook
 from openpyxl.styles import PatternFill, Font, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
-from modules.helper_functions import create_update_mapping, create_update_mapping_detail, validate_logic2, validate_all_mapping_details,  get_mapping_ref  ,get_mapping_details,get_error_messages_list,get_parameter_mapping_datatype,get_parameter_mapping_scd_type,call_activate_deactivate_mapping, call_delete_mapping, call_delete_mapping_details
+from modules.helper_functions import create_update_mapping,create_update_mapping_detail, validate_logic2, validate_all_mapping_details,  get_mapping_ref  ,get_mapping_details,get_error_messages_list,get_parameter_mapping_datatype,get_parameter_mapping_scd_type,call_activate_deactivate_mapping, call_delete_mapping, call_delete_mapping_details, call_schedule_immediate_job
 
 
 # Create blueprint
@@ -525,8 +525,11 @@ def save_to_db():
     try:
         data = request.json
         form_data = data['formData']
+        user_id = form_data['username']
         rows = data['rows']
         modified_rows = data.get('modifiedRows', [])  # Track modified rows
+        print(form_data)
+        print(rows)
        
         conn = create_oracle_connection()
         try:
@@ -545,7 +548,8 @@ def save_to_db():
                 'Y',  # Default to Y
                 datetime.datetime.now(),
                 'A' , # Default to Active
-                form_data['bulkProcessRows']
+                form_data['bulkProcessRows'],
+                user_id  # Pass the user_id parameter
             )
            
             processed_rows = []
@@ -572,10 +576,11 @@ def save_to_db():
                     row['keyColumn'],
                     row['valColumn'],
                     row['mapCombineCode'],
-                    1,  # Default execution sequence
-                    row['scdType'],  # Default SCD Type
-                    logic_ver_flag,  # Use the defined logic_ver_flag
-                    "" if logic_ver_flag == "" else datetime.datetime.now()  # Set to current time if not empty
+                    row['execSequence'], 
+                    row['scdType'],  
+                    logic_ver_flag, 
+                    "" if logic_ver_flag == "" else datetime.datetime.now(),  # Set to current time if not empty
+                    form_data['username']
                 )
                
                 processed_rows.append({
@@ -864,3 +869,29 @@ def delete_mapping_detail():
         }), 500
 
 
+# Schedule the job immediately
+@mapper_bp.route('/schedule-job-immediately', methods=['POST'])
+def schedule_job_immediately():
+    try:
+        data = request.json
+        p_mapref = data.get('mapref')
+
+        if not p_mapref:
+            return jsonify({
+                'success': False,
+                'message': 'Missing required parameter: mapref'
+            }), 400
+
+        conn = create_oracle_connection()
+        try:
+            success, message = call_schedule_immediate_job(conn, p_mapref)
+            return jsonify({
+                'success': success,
+                'message': message  
+            })
+        finally:
+            conn.close()
+    except Exception as e:
+        print(f"Error in schedule_job_immediately: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+    

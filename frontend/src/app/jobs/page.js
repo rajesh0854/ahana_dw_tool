@@ -42,7 +42,8 @@ import {
   KeyboardArrowUp as KeyboardArrowUpIcon,
   Search as SearchIcon,
   FilterList as FilterListIcon,
-  Refresh as RefreshIcon
+  Refresh as RefreshIcon,
+  PlayArrow as PlayArrowIcon
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import { useTheme } from '@/context/ThemeContext';
@@ -135,6 +136,8 @@ const JobsPage = () => {
   const [selectedJob, setSelectedJob] = useState(null);
   const [openDialog, setOpenDialog] = useState(false);
   const [openLogicDialog, setOpenLogicDialog] = useState(false);
+  const [openExecuteDialog, setOpenExecuteDialog] = useState(false);
+  const [executingJob, setExecutingJob] = useState(null);
   
   // State for schedule data
   const [scheduleData, setScheduleData] = useState({});
@@ -623,6 +626,36 @@ const JobsPage = () => {
     setSuccessMessage('Dependency saved successfully');
   };
 
+  // Handle execute now
+  const handleExecuteNow = async (job) => {
+    setExecutingJob(job);
+    setOpenExecuteDialog(true);
+  };
+
+  // Handle confirm execute
+  const handleConfirmExecute = async () => {
+    try {
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/mapper/schedule-job-immediately`,
+        { mapref: executingJob.MAPREF }
+      );
+
+      if (response.data.success) {
+        setSuccessMessage('Job execution started successfully');
+        // Refresh the jobs list
+        fetchJobs();
+      } else {
+        setError(response.data.message || 'Failed to execute job');
+      }
+    } catch (err) {
+      console.error('Error executing job:', err);
+      setError(err.response?.data?.message || 'Failed to execute job. Please try again.');
+    } finally {
+      setOpenExecuteDialog(false);
+      setExecutingJob(null);
+    }
+  };
+
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
     <motion.div
@@ -1068,6 +1101,20 @@ const JobsPage = () => {
                                   <CodeIcon fontSize="small" sx={{ fontSize: 18 }} />
                                 </ActionButton>
                               </Tooltip>
+
+                              <Tooltip title="Execute Now">
+                                <ActionButton
+                                  size="small"
+                                  color="secondary"
+                                  darkMode={darkMode}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleExecuteNow(job);
+                                  }}
+                                >
+                                  <PlayArrowIcon fontSize="small" sx={{ fontSize: 18 }} />
+                                </ActionButton>
+                              </Tooltip>
                             </Box>
                           </TableCell>
                         </TableRow>
@@ -1121,6 +1168,14 @@ const JobsPage = () => {
         open={openLogicDialog}
         onClose={handleCloseLogicDialog}
         job={selectedJob}
+      />
+
+      {/* Execute Job Dialog */}
+      <ExecuteJobDialog
+        open={openExecuteDialog}
+        onClose={() => setOpenExecuteDialog(false)}
+        job={executingJob}
+        onConfirm={handleConfirmExecute}
       />
     </motion.div>
     </LocalizationProvider>
@@ -1223,6 +1278,97 @@ const LogicViewDialog = ({ open, onClose, job }) => {
           }}
         >
           Close
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+};
+
+// Execute Job Dialog Component
+const ExecuteJobDialog = ({ open, onClose, job, onConfirm }) => {
+  const { darkMode } = useTheme();
+  
+  return (
+    <Dialog
+      open={open}
+      onClose={onClose}
+      maxWidth="sm"
+      fullWidth
+      PaperProps={{
+        sx: {
+          backgroundColor: darkMode ? '#1E293B' : 'white',
+          backgroundImage: darkMode ? 
+            'linear-gradient(to bottom, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.95))' : 
+            'none',
+          borderRadius: 2,
+          overflow: 'hidden',
+          boxShadow: darkMode ? '0 25px 50px -12px rgba(0, 0, 0, 0.5)' : '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
+        }
+      }}
+    >
+      <DialogTitle sx={{ 
+        backgroundColor: darkMode ? '#1A202C' : '#F9FAFB', 
+        color: darkMode ? 'white' : '#1A202C',
+        borderBottom: darkMode ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(0, 0, 0, 0.1)',
+        px: 3,
+        py: 1.5
+      }}>
+        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          <Typography variant="h6" sx={{ fontWeight: 500, fontSize: '1rem' }}>
+            Execute Job: {job?.JOBID}
+          </Typography>
+        </Box>
+        <IconButton
+          aria-label="close"
+          onClick={onClose}
+          sx={{
+            position: 'absolute',
+            right: 8,
+            top: 8,
+            color: darkMode ? 'white' : 'grey.500',
+          }}
+        >
+          <CloseIcon />
+        </IconButton>
+      </DialogTitle>
+      <DialogContent sx={{ mt: 2, p: 3, color: darkMode ? 'white' : 'text.primary' }}>
+        <Typography variant="body1" sx={{ mb: 2 }}>
+          Are you sure you want to execute this job immediately?
+        </Typography>
+        <Button 
+          onClick={onConfirm} 
+          variant="contained" 
+          color="primary"
+          size="small"
+          sx={{ 
+            borderRadius: 1.5,
+            py: 0.5,
+            px: 2,
+            fontSize: '0.8125rem'
+          }}
+        >
+          Execute Now
+        </Button>
+      </DialogContent>
+      <DialogActions sx={{ 
+        backgroundColor: darkMode ? '#1A202C' : '#F9FAFB',
+        borderTop: darkMode ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(0, 0, 0, 0.1)',
+        px: 3,
+        py: 1.5
+      }}>
+        <Button 
+          onClick={onClose} 
+          variant="contained" 
+          color="primary"
+          size="small"
+          sx={{ 
+            borderRadius: 1.5,
+            py: 0.5,
+            px: 2,
+            fontSize: '0.8125rem'
+          }}
+        >
+          Cancel
         </Button>
       </DialogActions>
     </Dialog>

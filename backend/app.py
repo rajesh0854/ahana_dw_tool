@@ -27,15 +27,25 @@ from modules.jobs.jobs import jobs_bp
 from modules.type_mapping.parameter_mapping import parameter_mapping_bp
 
 app = Flask(__name__)
+# CORS(app, resources={
+#     r"/*": {
+#         "origins": ["http://localhost:3000"],
+#         "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+#         "allow_headers": ["Content-Type", "Authorization"],
+#         "supports_credentials": True,
+#         "expose_headers": ["Authorization"]
+#     }
+# })
+
+# allow all origins with  support credentials
 CORS(app, resources={
     r"/*": {
-        "origins": ["http://localhost:3000"],
+        "origins": ["*"],
         "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-        "allow_headers": ["Content-Type", "Authorization"],
         "supports_credentials": True,
-        "expose_headers": ["Authorization"]
     }
 })
+
 
 # Load environment variables
 load_dotenv()

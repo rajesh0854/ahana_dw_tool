@@ -194,19 +194,6 @@ def get_parameter_mapping_scd_type(conn):
         raise
 
 def call_activate_deactivate_mapping(connection, p_mapref, p_stflg):
-    """
-    Calls the Oracle procedure ACTIVATE_DEACTIVATE_MAPPING
-    
-    Args:
-        connection: Oracle connection object
-        p_mapref: Mapping reference to activate/deactivate
-        p_stflg: Status flag ('A' to activate, 'N' to deactivate)
-    
-    Returns:
-        tuple: A tuple containing (success, message) where:
-            - success: Boolean indicating if the operation was successful
-            - message: Success or error message
-    """
     cursor = None
     try:
         cursor = connection.cursor()
@@ -254,26 +241,8 @@ def call_activate_deactivate_mapping(connection, p_mapref, p_stflg):
 # mapping function
 
 def create_update_mapping(connection, p_mapref, p_mapdesc, p_trgschm, p_trgtbtyp, 
-                         p_trgtbnm, p_frqcd, p_srcsystm, p_lgvrfyflg, p_lgvrfydt, p_stflg,p_blkprcrows):
-    """
-    Creates or updates a mapping using TRG.PKGDWMAPR.CREATE_UPDATE_MAPPING
-    
-    Args:
-        connection: Oracle connection object
-        p_mapref: Mapping reference
-        p_mapdesc: Mapping description
-        p_trgschm: Target schema
-        p_trgtbtyp: Target table type
-        p_trgtbnm: Target table name
-        p_frqcd: Frequency code
-        p_srcsystm: Source system
-        p_lgvrfyflg: Logic verification flag
-        p_lgvrfydt: Logic verification date
-        p_stflg: Status flag
-        
-    Returns:
-        Mapping ID
-    """
+                         p_trgtbnm, p_frqcd, p_srcsystm, p_lgvrfyflg, p_lgvrfydt, p_stflg,p_blkprcrows,user_id):
+
     cursor = None
     try:
         cursor = connection.cursor()
@@ -295,7 +264,8 @@ def create_update_mapping(connection, p_mapref, p_mapdesc, p_trgschm, p_trgtbtyp
                 p_lgvrfyflg => :p_lgvrfyflg,
                 p_lgvrfydt => :p_lgvrfydt,
                 p_stflg => :p_stflg,
-                p_blkprcrows=>:p_blkprcrows
+                p_blkprcrows=>:p_blkprcrows,
+                p_user=>:p_user
             );
         END;
         """
@@ -314,7 +284,8 @@ def create_update_mapping(connection, p_mapref, p_mapdesc, p_trgschm, p_trgtbtyp
             p_lgvrfyflg=p_lgvrfyflg,
             p_lgvrfydt=p_lgvrfydt,
             p_stflg=p_stflg,
-            p_blkprcrows=p_blkprcrows
+            p_blkprcrows=p_blkprcrows,
+            p_user=user_id
         )
         
         connection.commit()
@@ -334,30 +305,8 @@ def create_update_mapping(connection, p_mapref, p_mapdesc, p_trgschm, p_trgtbtyp
 
 def create_update_mapping_detail(connection, p_mapref, p_trgclnm, p_trgcldtyp, p_trgkeyflg, 
                                p_trgkeyseq, p_trgcldesc, p_maplogic, p_keyclnm, 
-                               p_valclnm, p_mapcmbcd, p_excseq, p_scdtyp, p_lgvrfyflg, p_lgvrfydt):
-    """
-    Creates or updates a mapping detail using TRG.PKGDWMAPR.CREATE_UPDATE_MAPPING_DETAIL
-    
-    Args:
-        connection: Oracle connection object
-        p_mapref: Mapping reference (must exist)
-        p_trgclnm: Target column name
-        p_trgcldtyp: Target column data type
-        p_trgkeyflg: Is key column (Y/N)
-        p_trgkeyseq: Key sequence
-        p_trgcldesc: Column description
-        p_maplogic: Mapping logic (SQL)
-        p_keyclnm: Key column name
-        p_valclnm: Value column name
-        p_mapcmbcd: Mapping combination code
-        p_excseq: Execution sequence
-        p_scdtyp: SCD Type
-        p_lgvrfyflg: Logic verification flag (Y/N)
-        p_lgvrfydt: Logic verification date
-        
-    Returns:
-        Mapping detail ID
-    """
+                               p_valclnm, p_mapcmbcd, p_excseq, p_scdtyp, p_lgvrfyflg, p_lgvrfydt,user_id):
+ 
     cursor = None
     try:
         cursor = connection.cursor()
@@ -382,7 +331,8 @@ def create_update_mapping_detail(connection, p_mapref, p_trgclnm, p_trgcldtyp, p
                 p_excseq => :p_excseq,
                 p_scdtyp => :p_scdtyp,
                 p_lgvrfyflg => :p_lgvrfyflg,
-                p_lgvrfydt => :p_lgvrfydt
+                p_lgvrfydt => :p_lgvrfydt,
+                p_user=>:p_user
             );
         END;
         """
@@ -404,7 +354,8 @@ def create_update_mapping_detail(connection, p_mapref, p_trgclnm, p_trgcldtyp, p
             p_excseq=p_excseq,
             p_scdtyp=p_scdtyp,
             p_lgvrfyflg=p_lgvrfyflg,
-            p_lgvrfydt=p_lgvrfydt
+            p_lgvrfydt=p_lgvrfydt,
+            p_user=user_id
         )
         connection.commit()
         
@@ -518,18 +469,7 @@ def validate_logic2(connection, p_logic, p_keyclnm, p_valclnm):
             cursor.close()
 
 def validate_all_mapping_details(connection, p_mapref):
-    """
-    Calls the Oracle function TRG.PKGDWMAPR.VALIDATE_MAPPING_DETAILS
-    
-    Args:
-        connection: Oracle connection object
-        p_mapref: Mapping reference to validate
-        
-    Returns:
-        tuple: A tuple containing (result, error_message) where:
-            - result: The function's return value ('Y' or 'N')
-            - error_message: Any error message returned by the Oracle function
-    """
+
     cursor = None
     try:
         cursor = connection.cursor()
@@ -595,18 +535,7 @@ def get_job_list(conn):
 
 
 def call_create_update_job(connection, p_mapref):
-    """
-    Calls the Oracle function CREATE_UPDATE_JOB
-    
-    Args:
-        connection: Oracle connection object
-        p_mapref: Mapping reference to create/update job
-    
-    Returns:
-        tuple: A tuple containing (job_id, error_message) where:
-            - job_id: The returned job ID from the function
-            - error_message: Any error message returned by the Oracle function
-    """
+
     cursor = None
     try:
         cursor = connection.cursor()
@@ -687,19 +616,6 @@ def call_delete_mapping(connection, p_mapref):
             cursor.close()
 
 def call_delete_mapping_details(connection, p_mapref, p_trgclnm):
-    """
-    Calls the Oracle procedure DELETE_MAPPING_DETAILS
-    
-    Args:
-        connection: Oracle connection object
-        p_mapref: Mapping reference
-        p_trgclnm: Target column name
-    
-    Returns:
-        tuple: A tuple containing (success, message) where:
-            - success: Boolean indicating if the operation was successful
-            - message: Success or error message
-    """
     cursor = None
     try:
         cursor = connection.cursor()
@@ -734,6 +650,48 @@ def call_delete_mapping_details(connection, p_mapref, p_trgclnm):
             return False, error_message
         else:
             return True, f"Mapping detail {p_mapref}-{p_trgclnm} successfully deleted"
+    
+    except Exception as e:
+        error_message = f"Exception while deleting mapping detail: {str(e)}"
+        return False, error_message
+    finally:
+        if cursor:
+            cursor.close()
+
+
+
+def call_schedule_immediate_job(connection, p_mapref):
+    cursor = None
+    try:
+        cursor = connection.cursor()
+        
+        # Define the output parameter for error message
+        p_err = cursor.var(oracledb.STRING, 2000)  # Assuming error message can be up to 2000 chars
+        
+        # SQL to execute with named parameters
+        sql = """
+
+        DECLARE
+          v_mapref VARCHAR2(100) := :p_mapref;
+        BEGIN
+          PKGDWPRC.SCHEDULE_JOB_IMMEDIATE(p_mapref => v_mapref);
+        END;
+        """
+        
+        # Execute with named parameters
+        cursor.execute(
+            sql,
+            p_mapref=p_mapref,
+        )
+        connection.commit()
+        
+        # Get the error message (if any)
+        error_message = p_err.getvalue()
+        
+        if error_message:
+            return False, error_message
+        else:
+            return True, f"Job {p_mapref} scheduled for immediate execution"
     
     except Exception as e:
         error_message = f"Exception while deleting mapping detail: {str(e)}"

@@ -85,6 +85,9 @@ import { motion } from 'framer-motion'
 const ReferenceForm = memo(({ handleReturnToReferenceTable, reference }) => {
   const { darkMode } = useTheme()
 
+  // Add state for user data
+  const [userData, setUserData] = useState(null)
+
   // New state variables for the table view
   const [showReferenceTable, setShowReferenceTable] = useState(true)
   // Existing state variables
@@ -102,6 +105,7 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference }) => {
       validator: 'N',
       keyColumn: '',
       valColumn: '',
+      execSequence: '',
       mapCombineCode: '',
       LogicVerFlag: '',
       scdType: '1', // Store PRCD for SCD Type
@@ -212,6 +216,9 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference }) => {
   // Add state for job creation tracking
   const [isJobCreating, setIsJobCreating] = useState(false)
   const [isJobCreated, setIsJobCreated] = useState(false)
+
+  // Add new state for tracking bulk validation status
+  const [bulkValidationSuccess, setBulkValidationSuccess] = useState(true)
 
   // Add constants for select options
   const TABLE_TYPES = [
@@ -401,6 +408,9 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference }) => {
 
     // If the field is reference, validate and transform using Zod
     if (field === 'reference') {
+      // Remove spaces and only allow allowed characters
+      value = preventSpaces(value)
+      
       try {
         // Only allow letters, numbers, and underscores
         if (!/^[a-zA-Z0-9_]*$/.test(value)) {
@@ -582,6 +592,7 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference }) => {
       'dataType',
       'keyColumn',
       'valColumn',
+      'execSequence',
       'mapCombineCode',
     ]
 
@@ -712,6 +723,7 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference }) => {
         validator: 'N',
         keyColumn: '',
         valColumn: '',
+        execSequence: '',
         mapCombineCode: '',
         LogicVerFlag: '',
         scdType: scdTypeOptions.length > 0 ? scdTypeOptions[0].PRCD : '1',
@@ -793,6 +805,7 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference }) => {
         validator: 'N',
         keyColumn: '',
         valColumn: '',
+        execSequence: '',
         mapCombineCode: '',
         LogicVerFlag: '',
         scdType: scdTypeOptions.length > 0 ? scdTypeOptions[0].PRCD : '1', // Use PRCD for storage
@@ -820,7 +833,10 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference }) => {
         reference: z
           .string()
           .min(1, 'Reference is required')
-          .max(30, 'Reference cannot exceed 30 characters'),
+          .max(30, 'Reference cannot exceed 30 characters')
+          .regex(/^[a-zA-Z0-9_]*$/, {
+            message: 'Reference can only contain letters, numbers, and underscores',
+          }),
         description: z
           .string()
           .min(1, 'Description is required')
@@ -887,22 +903,24 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference }) => {
       return
     }
 
-    // Check if all rows have been validated
-    if (!areAllRowsValid()) {
-      message.warning(
-        'Not all rows have been validated. Please validate before saving.'
-      )
-      return
-    }
+    // REMOVED: Check if all rows have been validated
+    // if (!areAllRowsValid()) {
+    //   message.warning(
+    //     'Not all rows have been validated. Please validate before saving.'
+    //   )
+    //   return
+    // }
 
     setIsSaving(true)
 
     try {
-      // Prepare the data to be sent
+      // Prepare the data to be sent with user information
       const dataToSend = {
         formData: {
           ...formData,
           bulkProcessRows: formData.bulkProcessRows || '0', // Default to 0 if empty
+          user_id: userData?.id || '', // Add user ID from localStorage
+          username: userData?.username || '' // Add username from localStorage
         },
         rows: rows.filter((row) => row.fieldName), // Only send rows with a field name
         modifiedRows: modifiedRows, // Send the list of modified row indices
@@ -1172,6 +1190,7 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference }) => {
               validator: row.validator || 'N',
               keyColumn: row.keyColumn || '',
               valColumn: row.valColumn || '',
+              execSequence: row.execSequence || '',
               mapCombineCode: row.mapCombineCode || '',
               LogicVerFlag: row.LogicVerFlag || '',
               scdType: row.scdType || '1',
@@ -1188,6 +1207,7 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference }) => {
               validator: 'N',
               keyColumn: '',
               valColumn: '',
+              execSequence: '',
               mapCombineCode: '',
               LogicVerFlag: '',
               scdType: '1',
@@ -1245,6 +1265,7 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference }) => {
             validator: 'N',
             keyColumn: '',
             valColumn: '',
+            execSequence: '',
             mapCombineCode: '',
             LogicVerFlag: '',
             scdType: '1',
@@ -1451,14 +1472,28 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference }) => {
         throw new Error(data.message || 'Batch validation failed')
       }
 
-      // Process results and update rows
-      const newRows = [...rows]
+      // Initialize validation states
       let validationMessages = []
-      let allValid = true
+      let hasBulkValidationError = false
+      let hasRowValidationErrors = false
 
-      // Update LogicVerFlag for each row based on validation results
+      // Check bulk validation status first
+      if (data.bulkValidation && data.bulkValidation.success === 'N') {
+        hasBulkValidationError = true
+        setBulkValidationSuccess(false) // Set bulk validation status to false
+        validationMessages.push(data.bulkValidation.error || 'Bulk validation failed')
+        message.error({
+          content: data.bulkValidation.error || 'Validation failed',
+          key: 'validateAll',
+          duration: 5,
+        })
+      } else {
+        setBulkValidationSuccess(true) // Set bulk validation status to true
+      }
+
+      // Process row results
+      const newRows = [...rows]
       data.rowResults.forEach((result) => {
-        // Find the row index by matching mapdtlid or fieldName if needed
         const rowIndex = rows.findIndex(
           (row) =>
             (row.mapdtlid && row.mapdtlid === result.rowId) ||
@@ -1466,19 +1501,16 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference }) => {
         )
 
         if (rowIndex !== -1) {
-          // Update row validation flag
           newRows[rowIndex] = {
             ...newRows[rowIndex],
             LogicVerFlag: result.isValid ? 'Y' : 'N',
           }
 
-          // Store error messages in state for tooltips
           if (!result.isValid) {
-            allValid = false
+            hasRowValidationErrors = true
             setErrorMessages((prev) => ({
               ...prev,
-              [rowIndex]:
-                result.detailedError || result.error || 'Validation failed',
+              [rowIndex]: result.detailedError || result.error || 'Validation failed',
             }))
             validationMessages.push(
               `Row ${rowIndex + 1} (${result.fieldName || 'Unnamed'}): ${
@@ -1489,7 +1521,7 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference }) => {
         }
       })
 
-      // Update rows with missing required fields
+      // Check for missing required fields
       rows.forEach((row, index) => {
         if (
           (row.fieldName.trim() !== '' ||
@@ -1500,49 +1532,44 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference }) => {
             row.logic.trim() !== '') &&
           (!row.keyColumn || !row.valColumn || !row.logic)
         ) {
+          hasRowValidationErrors = true
           newRows[index] = {
             ...newRows[index],
             LogicVerFlag: 'N',
           }
-          allValid = false
-
-          // Store missing fields error in state for tooltips
           setErrorMessages((prev) => ({
             ...prev,
-            [index]:
-              'Missing required fields: Key Column, Value Column, and SQL Logic',
+            [index]: 'Missing required fields: Key Column, Value Column, and SQL Logic',
           }))
-
           validationMessages.push(`Row ${index + 1}: Missing required fields`)
         }
       })
 
-      // Update rows state with all validation results
+      // Update rows state
       setRows(newRows)
 
-      // Update validation states
+      // Set validation states based on both bulk and row validation results
+      const isValidationSuccessful = !hasBulkValidationError && !hasRowValidationErrors
+      
       setHasBeenValidated(true)
-      setAllRowsValidated(allValid)
+      setAllRowsValidated(isValidationSuccessful)
+      setShowValidateButton(!isValidationSuccessful)
       
       // Reset activation states
       setIsActivated(false)
       setIsActivationSuccessful(false)
 
-      // Show final messages
-      if (allValid) {
+      // Show appropriate message
+      if (isValidationSuccessful) {
         message.success({
           content: 'All rows validated successfully',
           key: 'validateAll',
         })
-        
-        // Disable validate button when validation is successful
-        // This forces the user to move to the next step (activation)
-        setShowValidateButton(false)
       } else {
-      message.error({
+        message.error({
           content: (
             <div>
-              <div>Some rows failed validation:</div>
+              <div>Validation failed:</div>
               {validationMessages.map((msg, idx) => (
                 <div key={idx} style={{ marginTop: '8px' }}>
                   {msg}
@@ -1551,11 +1578,8 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference }) => {
             </div>
           ),
           key: 'validateAll',
-          duration: 5, // Show for longer since there might be multiple messages
+          duration: 5,
         })
-        
-        // Keep validate button enabled to allow retry when validation fails
-        setShowValidateButton(true)
       }
     } catch (error) {
       message.error({
@@ -1567,15 +1591,13 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference }) => {
       // Set validation workflow states on error
       setHasBeenValidated(true)
       setAllRowsValidated(false)
+      setShowValidateButton(true)
+      setBulkValidationSuccess(false) // Set bulk validation status to false on error
       
-      // Reset activation states on error
+      // Reset activation states
       setIsActivated(false)
       setIsActivationSuccessful(false)
-      
-      // Keep validate button enabled to allow retry
-      setShowValidateButton(true)
     } finally {
-      // Set validating state to false when done
       setIsValidating(false)
     }
   }
@@ -1798,6 +1820,7 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference }) => {
         validator: 'N',
         keyColumn: '',
         valColumn: '',
+        execSequence: '',
         mapCombineCode: '',
         LogicVerFlag: '',
         scdType: '1',
@@ -1995,6 +2018,19 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference }) => {
       handleCancelDelete();
     }
   };
+
+  // Add useEffect to fetch user data from localStorage
+  useEffect(() => {
+    try {
+      const userStr = localStorage.getItem('user')
+      if (userStr) {
+        const user = JSON.parse(userStr)
+        setUserData(user)
+      }
+    } catch (error) {
+      console.error('Error getting user data from localStorage:', error)
+    }
+  }, [])
 
   return (
     <motion.div
@@ -2222,7 +2258,7 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference }) => {
                   <Button
                     variant="contained"
                     onClick={handleActivate}
-                    disabled={!hasBeenValidated || !allRowsValidated || isActivated}
+                    disabled={!hasBeenValidated || !allRowsValidated || !bulkValidationSuccess || isActivated}
                     sx={{
                       height: '30px',
                       minWidth: '70px',
@@ -2901,7 +2937,7 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference }) => {
                         `}
                     sx={{ 
                       fontSize: 'clamp(0.65rem, 0.7vw, 0.7rem)',
-                      width: '180px',
+                      width: '220px', // Increased from 180px
                       padding: '6px 8px'
                     }}
                   >
@@ -2919,7 +2955,7 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference }) => {
                         `}
                     sx={{ 
                       fontSize: 'clamp(0.65rem, 0.7vw, 0.7rem)',
-                      width: '110px',
+                      width: '130px', // Increased from 110px
                       padding: '6px 8px'
                     }}
                   >
@@ -2937,7 +2973,7 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference }) => {
                         `}
                     sx={{ 
                       fontSize: 'clamp(0.65rem, 0.7vw, 0.7rem)',
-                      width: '110px',
+                      width: '130px', // Increased from 110px
                       padding: '6px 8px'
                     }}
                   >
@@ -2955,11 +2991,29 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference }) => {
                         `}
                     sx={{ 
                       fontSize: 'clamp(0.65rem, 0.7vw, 0.7rem)',
-                      width: '150px',
+                      width: '90px',
                       padding: '6px 8px'
                     }}
                   >
-                    Mapping Combine Code
+                    Exec Seq
+                  </TableCell>
+                  <TableCell
+                    className={`
+                          font-medium py-1 px-2
+                          ${
+                            darkMode
+                              ? 'bg-gray-800 text-gray-200'
+                              : 'bg-gray-50/90'
+                          }
+                          sticky top-0 z-10
+                        `}
+                    sx={{ 
+                      fontSize: 'clamp(0.65rem, 0.7vw, 0.7rem)',
+                      width: '110px', // Reduced from 150px
+                      padding: '6px 8px'
+                    }}
+                  >
+                    Comb Code
                   </TableCell>
                   <TableCell
                     align="center"
@@ -2974,7 +3028,7 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference }) => {
                         `}
                     sx={{ 
                       fontSize: 'clamp(0.65rem, 0.7vw, 0.7rem)',
-                      width: '50px',
+                      width: '40px', // Reduced from 50px
                       padding: '6px 2px'
                     }}
                   >
@@ -2994,7 +3048,7 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference }) => {
                       `}
                     sx={{ 
                       fontSize: 'clamp(0.65rem, 0.7vw, 0.7rem)',
-                      width: '40px',
+                      width: '35px', // Reduced from 40px
                       padding: '6px 2px'
                     }}
                   >
@@ -3498,6 +3552,61 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference }) => {
                             '&.Mui-focused fieldset': {
                               borderColor: '#3b82f6',
                             },
+                          },
+                        }}
+                      />
+                    </TableCell>
+                    
+                    <TableCell className="py-0 px-0" sx={{ padding: '0px 4px' }}>
+                      <TextField
+                        value={row.execSequence}
+                        onChange={(e) => {
+                          // Only allow integers up to 5000
+                          const value = e.target.value;
+                          if (value === '' || (/^\d+$/.test(value) && parseInt(value) <= 5000)) {
+                            handleRowChange(
+                              index + page * 10,
+                              'execSequence',
+                              value
+                            )
+                          }
+                        }}
+                        size="small"
+                        fullWidth
+                        variant="outlined"
+                        type="number"
+                        inputProps={{
+                          min: 0,
+                          max: 5000,
+                          className: 'px-2 py-0',
+                          style: { height: '20px', fontSize: '0.8rem' }
+                        }}
+                        className={`${
+                          darkMode ? 'bg-gray-800/50' : 'bg-white'
+                        } rounded-md`}
+                        sx={{
+                          '& .MuiOutlinedInput-root': {
+                            height: '22px',
+                            '& fieldset': {
+                              borderColor: darkMode
+                                ? 'rgba(255,255,255,0.1)'
+                                : 'rgba(0,0,0,0.1)',
+                            },
+                            '&:hover fieldset': {
+                              borderColor: darkMode
+                                ? 'rgba(255,255,255,0.2)'
+                                : 'rgba(0,0,0,0.2)',
+                            },
+                            '&.Mui-focused fieldset': {
+                              borderColor: '#3b82f6',
+                            },
+                          },
+                          '& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button': {
+                            '-webkit-appearance': 'none',
+                            margin: 0,
+                          },
+                          '& input[type=number]': {
+                            '-moz-appearance': 'textfield',
                           },
                         }}
                       />
