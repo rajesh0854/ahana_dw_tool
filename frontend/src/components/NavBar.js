@@ -32,6 +32,8 @@ const getPageTitle = (pathname) => {
       return 'User Profile';
     case '/settings':
       return 'Settings';
+    case '/dashboard':
+      return 'Dashboard';
     default:
       return 'Menu';
   }

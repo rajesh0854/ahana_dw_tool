@@ -1,4 +1,9 @@
+import os
 import oracledb
+import dotenv
+dotenv.load_dotenv()
+
+ORACLE_SCHEMA = os.getenv("SCHEMA")
 
 def get_parameter_mapping(conn):
     try:
@@ -251,9 +256,9 @@ def create_update_mapping(connection, p_mapref, p_mapdesc, p_trgschm, p_trgtbtyp
         v_mapid = cursor.var(oracledb.NUMBER)
         
         # SQL to execute with named parameters
-        sql = """
+        sql = f"""
         BEGIN
-            :result := TRG.PKGDWMAPR.CREATE_UPDATE_MAPPING(
+            :result := {ORACLE_SCHEMA}.PKGDWMAPR.CREATE_UPDATE_MAPPING(
                 p_mapref => :p_mapref,
                 p_mapdesc => :p_mapdesc,
                 p_trgschm => :p_trgschm,
@@ -372,24 +377,13 @@ def create_update_mapping_detail(connection, p_mapref, p_trgclnm, p_trgcldtyp, p
             cursor.close()
 
 def validate_logic_in_db(connection, p_logic, p_keyclnm, p_valclnm):
-    """
-    Validates the logic using TRG.PKGDWMAPR.VALIDATE_LOGIC
-    
-    Args:
-        connection: Oracle connection object
-        p_logic: Logic to validate
-        p_keyclnm: Key column name
-        p_valclnm: Value column name
-        
-    Returns:
-        Validation result (Y/N)
-    """
+
     cursor = connection.cursor()
     v_is_valid = cursor.var(oracledb.STRING)
     
-    sql = """
+    sql = f"""
     BEGIN
-        :result := TRG.PKGDWMAPR.VALIDATE_LOGIC(
+        :result := {ORACLE_SCHEMA}.PKGDWMAPR.VALIDATE_LOGIC(
             p_logic => :p_logic,
             p_keyclnm => :p_keyclnm,
             p_valclnm => :p_valclnm
@@ -411,18 +405,7 @@ def validate_logic_in_db(connection, p_logic, p_keyclnm, p_valclnm):
 
 
 def validate_logic2(connection, p_logic, p_keyclnm, p_valclnm):
-    """
-    Validates SQL logic using TRG.PKGDWMAPR.VALIDATE_LOGIC2
-    
-    Args:
-        connection: Oracle connection object
-        p_logic: SQL logic to validate
-        p_keyclnm: Key column name
-        p_valclnm: Value column name
-    
-    Returns:
-        Tuple: (Validation result (Y/N), Error message if any)
-    """
+
     cursor = None
     try:
         cursor = connection.cursor()
@@ -432,9 +415,9 @@ def validate_logic2(connection, p_logic, p_keyclnm, p_valclnm):
         v_error = cursor.var(oracledb.STRING, 4000)  # Error output parameter
         
         # SQL to execute with named parameters
-        sql = """
+        sql = f"""
         BEGIN
-            :result := TRG.PKGDWMAPR.VALIDATE_LOGIC2(
+            :result := {ORACLE_SCHEMA}.PKGDWMAPR.VALIDATE_LOGIC2(
                 p_logic => :p_logic,
                 p_keyclnm => :p_keyclnm,
                 p_valclnm => :p_valclnm,
@@ -479,9 +462,9 @@ def validate_all_mapping_details(connection, p_mapref):
         v_err = cursor.var(oracledb.STRING, 400)  # VARCHAR2(400) in Oracle
         
         # SQL to execute with named parameters
-        sql = """
+        sql = f"""
         BEGIN
-            :result := TRG.PKGDWMAPR.VALIDATE_MAPPING_DETAILS(
+            :result := {ORACLE_SCHEMA}.PKGDWMAPR.VALIDATE_MAPPING_DETAILS(
                 p_mapref => :p_mapref,
                 p_err => :p_err
             );
@@ -544,9 +527,9 @@ def call_create_update_job(connection, p_mapref):
         v_job_id = cursor.var(oracledb.NUMBER)  # Assuming jobid is a NUMBER in Oracle
         
         # SQL to execute with named parameters
-        sql = """
+        sql = f"""
         BEGIN
-            :job_id := TRG.PKGDWJOB.CREATE_UPDATE_JOB(
+            :job_id := {ORACLE_SCHEMA}.PKGDWJOB.CREATE_UPDATE_JOB(
                 p_mapref => :p_mapref
             );
         END;

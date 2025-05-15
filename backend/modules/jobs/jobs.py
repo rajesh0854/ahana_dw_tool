@@ -1,8 +1,14 @@
 from flask import Blueprint, request, jsonify
 from modules.helper_functions import get_job_list,call_create_update_job,get_mapping_ref,get_mapping_details
 from database.dbconnect import create_oracle_connection
+import os
+import dotenv
+dotenv.load_dotenv()
+ORACLE_SCHEMA = os.getenv("SCHEMA")
 # Create blueprint
 jobs_bp = Blueprint('jobs', __name__)
+
+
 
 @jobs_bp.route("/jobs_list", methods=["GET"])
 def jobs():
@@ -87,7 +93,7 @@ def create_update_job():
 def get_all_jobs():
     try:
         conn = create_oracle_connection()
-        query_job_flow = """
+        query_job_flow = f"""
         
          SELECT 
             f.JOBFLWID,
@@ -128,7 +134,7 @@ def get_all_jobs():
                 ELSE NULL
             END AS "end date"
         FROM 
-            TRG.DWJOBFLW f
+            {ORACLE_SCHEMA}.DWJOBFLW f
         LEFT JOIN 
             (
                 SELECT 
@@ -142,7 +148,7 @@ def get_all_jobs():
                     MIN(STRTDT) AS STRTDT,
                     MIN(ENDDT) AS ENDDT
                 FROM 
-                    TRG.DWJOBSCH
+                    {ORACLE_SCHEMA}.DWJOBSCH
                 WHERE 
                     CURFLG = 'Y'
                 GROUP BY 
