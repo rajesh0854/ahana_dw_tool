@@ -43,7 +43,11 @@ import {
   Search as SearchIcon,
   FilterList as FilterListIcon,
   Refresh as RefreshIcon,
-  PlayArrow as PlayArrowIcon
+  PlayArrow as PlayArrowIcon,
+  ToggleOn as ToggleOnIcon,
+  ToggleOff as ToggleOffIcon,
+  Warning as WarningIcon,
+  RemoveRedEye as EyeIcon
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import { useTheme } from '@/context/ThemeContext';
@@ -67,20 +71,20 @@ import {
 
 // Styled components
 const StyledTableContainer = styled(TableContainer)(({ theme, darkMode }) => ({
-  maxHeight: '70vh',
+  maxHeight: '75vh',
   '& .MuiTableCell-head': {
     backgroundColor: darkMode ? '#1A202C' : '#F7FAFC', 
     color: darkMode ? '#E2E8F0' : '#2D3748',
     fontWeight: 600,
-    fontSize: '0.875rem',
-    padding: '12px 16px',
+    fontSize: '0.8125rem',
+    padding: '10px 14px',
     whiteSpace: 'nowrap',
     borderBottom: darkMode ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(0, 0, 0, 0.1)'
   },
   '& .MuiTableCell-body': {
     color: darkMode ? '#E2E8F0' : '#2D3748',
-    padding: '8px 16px',
-    fontSize: '0.875rem',
+    padding: '6px 14px',
+    fontSize: '0.8125rem',
   },
   '& .MuiTableRow-root:hover': {
     backgroundColor: darkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)',
@@ -89,22 +93,56 @@ const StyledTableContainer = styled(TableContainer)(({ theme, darkMode }) => ({
 
 // Define ActionButton if it's missing
 const ActionButton = styled(IconButton)(({ theme, darkMode, color = 'primary' }) => ({
-  padding: '4px',
-  marginRight: '4px',
+  padding: '3px',
+  margin: '0 2px',
+  width: '28px',
+  height: '28px',
   backgroundColor: darkMode 
-    ? (color === 'primary' ? 'rgba(59, 130, 246, 0.1)' : color === 'info' ? 'rgba(6, 182, 212, 0.1)' : 'rgba(99, 102, 241, 0.1)') 
-    : (color === 'primary' ? 'rgba(59, 130, 246, 0.05)' : color === 'info' ? 'rgba(6, 182, 212, 0.05)' : 'rgba(99, 102, 241, 0.05)'),
+    ? (color === 'primary' ? 'rgba(59, 130, 246, 0.1)' : 
+      color === 'info' ? 'rgba(6, 182, 212, 0.1)' : 
+      color === 'success' ? 'rgba(34, 197, 94, 0.1)' : 
+      color === 'error' ? 'rgba(239, 68, 68, 0.1)' : 
+      'rgba(99, 102, 241, 0.1)') 
+    : (color === 'primary' ? 'rgba(59, 130, 246, 0.05)' : 
+      color === 'info' ? 'rgba(6, 182, 212, 0.05)' : 
+      color === 'success' ? 'rgba(34, 197, 94, 0.05)' : 
+      color === 'error' ? 'rgba(239, 68, 68, 0.05)' : 
+      'rgba(99, 102, 241, 0.05)'),
   color: darkMode 
-    ? (color === 'primary' ? '#60A5FA' : color === 'info' ? '#06B6D4' : '#818CF8')
-    : (color === 'primary' ? '#3B82F6' : color === 'info' ? '#0891B2' : '#6366F1'),
+    ? (color === 'primary' ? '#60A5FA' : 
+      color === 'info' ? '#06B6D4' : 
+      color === 'success' ? '#4ADE80' : 
+      color === 'error' ? '#F87171' : 
+      '#818CF8')
+    : (color === 'primary' ? '#3B82F6' : 
+      color === 'info' ? '#0891B2' : 
+      color === 'success' ? '#22C55E' : 
+      color === 'error' ? '#EF4444' : 
+      '#6366F1'),
   border: '1px solid',
   borderColor: darkMode
-    ? (color === 'primary' ? 'rgba(59, 130, 246, 0.2)' : color === 'info' ? 'rgba(6, 182, 212, 0.2)' : 'rgba(99, 102, 241, 0.2)')
-    : (color === 'primary' ? 'rgba(59, 130, 246, 0.1)' : color === 'info' ? 'rgba(6, 182, 212, 0.1)' : 'rgba(99, 102, 241, 0.1)'),
+    ? (color === 'primary' ? 'rgba(59, 130, 246, 0.2)' : 
+      color === 'info' ? 'rgba(6, 182, 212, 0.2)' : 
+      color === 'success' ? 'rgba(34, 197, 94, 0.2)' : 
+      color === 'error' ? 'rgba(239, 68, 68, 0.2)' : 
+      'rgba(99, 102, 241, 0.2)')
+    : (color === 'primary' ? 'rgba(59, 130, 246, 0.1)' : 
+      color === 'info' ? 'rgba(6, 182, 212, 0.1)' : 
+      color === 'success' ? 'rgba(34, 197, 94, 0.1)' : 
+      color === 'error' ? 'rgba(239, 68, 68, 0.1)' : 
+      'rgba(99, 102, 241, 0.1)'),
   '&:hover': {
     backgroundColor: darkMode
-      ? (color === 'primary' ? 'rgba(59, 130, 246, 0.2)' : color === 'info' ? 'rgba(6, 182, 212, 0.2)' : 'rgba(99, 102, 241, 0.2)')
-      : (color === 'primary' ? 'rgba(59, 130, 246, 0.1)' : color === 'info' ? 'rgba(6, 182, 212, 0.1)' : 'rgba(99, 102, 241, 0.1)'),
+      ? (color === 'primary' ? 'rgba(59, 130, 246, 0.2)' : 
+        color === 'info' ? 'rgba(6, 182, 212, 0.2)' : 
+        color === 'success' ? 'rgba(34, 197, 94, 0.2)' : 
+        color === 'error' ? 'rgba(239, 68, 68, 0.2)' : 
+        'rgba(99, 102, 241, 0.2)')
+      : (color === 'primary' ? 'rgba(59, 130, 246, 0.1)' : 
+        color === 'info' ? 'rgba(6, 182, 212, 0.1)' : 
+        color === 'success' ? 'rgba(34, 197, 94, 0.1)' : 
+        color === 'error' ? 'rgba(239, 68, 68, 0.1)' : 
+        'rgba(99, 102, 241, 0.1)'),
   }
 }));
 
@@ -139,6 +177,11 @@ const JobsPage = () => {
   const [openExecuteDialog, setOpenExecuteDialog] = useState(false);
   const [executingJob, setExecutingJob] = useState(null);
   
+  // New state for enable/disable job functionality
+  const [openEnableDisableDialog, setOpenEnableDisableDialog] = useState(false);
+  const [jobToToggle, setJobToToggle] = useState(null);
+  const [isEnabling, setIsEnabling] = useState(false);
+
   // State for schedule data
   const [scheduleData, setScheduleData] = useState({});
   const [scheduleLoading, setScheduleLoading] = useState({});
@@ -227,11 +270,12 @@ const JobsPage = () => {
       const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/job/get_all_jobs`);
       
       // Since the response structure has changed, we'll directly use the data as it comes
-      setJobs(response.data);
+      const jobsData = response.data;
+      setJobs(jobsData);
       
       // Initialize schedule data for each job
       const initialScheduleData = {};
-      response.data.forEach(job => {
+      jobsData.forEach(job => {
         initialScheduleData[job.JOBFLWID] = {
           JOBFLWID: job.JOBFLWID,
           MAPREF: job.MAPREF || '',
@@ -244,6 +288,15 @@ const JobsPage = () => {
       
       setScheduleData(initialScheduleData);
       setError(null);
+      
+      // After getting all jobs, fetch schedule details for all jobs that might have schedule information
+      // This ensures the summary is shown even for jobs not officially scheduled
+      setTimeout(() => {
+        jobsData.forEach(job => {
+          fetchJobScheduleDetails(job.JOBFLWID);
+        });
+      }, 300); // Small delay to ensure jobs state is updated
+      
     } catch (err) {
       console.error('Error fetching jobs:', err);
       setError('Failed to fetch jobs. Please try again later.');
@@ -252,9 +305,9 @@ const JobsPage = () => {
     }
   };
 
-  // Fetch job schedule details when row is expanded
+  // Fetch job schedule details for a job
   const fetchJobScheduleDetails = async (jobId) => {
-    // Only fetch if this is a scheduled job and we haven't loaded data yet
+    // Get the job from the jobs list
     const job = jobs.find(j => j.JOBFLWID === jobId);
     if (!job) return;
     
@@ -298,6 +351,26 @@ const JobsPage = () => {
             JOB_SCHEDULE_STATUS: job.JOB_SCHEDULE_STATUS
           }
         }));
+        
+        // Update job data with schedule information so it's available for display
+        // even if the job is not officially scheduled
+        if (!job["Frequency code"] && scheduleDetails.FRQCD) {
+          setJobs(prevJobs => 
+            prevJobs.map(j => 
+              j.JOBFLWID === jobId 
+                ? { 
+                    ...j, 
+                    "Frequency code": scheduleDetails.FRQCD,
+                    "Frequency day": scheduleDetails.FRQDD,
+                    "frequency hour": scheduleDetails.FRQHH,
+                    "frequency month": scheduleDetails.FRQMI,
+                    "start date": scheduleDetails.STRT_DT || scheduleDetails.STRTDT,
+                    "end date": scheduleDetails.END_DT || scheduleDetails.ENDDT
+                  } 
+                : j
+            )
+          );
+        }
       }
     } catch (err) {
       console.error('Error fetching job schedule details:', err);
@@ -452,12 +525,12 @@ const JobsPage = () => {
     // Get day and time parameters based on frequency type
     let frequencyDay, frequencyHour, frequencyMinute;
     
-    if (['WK', 'FN', 'MN', 'HY', 'YR'].includes(frequencyCode)) {
-      frequencyDay = timeParts[1] || '';
-      const timePieces = timeParts[2] ? timeParts[2].split(':') : [];
-      frequencyHour = timePieces[0] || '';
-      frequencyMinute = timePieces[1] || '';
-    } else {
+          if (['WK', 'FN', 'MN', 'HY', 'YR'].includes(frequencyCode)) {
+        frequencyDay = timeParts[1] || '';
+        const timePieces = timeParts[2] ? timeParts[2].split(':') : [];
+        frequencyHour = timePieces[0] || '';
+        frequencyMinute = timePieces[1] || '';
+      } else {
       const timePieces = timeParts[1] ? timeParts[1].split(':') : [];
       frequencyHour = timePieces[0] || '';
       frequencyMinute = timePieces[1] || '';
@@ -590,14 +663,15 @@ const JobsPage = () => {
 
   // Define columns for table
   const columns = [
-    { id: 'MAPREF', label: 'Job Mapping Reference', width: '18%' },
-    { id: 'TRGTBNM', label: 'Target Table', width: '16%' },
-    { id: 'TRGTBTYP', label: 'Type', width: '6%' },
-    { id: 'STATUS', label: 'Status', width: '6%' },
-    { id: 'SCHEDULE', label: 'Schedule Configuration', width: '16%' },
+    { id: 'MAPREF', label: 'Job Mapping Reference', width: '16%' },
+    { id: 'TRGTBNM', label: 'Target Table', width: '14%' },
+    { id: 'TRGTBTYP', label: 'Type', width: '5%' },
+    { id: 'STATUS', label: 'Status', width: '5%' },
+    { id: 'SCHEDULE', label: 'Schedule Configuration', width: '17%' },
     { id: 'SUMMARY', label: 'Schedule Summary', width: '16%' },
-    { id: 'DEPENDENCY', label: 'Dependency', width: '12%' },
-    { id: 'actions', label: 'View Details', width: '10%' },
+    { id: 'DEPENDENCY', label: 'Dependency', width: '11%' },
+    { id: 'view', label: 'View', width: '8%' },
+    { id: 'actions', label: 'Actions', width: '8%' },
   ];
 
   const handleRefresh = () => {
@@ -653,6 +727,65 @@ const JobsPage = () => {
     } finally {
       setOpenExecuteDialog(false);
       setExecutingJob(null);
+    }
+  };
+
+  // New handler for enable/disable job
+  const handleEnableDisableJob = (job) => {
+    // Check if job has dependencies - if any other job depends on this one
+    const hasDependers = jobs.some(j => j.DPND_MAPREF === job.MAPREF);
+    
+    // If job is currently enabled (scheduled) and has dependers, show warning but don't proceed
+    if (job.JOB_SCHEDULE_STATUS === 'Scheduled' && hasDependers) {
+      setError('This job cannot be disabled as other jobs depend on it');
+      setTimeout(() => setError(null), 3000);
+      return;
+    }
+    
+    setJobToToggle({...job, hasDependers});
+    setIsEnabling(job.JOB_SCHEDULE_STATUS !== 'Scheduled');
+    setOpenEnableDisableDialog(true);
+  };
+
+  // Handler for confirming enable/disable
+  const handleConfirmEnableDisable = async () => {
+    try {
+      const action = isEnabling ? 'E' : 'D'; // E for enable, D for disable
+      
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/job/enable_disable_job`,
+        { 
+          MAPREF: jobToToggle.MAPREF,
+          JOB_FLG: action
+        }
+      );
+
+      if (response.data.success) {
+        setSuccessMessage(response.data.message);
+        
+        // Update job status in the jobs list
+        setJobs(prevJobs => 
+          prevJobs.map(job => 
+            job.MAPREF === jobToToggle.MAPREF 
+              ? { 
+                  ...job, 
+                  JOB_SCHEDULE_STATUS: isEnabling ? 'Scheduled' : 'Not Scheduled'
+                } 
+              : job
+          )
+        );
+        
+        // Refresh the jobs list to get updated status
+        fetchJobs();
+      } else {
+        setError(response.data.message || `Failed to ${isEnabling ? 'enable' : 'disable'} job`);
+      }
+    } catch (err) {
+      console.error(`Error ${isEnabling ? 'enabling' : 'disabling'} job:`, err);
+      setError(err.response?.data?.message || `Failed to ${isEnabling ? 'enable' : 'disable'} job. Please try again.`);
+    } finally {
+      setOpenEnableDisableDialog(false);
+      setJobToToggle(null);
     }
   };
 
@@ -721,7 +854,7 @@ const JobsPage = () => {
         {/* Filter controls with better spacing */}
         <Box sx={{ 
           px: 3,
-          py: 2,
+          py: 1.5,
           backgroundColor: darkMode ? 'rgba(17, 24, 39, 0.5)' : 'rgba(249, 250, 251, 0.7)',
           borderBottom: '1px solid',
           borderColor: darkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
@@ -729,7 +862,7 @@ const JobsPage = () => {
           justifyContent: 'space-between',
           alignItems: 'center',
           flexWrap: { xs: 'wrap', md: 'nowrap' },
-          gap: 2
+          gap: 1.5
         }}>
           {/* Left side controls - Search and Active Filters */}
           <Box sx={{ 
@@ -954,7 +1087,7 @@ const JobsPage = () => {
             sx={{ 
               overflow: 'auto', 
               flexGrow: 1,
-              maxHeight: 'calc(100vh - 250px)',
+              maxHeight: 'calc(100vh - 200px)',
               position: 'relative',
               '&::-webkit-scrollbar': {
                 width: '8px',
@@ -979,10 +1112,10 @@ const JobsPage = () => {
                     {columns.map((column) => (
                       <TableCell
                         key={column.id}
-                        align={column.id === 'actions' || column.id === 'STATUS' ? 'center' : 'left'}
+                        align={column.id === 'actions' || column.id === 'STATUS' || column.id === 'view' ? 'center' : 'left'}
                         sx={{ 
                           width: column.width,
-                          px: column.id === 'actions' ? 1 : 2,
+                          px: column.id === 'actions' || column.id === 'view' ? 1 : 2,
                           position: 'sticky',
                           top: 0,
                           zIndex: 1,
@@ -1071,9 +1204,9 @@ const JobsPage = () => {
                             />
                           </TableCell>
                           
-                          {/* Actions */}
+                          {/* View Column */}
                           <TableCell align="center">
-                            <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+                            <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1 }}>
                               <Tooltip title="View Details">
                                 <ActionButton
                                   size="small"
@@ -1101,7 +1234,12 @@ const JobsPage = () => {
                                   <CodeIcon fontSize="small" sx={{ fontSize: 18 }} />
                                 </ActionButton>
                               </Tooltip>
-
+                            </Box>
+                          </TableCell>
+                          
+                          {/* Actions */}
+                          <TableCell align="center">
+                            <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1 }}>
                               <Tooltip title="Execute Now">
                                 <ActionButton
                                   size="small"
@@ -1115,6 +1253,23 @@ const JobsPage = () => {
                                   <PlayArrowIcon fontSize="small" sx={{ fontSize: 18 }} />
                                 </ActionButton>
                               </Tooltip>
+
+                              <Tooltip title={job.JOB_SCHEDULE_STATUS === 'Scheduled' ? "Disable Job" : "Enable Job"}>
+                                <ActionButton
+                                  size="small"
+                                  color={job.JOB_SCHEDULE_STATUS === 'Scheduled' ? "success" : "error"}
+                                  darkMode={darkMode}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleEnableDisableJob(job);
+                                  }}
+                                >
+                                  {job.JOB_SCHEDULE_STATUS === 'Scheduled' ? 
+                                    <ToggleOnIcon fontSize="small" sx={{ fontSize: 18, color: '#2E7D32' }} /> :
+                                    <ToggleOffIcon fontSize="small" sx={{ fontSize: 18, color: '#D32F2F' }} />
+                                  }
+                                </ActionButton>
+                              </Tooltip>
                             </Box>
                           </TableCell>
                         </TableRow>
@@ -1123,7 +1278,7 @@ const JobsPage = () => {
                   })}
                   {filteredJobs.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={8} align="center" sx={{ py: 4 }}>
+                      <TableCell colSpan={9} align="center" sx={{ py: 4 }}>
                         {searchTerm || tableTypeFilter || scheduleStatusFilter ? (
                           <Typography variant="body1" color={darkMode ? 'gray.300' : 'gray.600'}>
                             No matching jobs found with current filters
@@ -1176,6 +1331,15 @@ const JobsPage = () => {
         onClose={() => setOpenExecuteDialog(false)}
         job={executingJob}
         onConfirm={handleConfirmExecute}
+      />
+
+      {/* Enable/Disable Job Dialog */}
+      <EnableDisableJobDialog
+        open={openEnableDisableDialog}
+        onClose={() => setOpenEnableDisableDialog(false)}
+        job={jobToToggle}
+        isEnabling={isEnabling}
+        onConfirm={handleConfirmEnableDisable}
       />
     </motion.div>
     </LocalizationProvider>
@@ -1348,6 +1512,129 @@ const ExecuteJobDialog = ({ open, onClose, job, onConfirm }) => {
           }}
         >
           Execute Now
+        </Button>
+      </DialogContent>
+      <DialogActions sx={{ 
+        backgroundColor: darkMode ? '#1A202C' : '#F9FAFB',
+        borderTop: darkMode ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(0, 0, 0, 0.1)',
+        px: 3,
+        py: 1.5
+      }}>
+        <Button 
+          onClick={onClose} 
+          variant="contained" 
+          color="primary"
+          size="small"
+          sx={{ 
+            borderRadius: 1.5,
+            py: 0.5,
+            px: 2,
+            fontSize: '0.8125rem'
+          }}
+        >
+          Cancel
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+};
+
+// Enable/Disable Job Dialog Component
+const EnableDisableJobDialog = ({ open, onClose, job, isEnabling, onConfirm }) => {
+  const { darkMode } = useTheme();
+  
+  // Check if this is a job with dependents (other jobs that depend on it)
+  const hasDependers = job?.hasDependers;
+  
+  // Warning message if trying to disable a job with dependents
+  const warningMessage = !isEnabling && hasDependers ? 
+    "Warning: Other jobs depend on this job. Disabling it may cause dependent jobs to fail." : null;
+  
+  return (
+    <Dialog
+      open={open}
+      onClose={onClose}
+      maxWidth="sm"
+      fullWidth
+      PaperProps={{
+        sx: {
+          backgroundColor: darkMode ? '#1E293B' : 'white',
+          backgroundImage: darkMode ? 
+            'linear-gradient(to bottom, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.95))' : 
+            'none',
+          borderRadius: 2,
+          overflow: 'hidden',
+          boxShadow: darkMode ? '0 25px 50px -12px rgba(0, 0, 0, 0.5)' : '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
+        }
+      }}
+    >
+      <DialogTitle sx={{ 
+        backgroundColor: darkMode ? '#1A202C' : '#F9FAFB', 
+        color: darkMode ? 'white' : '#1A202C',
+        borderBottom: darkMode ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(0, 0, 0, 0.1)',
+        px: 3,
+        py: 1.5
+      }}>
+        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          {!isEnabling && (
+            <ToggleOffIcon sx={{ mr: 1.5, color: warningMessage ? 'warning.main' : (darkMode ? 'primary.light' : 'primary.main') }} />
+          )}
+          {isEnabling && (
+            <ToggleOnIcon sx={{ mr: 1.5, color: darkMode ? 'success.light' : 'success.main' }} />
+          )}
+          <Typography variant="h6" sx={{ fontWeight: 500, fontSize: '1rem' }}>
+            {isEnabling ? 'Enable' : 'Disable'} Job: {job?.MAPREF}
+          </Typography>
+        </Box>
+        <IconButton
+          aria-label="close"
+          onClick={onClose}
+          sx={{
+            position: 'absolute',
+            right: 8,
+            top: 8,
+            color: darkMode ? 'white' : 'grey.500',
+          }}
+        >
+          <CloseIcon />
+        </IconButton>
+      </DialogTitle>
+      <DialogContent sx={{ mt: 2, p: 3, color: darkMode ? 'white' : 'text.primary' }}>
+        <Typography variant="body1" sx={{ mb: warningMessage ? 1 : 2 }}>
+          Are you sure you want to {isEnabling ? 'enable' : 'disable'} this job?
+        </Typography>
+        
+        {warningMessage && (
+          <Alert 
+            severity="warning" 
+            sx={{ 
+              mb: 2, 
+              borderRadius: 2,
+              backgroundColor: darkMode ? 'rgba(234, 179, 8, 0.15)' : 'rgba(234, 179, 8, 0.08)',
+              border: '1px solid',
+              borderColor: darkMode ? 'rgba(234, 179, 8, 0.3)' : 'rgba(234, 179, 8, 0.2)',
+              '& .MuiAlert-icon': {
+                color: darkMode ? 'warning.light' : 'warning.main'
+              }
+            }}
+          >
+            {warningMessage}
+          </Alert>
+        )}
+        
+        <Button 
+          onClick={onConfirm} 
+          variant="contained" 
+          color={isEnabling ? "success" : "primary"}
+          size="small"
+          sx={{ 
+            borderRadius: 1.5,
+            py: 0.5,
+            px: 2,
+            fontSize: '0.8125rem'
+          }}
+        >
+          {isEnabling ? 'Enable' : 'Disable'}
         </Button>
       </DialogContent>
       <DialogActions sx={{ 

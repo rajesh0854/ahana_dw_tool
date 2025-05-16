@@ -8,17 +8,19 @@ import {
 
 /**
  * ScheduleSummary component displays the schedule details in a human-readable format
+ * Shows summary for any job with sufficient schedule details, regardless of schedule status
  */
 const ScheduleSummary = ({ scheduleData, jobId, darkMode, job }) => {
   const jobSchedule = scheduleData[jobId] || {};
   
-  // Use job schedule status from job object if available
-  const isScheduled = job?.JOB_SCHEDULE_STATUS === 'Scheduled';
+  // Check if we have enough schedule information to display a summary
+  const hasFrequencyInfo = (job && job["Frequency code"]) || (jobSchedule && jobSchedule.TIMEPARAM);
+  const hasDateInfo = (job && job["start date"]) || (jobSchedule && jobSchedule.STRT_DT);
   
-  // Check if schedule is configured
-  const hasSchedule = isScheduled || (jobSchedule.TIMEPARAM && jobSchedule.STRT_DT);
+  // Display summary if we have the required information, regardless of official schedule status
+  const hasScheduleInfo = hasFrequencyInfo && hasDateInfo;
   
-  if (!hasSchedule) {
+  if (!hasScheduleInfo) {
     return (
       <Typography 
         variant="caption" 

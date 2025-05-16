@@ -94,8 +94,8 @@ def get_all_jobs():
     try:
         conn = create_oracle_connection()
         query_job_flow = f"""
-        
-         SELECT 
+
+               SELECT 
             f.JOBFLWID,
             f.MAPREF,
             f.TRGSCHM,
@@ -104,35 +104,17 @@ def get_all_jobs():
             f.DWLOGIC,
             f.STFLG,
             CASE 
-                WHEN s.JOBFLWID IS NOT NULL THEN 'Scheduled'
+                WHEN s.SCHFLG = 'Y' THEN 'Scheduled'
                 ELSE 'Not Scheduled'
             END AS JOB_SCHEDULE_STATUS,
             s.JOBSCHID,
             s.DPND_JOBSCHID,
-            CASE 
-                WHEN s.JOBFLWID IS NOT NULL THEN s.FRQCD
-                ELSE NULL
-            END AS "Frequency code",
-            CASE 
-                WHEN s.JOBFLWID IS NOT NULL THEN s.FRQDD
-                ELSE NULL
-            END AS "Frequency day",
-            CASE 
-                WHEN s.JOBFLWID IS NOT NULL THEN s.FRQHH
-                ELSE NULL
-            END AS "frequency hour",
-            CASE 
-                WHEN s.JOBFLWID IS NOT NULL THEN s.FRQMI
-                ELSE NULL
-            END AS "frequency month",
-            CASE 
-                WHEN s.JOBFLWID IS NOT NULL THEN s.STRTDT
-                ELSE NULL
-            END AS "start date",
-            CASE 
-                WHEN s.JOBFLWID IS NOT NULL THEN s.ENDDT
-                ELSE NULL
-            END AS "end date"
+            s.FRQCD AS "Frequency code",
+            s.FRQDD AS "Frequency day",
+            s.FRQHH AS "frequency hour",
+            s.FRQMI AS "frequency month",
+            s.STRTDT AS "start date",
+            s.ENDDT AS "end date"
         FROM 
             {ORACLE_SCHEMA}.DWJOBFLW f
         LEFT JOIN 
@@ -146,7 +128,8 @@ def get_all_jobs():
                     MIN(FRQHH) AS FRQHH,
                     MIN(FRQMI) AS FRQMI,
                     MIN(STRTDT) AS STRTDT,
-                    MIN(ENDDT) AS ENDDT
+                    MIN(ENDDT) AS ENDDT,
+                    MAX(SCHFLG) AS SCHFLG
                 FROM 
                     {ORACLE_SCHEMA}.DWJOBSCH
                 WHERE 
@@ -158,6 +141,7 @@ def get_all_jobs():
             f.JOBFLWID = s.JOBFLWID
         WHERE 
             f.CURFLG = 'Y'
+
 
         """
         cursor = conn.cursor()
@@ -375,23 +359,15 @@ def save_job_schedule():
         start_date = data.get('STRTDT')
         end_date = data.get('ENDDT')
         
-        # Validate required fields
-        # if not map_ref or not frequency_code or not frequency_day or not frequency_hour or not frequency_minute or not start_date:
-        #     return jsonify({
-        #         'success': False,
-        #         'message': 'Missing required parameters for job schedule'
-        #     }), 400
-            
         conn = create_oracle_connection()
         try:
             cursor = conn.cursor()
-            
             # Call the Oracle package function
-            sql = """
+            sql = f"""
             DECLARE
                 v_jobschid NUMBER;
             BEGIN
-                v_jobschid := TRG.PKGDWPRC.CREATE_JOB_SCHEDULE(
+                v_jobschid := {ORACLE_SCHEMA}.PKGDWPRC.CREATE_JOB_SCHEDULE(
                     p_mapref => :p_mapref,
                     p_frqcd => :p_frqcd,
                     p_frqdd => :p_frqdd,
@@ -516,3 +492,46 @@ def save_parent_child_job():
 
 
 
+# schedule job
+@jobs_bp.route('/enable_disable_job', methods=['POST'])
+def enable_disable_job():
+ 
+    data = request.json
+    map_ref = data.get('MAPREF')
+    job_flag = data.get('JOB_FLG')
+    conn = create_oracle_connection()
+    try:
+        cursor = conn.cursor()
+        query = f""" 
+        BEGIN
+          {ORACLE_SCHEMA}.PKGDWPRC.ENABLE_DISABLE_SCHEDULE(:map_ref, :job_flag);
+        END;
+        """
+        cursor.execute(query, {'map_ref': map_ref, 'job_flag': job_flag})
+        conn.commit()
+        if job_flag == 'E':
+            return jsonify({
+                'success': True,
+                'message': 'Job enabled successfully'
+            })
+        elif job_flag == 'D':
+            return jsonify({
+                'success': True,
+                'message': 'Job disabled successfully'
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'message': 'Invalid job flag'
+            }), 400 
+    except Exception as e:
+        conn.rollback()
+        error_message = str(e)
+        print(f"Database error in enable_disable_job: {error_message}")
+        return jsonify({
+            'success': False,
+            'message': f'Database error: {error_message}'
+        }), 500
+    finally:
+        conn.close()
+        

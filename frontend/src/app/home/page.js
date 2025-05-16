@@ -20,8 +20,9 @@ import {
   AutoFixHigh,
   Shield,
   BarChart,
-  DataObject,
-  CloudSync,
+  TaskAlt,
+  AccountCircle,
+  Dashboard,
 } from '@mui/icons-material'
 
 const Page = () => {
@@ -72,28 +73,28 @@ const Page = () => {
       delay: 0.4,
     },
     {
-      title: 'Analytics',
-      path: '/analytics',
-      gradient: 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)',
-      description: 'Gain valuable insights with advanced data analytics',
-      icon: <BarChart sx={{ fontSize: '2rem', color: '#fff' }} />,
-      delay: 0.5,
-    },
-    {
-      title: 'Data Catalog',
-      path: '/catalog',
+      title: 'Jobs and Status',
+      path: '/job-status',
       gradient: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
-      description: 'Organize and discover your data assets efficiently',
-      icon: <DataObject sx={{ fontSize: '2rem', color: '#fff' }} />,
+      description: 'Track and manage your job executions and their status',
+      icon: <TaskAlt sx={{ fontSize: '2rem', color: '#fff' }} />,
       delay: 0.6,
     },
     {
-      title: 'Integration Hub',
-      path: '/integrations',
+      title: 'User Profile',
+      path: '/profile',
       gradient: 'linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)',
-      description: 'Connect with external systems and data sources',
-      icon: <CloudSync sx={{ fontSize: '2rem', color: '#fff' }} />,
+      description: 'Manage your account settings and preferences',
+      icon: <AccountCircle sx={{ fontSize: '2rem', color: '#fff' }} />,
       delay: 0.7,
+    },
+    {
+      title: 'Dashboard',
+      path: '/dashboard',
+      gradient: 'linear-gradient(135deg, #8B5CF6 0%, #6D28D9 100%)',
+      description: 'View summary analytics and key performance indicators',
+      icon: <Dashboard sx={{ fontSize: '2rem', color: '#fff' }} />,
+      delay: 0.8,
     },
     {
       title: 'Security',
@@ -101,7 +102,7 @@ const Page = () => {
       gradient: 'linear-gradient(135deg, #64748B 0%, #475569 100%)',
       description: 'Comprehensive security controls and audit tools',
       icon: <Shield sx={{ fontSize: '2rem', color: '#fff' }} />,
-      delay: 0.8,
+      delay: 0.9,
     },
   ]
 

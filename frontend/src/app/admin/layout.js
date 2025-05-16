@@ -1,5 +1,5 @@
 'use client';
-import { Box, Container } from '@mui/material';
+import { Box } from '@mui/material';
 
 export default function AdminLayout({ children, about, license, 'manage-users': manageUsers }) {
     return (
@@ -7,21 +7,25 @@ export default function AdminLayout({ children, about, license, 'manage-users': 
             width: '100%', 
             maxWidth: '100%',
             overflowX: 'hidden',
-            pb: 4
+            display: 'flex',
+            flexDirection: 'column',
+            minHeight: 'calc(100vh - 14rem)'
         }}>
-            <Container 
-                maxWidth={false} 
+            <Box 
                 sx={{ 
-                    px: { xs: 2, sm: 3, md: 4 }, 
+                    width: '100%',
+                    px: { xs: 1, sm: 2, md: 3 }, 
                     py: 2,
-                    maxWidth: '100%'
+                    flex: 1,
+                    display: 'flex',
+                    flexDirection: 'column'
                 }}
             >
                 {children}
                 {about}
                 {license}
                 {manageUsers}
-            </Container>
+            </Box>
         </Box>
     );
 } 

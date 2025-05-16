@@ -561,30 +561,7 @@ const JobStatusAndLogsPage = () => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
     >
-      <Box p={{ xs: 2, sm: 3 }}>
-        <PageHeader darkMode={darkMode}>
-          <Box display="flex" alignItems="center" gap={1.5}>
-            <Box 
-              sx={{ 
-                backgroundColor: darkMode ? 'primary.dark' : 'primary.light',
-                p: 1,
-                borderRadius: 1.5,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}
-            >
-              <AssignmentIcon color="primary" fontSize={isMobile ? 'medium' : 'large'} />
-            </Box>
-            <HeaderTitle variant="h1" color={darkMode ? 'primary.light' : 'primary.main'}>
-              Job Status & Logs
-            </HeaderTitle>
-          </Box>
-          <HeaderSubtitle variant="body1" darkMode={darkMode}>
-            Track the status of scheduled jobs, view execution logs, and diagnose errors for data warehouse jobs.
-          </HeaderSubtitle>
-        </PageHeader>
-        
+      <Box p={{ xs: 2, sm: 3 }}>        
         <AnimatePresence>
           {error && (
             <motion.div

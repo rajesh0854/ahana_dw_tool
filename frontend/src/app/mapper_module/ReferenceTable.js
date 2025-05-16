@@ -601,18 +601,6 @@ const ReferenceTable = ({ handleEditReference, handleCreateNewReference }) => {
                         : '1px solid rgba(229, 231, 235, 1)',
                     }}
                   >
-                    Updated By
-                  </TableCell>
-                  <TableCell
-                    sx={{
-                      backgroundColor: darkMode ? '#1A1F2C' : '#F9FAFB',
-                      color: darkMode ? 'white' : 'black',
-                      fontWeight: 'bold',
-                      borderBottom: darkMode
-                        ? '1px solid rgba(75, 85, 99, 0.2)'
-                        : '1px solid rgba(229, 231, 235, 1)',
-                    }}
-                  >
                     Actions
                   </TableCell>
                 </TableRow>
@@ -621,7 +609,7 @@ const ReferenceTable = ({ handleEditReference, handleCreateNewReference }) => {
               <TableBody>
                 {loadingReferences ? (
                   <TableRow>
-                    <TableCell colSpan={11} align="center" sx={{ py: 3 }}>
+                    <TableCell colSpan={10} align="center" sx={{ py: 3 }}>
                       <CircularProgress size={30} />
                       <Typography
                         variant="body2"
@@ -636,7 +624,7 @@ const ReferenceTable = ({ handleEditReference, handleCreateNewReference }) => {
                   </TableRow>
                 ) : filteredReferences.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={11} align="center" sx={{ py: 3 }}>
+                    <TableCell colSpan={10} align="center" sx={{ py: 3 }}>
                       <Typography
                         variant="body1"
                         sx={{ color: darkMode ? 'gray.400' : 'gray.600' }}
@@ -802,14 +790,6 @@ const ReferenceTable = ({ handleEditReference, handleCreateNewReference }) => {
                           }}
                         >
                           {reference[8] || '-'}
-                        </TableCell>
-                        <TableCell
-                          sx={{
-                            color: darkMode ? 'white' : 'inherit',
-                            fontSize: 'clamp(0.8rem, 0.875vw, 0.875rem)',
-                          }}
-                        >
-                          {reference[9] || '-'}
                         </TableCell>
                         <TableCell>
                           <Box display="flex" gap={1}>
