@@ -680,7 +680,20 @@ def validate_batch_logic():
            
             # First validate all logic together
             bulk_result, bulk_error = validate_all_mapping_details(connection, p_mapref)
+            print(bulk_error)
+            print(bulk_result)
            
+            if bulk_error is None:
+                return jsonify({
+                    'status': 'success',
+                    'bulkValidation': {
+                        'success': True,
+                        'error': None
+                    },
+                    'rowResults': results
+                })
+            
+
             # Collect all mapdtlids for batch error message retrieval
             map_detail_ids = [row.get('mapdtlid') for row in rows if row.get('mapdtlid') and row.get('logic')]
            

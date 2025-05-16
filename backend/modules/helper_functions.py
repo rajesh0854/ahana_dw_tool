@@ -127,10 +127,6 @@ def get_error_message(conn, map_detail_id):
         raise
 
 def get_error_messages_list(conn, map_detail_ids):
-    """
-    map_detail_ids: list of references from detail mapping table
-    Returns: dictionary mapping each id to its error message
-    """
     try:
         result_dict = {}
         cursor = conn.cursor()
