@@ -1,49 +1,62 @@
 import React from 'react';
-import { Box, Tooltip } from '@mui/material';
+import { Box, Tooltip, Chip } from '@mui/material';
+import { styled } from '@mui/material/styles';
 import { 
-  CheckCircle as CheckCircleIcon,
-  AccessTime as AccessTimeIcon,
+  CheckCircleOutline as CheckCircleIcon,
+  AccessTime as AccessTimeIcon
 } from '@mui/icons-material';
 
+const StatusChip = styled(Chip)(({ theme, darkMode, status }) => ({
+  height: '24px',
+  fontWeight: 600,
+  fontSize: '0.75rem',
+  borderRadius: '6px',
+  backgroundColor: 
+    status === 'Scheduled' ? (darkMode ? 'rgba(34, 197, 94, 0.2)' : 'rgba(34, 197, 94, 0.1)') :
+    (darkMode ? 'rgba(245, 158, 11, 0.2)' : 'rgba(245, 158, 11, 0.1)'),
+  color: 
+    status === 'Scheduled' ? (darkMode ? '#4ADE80' : '#22C55E') :
+    (darkMode ? '#FBBF24' : '#D97706'),
+  border: '1px solid',
+  borderColor: 
+    status === 'Scheduled' ? (darkMode ? 'rgba(34, 197, 94, 0.3)' : 'rgba(34, 197, 94, 0.2)') :
+    (darkMode ? 'rgba(245, 158, 11, 0.3)' : 'rgba(245, 158, 11, 0.2)'),
+  '& .MuiChip-label': {
+    padding: '0 8px',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '4px'
+  }
+}));
+
 /**
- * Status indicator component that displays job schedule status as an icon
+ * StatusIndicator component that displays the job schedule status
+ * 
+ * @param {Object} props Component props
+ * @param {string} props.status Status to display (e.g. "Scheduled", "Not Scheduled")
+ * @param {boolean} props.darkMode Whether dark mode is enabled
+ * @returns {JSX.Element} Rendered component
  */
 const StatusIndicator = ({ status, darkMode }) => {
   const isScheduled = status === 'Scheduled';
   
   return (
-    <Tooltip title={isScheduled ? "Scheduled" : "Not Scheduled"}>
-      <Box
-        sx={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          width: 36,
-          height: 36,
-          borderRadius: '50%',
-          backgroundColor: isScheduled 
-            ? (darkMode ? 'rgba(16, 185, 129, 0.15)' : 'rgba(16, 185, 129, 0.08)') 
-            : (darkMode ? 'rgba(245, 158, 11, 0.15)' : 'rgba(245, 158, 11, 0.08)'),
-          color: isScheduled 
-            ? (darkMode ? '#34D399' : '#059669') 
-            : (darkMode ? '#FBBF24' : '#D97706'),
-          border: '1px solid',
-          borderColor: isScheduled 
-            ? (darkMode ? 'rgba(16, 185, 129, 0.3)' : 'rgba(16, 185, 129, 0.2)') 
-            : (darkMode ? 'rgba(245, 158, 11, 0.3)' : 'rgba(245, 158, 11, 0.2)'),
-          transition: 'all 0.2s ease',
-          '&:hover': {
-            transform: 'scale(1.05)',
-            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)'
-          }
-        }}
-      >
-        {isScheduled ? (
-          <CheckCircleIcon sx={{ fontSize: 20 }} />
-        ) : (
-          <AccessTimeIcon sx={{ fontSize: 20 }} />
-        )}
-      </Box>
+    <Tooltip title={status || 'Status unknown'} arrow>
+      <StatusChip
+        label={
+          <>
+            {isScheduled ? (
+              <CheckCircleIcon fontSize="small" sx={{ fontSize: 16 }} />
+            ) : (
+              <AccessTimeIcon fontSize="small" sx={{ fontSize: 16 }} />
+            )}
+            {status || 'Unknown'}
+          </>
+        }
+        status={status}
+        darkMode={darkMode}
+        size="small"
+      />
     </Tooltip>
   );
 };

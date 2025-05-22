@@ -1,54 +1,74 @@
 import React from 'react';
-import { Box, Tooltip } from '@mui/material';
-import { Storage as StorageIcon } from '@mui/icons-material';
+import { Box, Typography, Chip, Tooltip } from '@mui/material';
+import { styled } from '@mui/material/styles';
+import { Storage } from '@mui/icons-material';
+
+const TableTypeChip = styled(Chip)(({ theme, darkMode, tableType }) => ({
+  height: '20px',
+  fontSize: '0.675rem',
+  fontWeight: 600,
+  borderRadius: '4px',
+  padding: '0 2px',
+  marginLeft: '8px',
+  backgroundColor: 
+    tableType === 'FACT' ? (darkMode ? 'rgba(236, 72, 153, 0.2)' : 'rgba(236, 72, 153, 0.1)') :
+    tableType === 'DIM' ? (darkMode ? 'rgba(79, 70, 229, 0.2)' : 'rgba(79, 70, 229, 0.1)') :
+    tableType === 'STG' ? (darkMode ? 'rgba(14, 165, 233, 0.2)' : 'rgba(14, 165, 233, 0.1)') :
+    (darkMode ? 'rgba(107, 114, 128, 0.2)' : 'rgba(107, 114, 128, 0.1)'),
+  color: 
+    tableType === 'FACT' ? (darkMode ? '#F472B6' : '#EC4899') :
+    tableType === 'DIM' ? (darkMode ? '#818CF8' : '#4F46E5') :
+    tableType === 'STG' ? (darkMode ? '#38BDF8' : '#0EA5E9') :
+    (darkMode ? '#9CA3AF' : '#6B7280'),
+  border: '1px solid',
+  borderColor: 
+    tableType === 'FACT' ? (darkMode ? 'rgba(236, 72, 153, 0.3)' : 'rgba(236, 72, 153, 0.2)') :
+    tableType === 'DIM' ? (darkMode ? 'rgba(79, 70, 229, 0.3)' : 'rgba(79, 70, 229, 0.2)') :
+    tableType === 'STG' ? (darkMode ? 'rgba(14, 165, 233, 0.3)' : 'rgba(14, 165, 233, 0.2)') :
+    (darkMode ? 'rgba(107, 114, 128, 0.3)' : 'rgba(107, 114, 128, 0.2)'),
+}));
 
 /**
- * TargetTableDisplay component displays the target table info
+ * Displays formatted target table information
  */
 const TargetTableDisplay = ({ targetSchema, targetTable, tableType, darkMode }) => {
   return (
-    <Tooltip title={`${targetSchema}.${targetTable} (${tableType || 'Unknown type'})`}>
-      <Box 
-        sx={{ 
-          display: 'flex',
-          alignItems: 'center',
-          gap: 0.5,
-          backgroundColor: darkMode ? 'rgba(31, 41, 55, 0.5)' : 'rgba(243, 244, 246, 0.7)',
-          py: 0.25, 
-          px: 0.75, 
-          borderRadius: 1,
-          border: '1px solid',
-          borderColor: darkMode ? 'rgba(75, 85, 99, 0.2)' : 'rgba(209, 213, 219, 0.8)',
-          maxWidth: '160px',
-          overflow: 'hidden',
-          flexShrink: 1,
-          minWidth: 0
-        }}
-      >
-        <StorageIcon 
+    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+      <Tooltip title="Database Table" placement="top">
+        <Storage 
+          fontSize="small" 
           sx={{ 
-            fontSize: 14, 
-            color: darkMode ? 'rgba(156, 163, 175, 0.8)' : 'rgba(107, 114, 128, 0.8)',
+            mr: 1, 
+            color: darkMode ? 'primary.light' : 'primary.main',
             opacity: 0.8,
-            flexShrink: 0
-          }} 
-        />
-        <Box 
-          component="span" 
-          sx={{ 
-            fontSize: '0.7rem',
-            color: darkMode ? 'rgba(156, 163, 175, 0.9)' : 'rgba(107, 114, 128, 0.9)',
-            fontFamily: 'monospace', 
-            fontWeight: 500,
-            whiteSpace: 'nowrap',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis'
+            fontSize: '1rem'
           }}
-        >
-          {`${targetSchema}.${targetTable}`}
+        />
+      </Tooltip>
+      
+      <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          <Typography
+            variant="body2"
+            sx={{
+              fontWeight: 500,
+              fontSize: '0.875rem',
+              fontFamily: 'monospace',
+              letterSpacing: '0.01em',
+            }}
+          >
+            {targetSchema}.{targetTable}
+          </Typography>
+          
+          <TableTypeChip
+            label={tableType}
+            size="small"
+            tableType={tableType}
+            darkMode={darkMode}
+          />
         </Box>
       </Box>
-    </Tooltip>
+    </Box>
   );
 };
 

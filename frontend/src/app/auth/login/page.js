@@ -26,7 +26,7 @@ import StorageOutlinedIcon from '@mui/icons-material/StorageOutlined'
 import DataUsageIcon from '@mui/icons-material/DataUsage'
 import { ThemeProvider, createTheme } from '@mui/material/styles'
 import ReCAPTCHA from 'react-google-recaptcha'
-import { RECAPTCHA_SITE_KEY } from '../../config'
+import { RECAPTCHA_SITE_KEY, ENABLE_RECAPTCHA } from '../../config'
 import React from 'react'
 
 // Create a custom theme with data warehouse colors
@@ -377,7 +377,7 @@ const LoginPage = () => {
       return
     }
 
-    if (RECAPTCHA_SITE_KEY && !captchaVerified) {
+    if (ENABLE_RECAPTCHA && RECAPTCHA_SITE_KEY && !captchaVerified) {
       setError('Please verify that you are not a robot')
       return
     }
@@ -387,13 +387,13 @@ const LoginPage = () => {
       const result = await login(
         username, 
         password, 
-        RECAPTCHA_SITE_KEY ? recaptchaToken : undefined
+        (ENABLE_RECAPTCHA && RECAPTCHA_SITE_KEY) ? recaptchaToken : undefined
       )
       if (result.success) {
         router.push('/home')
       } else {
         setError(result.error)
-        if (recaptchaRef.current) {
+        if (ENABLE_RECAPTCHA && recaptchaRef.current) {
           recaptchaRef.current.reset()
           setCaptchaVerified(false)
           setRecaptchaToken('')
@@ -753,32 +753,42 @@ const LoginPage = () => {
                     variants={itemVariants}
                     style={{ marginBottom: '1.25rem', display: 'flex', flexDirection: 'column', alignItems: 'center' }}
                   >
-                    {RECAPTCHA_SITE_KEY ? (
-                      <>
-                        <ReCAPTCHA
-                          ref={recaptchaRef}
-                          sitekey={RECAPTCHA_SITE_KEY}
-                          onChange={handleCaptchaChange}
-                          size="normal"
-                          theme="light"
-                        />
-                        {isUsingTestKey && (
-                          <Typography 
-                            variant="caption" 
-                            color="warning.main" 
-                            sx={{ mt: 1, fontSize: '0.75rem' }}
-                          >
-                            Using test reCAPTCHA key (for development only)
-                          </Typography>
-                        )}
-                      </>
+                    {ENABLE_RECAPTCHA ? (
+                      RECAPTCHA_SITE_KEY ? (
+                        <>
+                          <ReCAPTCHA
+                            ref={recaptchaRef}
+                            sitekey={RECAPTCHA_SITE_KEY}
+                            onChange={handleCaptchaChange}
+                            size="normal"
+                            theme="light"
+                          />
+                          {isUsingTestKey && (
+                            <Typography 
+                              variant="caption" 
+                              color="warning.main" 
+                              sx={{ mt: 1, fontSize: '0.75rem' }}
+                            >
+                              Using test reCAPTCHA key (for development only)
+                            </Typography>
+                          )}
+                        </>
+                      ) : (
+                        <Alert 
+                          severity="warning" 
+                          sx={{ mb: 1, width: '100%', borderRadius: '0.75rem' }}
+                        >
+                          ReCAPTCHA site key is missing. Please configure it.
+                        </Alert>
+                      )
                     ) : (
-                      <Alert 
-                        severity="warning" 
-                        sx={{ mb: 1, width: '100%', borderRadius: '0.75rem' }}
+                      <Typography 
+                        variant="caption" 
+                        color="info.main" 
+                        sx={{ mt: 1, fontSize: '0.75rem' }}
                       >
-                        ReCAPTCHA site key is missing. Please configure it.
-                      </Alert>
+                        ReCAPTCHA verification is disabled
+                      </Typography>
                     )}
                   </motion.div>
 
@@ -787,12 +797,12 @@ const LoginPage = () => {
                       type="submit"
                       whileHover={{ scale: isLoading ? 1 : 1.03 }}
                       whileTap={{ scale: isLoading ? 1 : 0.97 }}
-                      disabled={isLoading || (RECAPTCHA_SITE_KEY && !captchaVerified)}
+                      disabled={isLoading || (ENABLE_RECAPTCHA && RECAPTCHA_SITE_KEY && !captchaVerified)}
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       transition={{ duration: 0.3 }}
                       style={{
-                        opacity: (isLoading || (RECAPTCHA_SITE_KEY && !captchaVerified)) ? 0.7 : 1,
+                        opacity: (isLoading || (ENABLE_RECAPTCHA && RECAPTCHA_SITE_KEY && !captchaVerified)) ? 0.7 : 1,
                       }}
                     >
                       <span>

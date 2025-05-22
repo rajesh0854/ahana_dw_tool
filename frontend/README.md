@@ -23,6 +23,30 @@ npm install
 NEXT_PUBLIC_API_URL=http://localhost:5000
 ```
 
+## reCAPTCHA Configuration
+
+For environments without internet access, you can disable the Google reCAPTCHA verification on the login page.
+
+1. Create a `.env.local` file in the frontend directory (if it doesn't exist already)
+2. Add the following environment variable:
+
+```
+# Set to 'false' to disable reCAPTCHA verification
+NEXT_PUBLIC_ENABLE_RECAPTCHA=false
+```
+
+This will disable the reCAPTCHA component completely, allowing users to log in without verification.
+
+If you want to enable reCAPTCHA:
+
+```
+# Enable reCAPTCHA (default)
+NEXT_PUBLIC_ENABLE_RECAPTCHA=true
+
+# Also provide a valid site key
+NEXT_PUBLIC_RECAPTCHA_SITE_KEY=your_recaptcha_site_key_here
+```
+
 ## Running the Application
 
 1. Start the development server:

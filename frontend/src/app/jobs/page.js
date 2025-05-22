@@ -28,7 +28,8 @@ import {
   MenuItem,
   FormControl,
   InputLabel,
-  Chip
+  Chip,
+  Fade
 } from '@mui/material';
 import { styled, useTheme as useMuiTheme } from '@mui/material/styles';
 import { 
@@ -71,43 +72,55 @@ import {
 
 // Styled components
 const StyledTableContainer = styled(TableContainer)(({ theme, darkMode }) => ({
-  maxHeight: '75vh',
+  maxHeight: '80vh',
+  borderRadius: '12px',
+  overflowX: 'auto',
+  boxShadow: darkMode 
+    ? '0 4px 20px rgba(0, 0, 0, 0.3)' 
+    : '0 4px 20px rgba(0, 0, 0, 0.08)',
+  border: darkMode ? '1px solid rgba(255, 255, 255, 0.05)' : '1px solid rgba(0, 0, 0, 0.05)',
   '& .MuiTableCell-head': {
     backgroundColor: darkMode ? '#1A202C' : '#F7FAFC', 
     color: darkMode ? '#E2E8F0' : '#2D3748',
     fontWeight: 600,
-    fontSize: '0.8125rem',
-    padding: '10px 14px',
+    fontSize: '0.875rem',
+    padding: '14px 16px',
     whiteSpace: 'nowrap',
-    borderBottom: darkMode ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(0, 0, 0, 0.1)'
+    borderBottom: darkMode ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(0, 0, 0, 0.1)',
+    position: 'sticky',
+    top: 0,
+    zIndex: 10,
+    backdropFilter: 'blur(8px)'
   },
   '& .MuiTableCell-body': {
     color: darkMode ? '#E2E8F0' : '#2D3748',
-    padding: '6px 14px',
-    fontSize: '0.8125rem',
+    padding: '10px 16px',
+    fontSize: '0.875rem',
+    transition: 'background-color 0.2s ease',
   },
   '& .MuiTableRow-root:hover': {
     backgroundColor: darkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)',
+    transition: 'background-color 0.2s ease',
   },
 }));
 
 // Define ActionButton if it's missing
 const ActionButton = styled(IconButton)(({ theme, darkMode, color = 'primary' }) => ({
-  padding: '3px',
-  margin: '0 2px',
-  width: '28px',
-  height: '28px',
+  padding: '6px',
+  margin: '0 3px',
+  width: '32px',
+  height: '32px',
   backgroundColor: darkMode 
-    ? (color === 'primary' ? 'rgba(59, 130, 246, 0.1)' : 
+    ? (color === 'primary' ? 'rgba(59, 130, 246, 0.15)' : 
+      color === 'info' ? 'rgba(6, 182, 212, 0.15)' : 
+      color === 'success' ? 'rgba(34, 197, 94, 0.15)' : 
+      color === 'error' ? 'rgba(239, 68, 68, 0.15)' : 
+      'rgba(99, 102, 241, 0.15)') 
+    : (color === 'primary' ? 'rgba(59, 130, 246, 0.1)' : 
       color === 'info' ? 'rgba(6, 182, 212, 0.1)' : 
       color === 'success' ? 'rgba(34, 197, 94, 0.1)' : 
       color === 'error' ? 'rgba(239, 68, 68, 0.1)' : 
-      'rgba(99, 102, 241, 0.1)') 
-    : (color === 'primary' ? 'rgba(59, 130, 246, 0.05)' : 
-      color === 'info' ? 'rgba(6, 182, 212, 0.05)' : 
-      color === 'success' ? 'rgba(34, 197, 94, 0.05)' : 
-      color === 'error' ? 'rgba(239, 68, 68, 0.05)' : 
-      'rgba(99, 102, 241, 0.05)'),
+      'rgba(99, 102, 241, 0.1)'),
   color: darkMode 
     ? (color === 'primary' ? '#60A5FA' : 
       color === 'info' ? '#06B6D4' : 
@@ -121,43 +134,152 @@ const ActionButton = styled(IconButton)(({ theme, darkMode, color = 'primary' })
       '#6366F1'),
   border: '1px solid',
   borderColor: darkMode
-    ? (color === 'primary' ? 'rgba(59, 130, 246, 0.2)' : 
+    ? (color === 'primary' ? 'rgba(59, 130, 246, 0.3)' : 
+      color === 'info' ? 'rgba(6, 182, 212, 0.3)' : 
+      color === 'success' ? 'rgba(34, 197, 94, 0.3)' : 
+      color === 'error' ? 'rgba(239, 68, 68, 0.3)' : 
+      'rgba(99, 102, 241, 0.3)')
+    : (color === 'primary' ? 'rgba(59, 130, 246, 0.2)' : 
       color === 'info' ? 'rgba(6, 182, 212, 0.2)' : 
       color === 'success' ? 'rgba(34, 197, 94, 0.2)' : 
       color === 'error' ? 'rgba(239, 68, 68, 0.2)' : 
-      'rgba(99, 102, 241, 0.2)')
-    : (color === 'primary' ? 'rgba(59, 130, 246, 0.1)' : 
-      color === 'info' ? 'rgba(6, 182, 212, 0.1)' : 
-      color === 'success' ? 'rgba(34, 197, 94, 0.1)' : 
-      color === 'error' ? 'rgba(239, 68, 68, 0.1)' : 
-      'rgba(99, 102, 241, 0.1)'),
+      'rgba(99, 102, 241, 0.2)'),
+  transition: 'all 0.2s ease',
   '&:hover': {
     backgroundColor: darkMode
-      ? (color === 'primary' ? 'rgba(59, 130, 246, 0.2)' : 
-        color === 'info' ? 'rgba(6, 182, 212, 0.2)' : 
-        color === 'success' ? 'rgba(34, 197, 94, 0.2)' : 
-        color === 'error' ? 'rgba(239, 68, 68, 0.2)' : 
-        'rgba(99, 102, 241, 0.2)')
-      : (color === 'primary' ? 'rgba(59, 130, 246, 0.1)' : 
-        color === 'info' ? 'rgba(6, 182, 212, 0.1)' : 
-        color === 'success' ? 'rgba(34, 197, 94, 0.1)' : 
-        color === 'error' ? 'rgba(239, 68, 68, 0.1)' : 
-        'rgba(99, 102, 241, 0.1)'),
+      ? (color === 'primary' ? 'rgba(59, 130, 246, 0.25)' : 
+        color === 'info' ? 'rgba(6, 182, 212, 0.25)' : 
+        color === 'success' ? 'rgba(34, 197, 94, 0.25)' : 
+        color === 'error' ? 'rgba(239, 68, 68, 0.25)' : 
+        'rgba(99, 102, 241, 0.25)')
+      : (color === 'primary' ? 'rgba(59, 130, 246, 0.15)' : 
+        color === 'info' ? 'rgba(6, 182, 212, 0.15)' : 
+        color === 'success' ? 'rgba(34, 197, 94, 0.15)' : 
+        color === 'error' ? 'rgba(239, 68, 68, 0.15)' : 
+        'rgba(99, 102, 241, 0.15)'),
+    transform: 'translateY(-1px)',
+    boxShadow: '0 2px 5px rgba(0,0,0,0.1)'
+  },
+  '&:active': {
+    transform: 'translateY(0)',
   }
 }));
 
 // New styled component for scroll-to-top button
 const ScrollToTopButton = styled(Fab)(({ theme, darkMode }) => ({
   position: 'fixed',
-  bottom: 20,
-  right: 20,
-  backgroundColor: darkMode ? 'rgba(59, 130, 246, 0.9)' : 'rgba(59, 130, 246, 0.8)',
+  bottom: 24,
+  right: 24,
+  backgroundColor: darkMode ? 'rgba(59, 130, 246, 0.9)' : 'rgba(59, 130, 246, 0.9)',
   color: '#FFFFFF',
+  transition: 'all 0.3s ease',
   '&:hover': {
-    backgroundColor: darkMode ? 'rgba(37, 99, 235, 1)' : 'rgba(37, 99, 235, 0.9)',
+    backgroundColor: darkMode ? 'rgba(37, 99, 235, 1)' : 'rgba(37, 99, 235, 1)',
+    transform: 'translateY(-2px)',
   },
   zIndex: 1000,
   boxShadow: darkMode ? '0 4px 12px rgba(0, 0, 0, 0.4)' : '0 4px 12px rgba(0, 0, 0, 0.2)',
+}));
+
+// New styled components for the filters section 
+const FiltersContainer = styled(Box)(({ theme, darkMode }) => ({
+  display: 'flex',
+  flexWrap: 'wrap',
+  gap: '12px',
+  alignItems: 'center',
+  padding: '12px 16px',
+  borderRadius: '12px',
+  backgroundColor: darkMode ? 'rgba(17, 24, 39, 0.6)' : 'rgba(249, 250, 251, 0.8)',
+  backdropFilter: 'blur(8px)',
+  boxShadow: darkMode ? '0 4px 6px rgba(0, 0, 0, 0.2)' : '0 1px 3px rgba(0, 0, 0, 0.1)',
+  border: darkMode ? '1px solid rgba(255, 255, 255, 0.05)' : '1px solid rgba(0, 0, 0, 0.05)',
+  transition: 'all 0.3s ease',
+}));
+
+const StyledSearchField = styled(TextField)(({ theme, darkMode }) => ({
+  '& .MuiOutlinedInput-root': {
+    backgroundColor: darkMode ? 'rgba(26, 32, 44, 0.8)' : 'rgba(255, 255, 255, 0.8)',
+    borderRadius: '8px',
+    '&:hover .MuiOutlinedInput-notchedOutline': {
+      borderColor: darkMode ? 'rgba(99, 102, 241, 0.5)' : 'rgba(99, 102, 241, 0.5)',
+    },
+    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+      borderColor: '#3B82F6',
+    }
+  },
+  '& .MuiInputLabel-root': {
+    fontSize: '0.875rem',
+  },
+  '& .MuiInputBase-input': {
+    padding: '10px 12px',
+  }
+}));
+
+const StyledFormControl = styled(FormControl)(({ theme, darkMode }) => ({
+  minWidth: 150,
+  '& .MuiOutlinedInput-root': {
+    backgroundColor: darkMode ? 'rgba(26, 32, 44, 0.8)' : 'rgba(255, 255, 255, 0.8)',
+    borderRadius: '8px',
+    '&:hover .MuiOutlinedInput-notchedOutline': {
+      borderColor: darkMode ? 'rgba(99, 102, 241, 0.5)' : 'rgba(99, 102, 241, 0.5)',
+    },
+    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+      borderColor: '#3B82F6',
+    }
+  },
+  '& .MuiInputLabel-root': {
+    fontSize: '0.875rem',
+  }
+}));
+
+// Button styles
+const StyledButton = styled(Button)(({ theme, darkMode }) => ({
+  textTransform: 'none',
+  fontWeight: 600,
+  borderRadius: '8px',
+  padding: '8px 16px',
+  boxShadow: 'none',
+  transition: 'all 0.2s ease',
+  '&:hover': {
+    boxShadow: '0 2px 6px rgba(0, 0, 0, 0.1)',
+    transform: 'translateY(-1px)',
+  },
+  '&:active': {
+    transform: 'translateY(0)',
+  }
+}));
+
+// Page header styling
+const PageHeader = styled(Box)(({ theme, darkMode }) => ({
+  display: 'flex',
+  justifyContent: 'flex-end',
+  alignItems: 'center',
+  marginBottom: '16px',
+  padding: '12px 20px',
+  borderRadius: '12px',
+  backgroundColor: darkMode ? 'rgba(17, 24, 39, 0.6)' : 'rgba(249, 250, 251, 0.8)',
+  backdropFilter: 'blur(8px)',
+  boxShadow: darkMode ? '0 4px 6px rgba(0, 0, 0, 0.2)' : '0 1px 3px rgba(0, 0, 0, 0.1)',
+  border: darkMode ? '1px solid rgba(255, 255, 255, 0.05)' : '1px solid rgba(0, 0, 0, 0.05)',
+}));
+
+const StatusChip = styled(Chip)(({ theme, darkMode, status }) => ({
+  fontWeight: 600,
+  fontSize: '0.75rem',
+  borderRadius: '6px',
+  backgroundColor: 
+    status === 'Scheduled' ? (darkMode ? 'rgba(34, 197, 94, 0.2)' : 'rgba(34, 197, 94, 0.1)') :
+    (darkMode ? 'rgba(245, 158, 11, 0.2)' : 'rgba(245, 158, 11, 0.1)'),
+  color: 
+    status === 'Scheduled' ? (darkMode ? '#4ADE80' : '#22C55E') :
+    (darkMode ? '#FBBF24' : '#D97706'),
+  border: '1px solid',
+  borderColor: 
+    status === 'Scheduled' ? (darkMode ? 'rgba(34, 197, 94, 0.3)' : 'rgba(34, 197, 94, 0.2)') :
+    (darkMode ? 'rgba(245, 158, 11, 0.3)' : 'rgba(245, 158, 11, 0.2)'),
+  '& .MuiChip-label': {
+    padding: '0 6px',
+  }
 }));
 
 const JobsPage = () => {
@@ -663,13 +785,12 @@ const JobsPage = () => {
 
   // Define columns for table
   const columns = [
-    { id: 'MAPREF', label: 'Job Mapping Reference', width: '16%' },
+    { id: 'MAPREF', label: 'Job Mapping Reference', width: '18%' },
     { id: 'TRGTBNM', label: 'Target Table', width: '14%' },
-    { id: 'TRGTBTYP', label: 'Type', width: '5%' },
     { id: 'STATUS', label: 'Status', width: '5%' },
     { id: 'SCHEDULE', label: 'Schedule Configuration', width: '17%' },
-    { id: 'SUMMARY', label: 'Schedule Summary', width: '16%' },
-    { id: 'DEPENDENCY', label: 'Dependency', width: '11%' },
+    { id: 'SUMMARY', label: 'Schedule Summary', width: '18%' },
+    { id: 'DEPENDENCY', label: 'Dependency', width: '12%' },
     { id: 'view', label: 'View', width: '8%' },
     { id: 'actions', label: 'Actions', width: '8%' },
   ];
@@ -797,518 +918,361 @@ const JobsPage = () => {
       transition={{ duration: 0.5 }}
       style={{ height: '100%', display: 'flex', flexDirection: 'column' }}
     >
-      {error && (
-        <Alert 
-          severity="error" 
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+        {/* Filters */}
+        <FiltersContainer darkMode={darkMode} sx={{ mb: 0, flexGrow: 1, mr: 2 }}>
+          <StyledSearchField
+            label="Search Jobs"
+            variant="outlined"
+            size="small"
+            value={searchTerm}
+            onChange={handleSearchChange}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon />
+                </InputAdornment>
+              ),
+            }}
+            darkMode={darkMode}
+            sx={{ flexGrow: 1, minWidth: { xs: '100%', sm: '200px' } }}
+          />
+          
+          <StyledFormControl size="small" darkMode={darkMode}>
+            <InputLabel>Table Type</InputLabel>
+            <Select
+              value={tableTypeFilter}
+              onChange={handleTableTypeFilterChange}
+              label="Table Type"
+            >
+              <MenuItem value="">All Types</MenuItem>
+              <MenuItem value="FACT">Fact</MenuItem>
+              <MenuItem value="DIM">Dimension</MenuItem>
+              <MenuItem value="STG">Staging</MenuItem>
+            </Select>
+          </StyledFormControl>
+          
+          <StyledFormControl size="small" darkMode={darkMode}>
+            <InputLabel>Schedule Status</InputLabel>
+            <Select
+              value={scheduleStatusFilter}
+              onChange={handleScheduleStatusFilterChange}
+              label="Schedule Status"
+            >
+              <MenuItem value="">All Statuses</MenuItem>
+              <MenuItem value="Scheduled">Scheduled</MenuItem>
+              <MenuItem value="Not Scheduled">Not Scheduled</MenuItem>
+            </Select>
+          </StyledFormControl>
+          
+          <StyledButton
+            variant="outlined"
+            size="small"
+            onClick={clearAllFilters}
+            darkMode={darkMode}
+          >
+            Clear Filters
+          </StyledButton>
+        </FiltersContainer>
+
+        <StyledButton
+          variant="contained"
+          color="primary"
+          startIcon={<RefreshIcon />}
+          onClick={handleRefresh}
+          darkMode={darkMode}
+          sx={{ height: '38px', whiteSpace: 'nowrap' }}
+        >
+          Refresh Jobs
+        </StyledButton>
+      </Box>
+
+      {/* Success/Error Messages */}
+      <Collapse in={!!error || !!successMessage}>
+        <Box sx={{ mb: 2 }}>
+          {error && (
+            <Alert 
+              severity="error" 
+              sx={{ 
+                mb: 2,
+                borderRadius: '8px',
+                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
+              }}
+              onClose={() => setError(null)}
+            >
+              {error}
+            </Alert>
+          )}
+          {successMessage && (
+            <Alert 
+              severity="success"
+              sx={{ 
+                mb: 2,
+                borderRadius: '8px',
+                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
+              }}
+              onClose={() => setSuccessMessage(null)}
+            >
+              {successMessage}
+            </Alert>
+          )}
+        </Box>
+      </Collapse>
+
+      {/* Jobs table */}
+      {loading ? (
+        <Box sx={{ 
+          display: 'flex', 
+          justifyContent: 'center', 
+          alignItems: 'center',
+          height: '50vh',
+          flexDirection: 'column',
+          gap: 2
+        }}>
+          <CircularProgress size={60} thickness={4} />
+          <Typography variant="h6" sx={{ mt: 2 }}>Loading jobs...</Typography>
+        </Box>
+      ) : jobs.length === 0 ? (
+        <Paper 
+          elevation={0}
           sx={{ 
-            mb: 3, 
-            borderRadius: 2,
-            backgroundColor: darkMode ? 'rgba(220, 38, 38, 0.1)' : 'rgba(220, 38, 38, 0.05)',
-            borderLeft: '4px solid',
-            borderLeftColor: 'error.main',
-            '& .MuiAlert-icon': {
-              color: darkMode ? 'error.light' : 'error.main'
+            p: 4, 
+            textAlign: 'center',
+            borderRadius: '12px',
+            backgroundColor: darkMode ? 'rgba(17, 24, 39, 0.6)' : 'rgba(249, 250, 251, 0.8)',
+            backdropFilter: 'blur(8px)',
+            border: darkMode ? '1px solid rgba(255, 255, 255, 0.05)' : '1px solid rgba(0, 0, 0, 0.05)',
+          }}
+        >
+          <Typography variant="h5" sx={{ mb: 2 }}>No jobs found</Typography>
+          <Typography color="textSecondary">
+            Try clearing filters or refreshing the page
+          </Typography>
+        </Paper>
+      ) : (
+        <Box
+          ref={contentRef}
+          sx={{ 
+            overflow: 'auto', 
+            flexGrow: 1,
+            maxHeight: 'calc(100vh - 130px)',
+            position: 'relative',
+            '&::-webkit-scrollbar': {
+              width: '8px',
+              height: '8px',
+            },
+            '&::-webkit-scrollbar-track': {
+              backgroundColor: darkMode ? 'rgba(15, 23, 42, 0.3)' : 'rgba(243, 244, 246, 0.5)',
+            },
+            '&::-webkit-scrollbar-thumb': {
+              backgroundColor: darkMode ? 'rgba(59, 130, 246, 0.5)' : 'rgba(59, 130, 246, 0.3)',
+              borderRadius: '4px',
+              '&:hover': {
+                backgroundColor: darkMode ? 'rgba(59, 130, 246, 0.7)' : 'rgba(59, 130, 246, 0.5)',
+              }
             }
           }}
         >
-          {error}
-        </Alert>
-      )}
-
-      <Snackbar
-        open={!!successMessage}
-        autoHideDuration={3000}
-        onClose={() => setSuccessMessage(null)}
-        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-      >
-        <Alert 
-          severity="success" 
-          variant="filled"
-          sx={{
-            borderRadius: 2,
-            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)'
-          }}
-        >
-          {successMessage}
-        </Alert>
-      </Snackbar>
-
-      <Paper 
-        elevation={darkMode ? 2 : 1} 
-        sx={{ 
-          borderRadius: 2, 
-          overflow: 'hidden',
-          backgroundColor: darkMode ? '#1E293B' : 'white',
-          border: darkMode ? '1px solid #2D3748' : 'none',
-          backgroundImage: darkMode ? 
-            'linear-gradient(to bottom, rgba(30, 41, 59, 0.7), rgba(15, 23, 42, 0.9))' : 
-            'linear-gradient(to bottom, rgba(255, 255, 255, 0.9), rgba(249, 250, 251, 0.95))',
-          boxShadow: darkMode ? 
-            '0 4px 20px rgba(0, 0, 0, 0.3)' : 
-            '0 4px 20px rgba(0, 0, 0, 0.08)',
-          display: 'flex',
-          flexDirection: 'column',
-          flexGrow: 1
-        }}
-      >
-        {/* Filter controls with better spacing */}
-        <Box sx={{ 
-          px: 3,
-          py: 1.5,
-          backgroundColor: darkMode ? 'rgba(17, 24, 39, 0.5)' : 'rgba(249, 250, 251, 0.7)',
-          borderBottom: '1px solid',
-          borderColor: darkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          flexWrap: { xs: 'wrap', md: 'nowrap' },
-          gap: 1.5
-        }}>
-          {/* Left side controls - Search and Active Filters */}
-          <Box sx={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: 2,
-            flexGrow: 1,
-            flexBasis: { xs: '100%', md: '60%' },
-            order: { xs: 2, md: 1 },
-            mt: { xs: 2, md: 0 }
-          }}>
-            {/* Search field */}
-            <TextField
-              size="small"
-              placeholder="Search jobs..."
-              variant="outlined"
-              value={searchTerm}
-              onChange={handleSearchChange}
-              sx={{ 
-                width: { xs: '100%', sm: 240 },
-                flexGrow: { xs: 1, sm: 0 }
-              }}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <SearchIcon fontSize="small" color={darkMode ? 'primary' : 'inherit'} />
-                  </InputAdornment>
-                ),
-                sx: {
-                  borderRadius: 2,
-                  backgroundColor: darkMode ? 'rgba(30, 41, 59, 0.6)' : 'rgba(255, 255, 255, 0.8)',
-                  '& .MuiOutlinedInput-notchedOutline': {
-                    borderColor: darkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
-                  },
-                  '&:hover .MuiOutlinedInput-notchedOutline': {
-                    borderColor: darkMode ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.2)',
-                  },
-                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                    borderColor: darkMode ? 'primary.main' : 'primary.main',
-                  },
-                  fontSize: '0.875rem',
-                }
-              }}
-            />
-            
-            {/* Active Filter Badge */}
-            {(tableTypeFilter || scheduleStatusFilter || searchTerm) && (
-              <Box sx={{ 
-                display: 'flex',
-                alignItems: 'center',
-                backgroundColor: darkMode ? 'rgba(59, 130, 246, 0.15)' : 'rgba(59, 130, 246, 0.08)',
-                color: darkMode ? '#60A5FA' : '#3B82F6',
-                borderRadius: 8,
-                px: 1.5,
-                py: 0.3,
-                height: 38,
-                fontSize: '0.75rem',
-                fontWeight: 600,
-                border: '1px solid',
-                borderColor: darkMode ? 'rgba(59, 130, 246, 0.3)' : 'rgba(59, 130, 246, 0.15)',
-                cursor: 'pointer',
-                '&:hover': {
-                  backgroundColor: darkMode ? 'rgba(59, 130, 246, 0.25)' : 'rgba(59, 130, 246, 0.15)',
-                }
-              }}
-              onClick={clearAllFilters}
-              >
-                <FilterListIcon fontSize="small" sx={{ mr: 0.5, fontSize: 16 }} />
-                {(tableTypeFilter ? 1 : 0) + (scheduleStatusFilter ? 1 : 0) + (searchTerm ? 1 : 0)} 
-                {' Filter' + ((tableTypeFilter && scheduleStatusFilter) || 
-                            (tableTypeFilter && searchTerm) || 
-                            (scheduleStatusFilter && searchTerm) ? 's' : '')} 
-                Active (Clear)
-              </Box>
-            )}
-          </Box>
-          
-          {/* Right side controls - Filters and Refresh */}
-          <Box sx={{ 
-            display: 'flex', 
-            justifyContent: 'flex-end', 
-            alignItems: 'center', 
-            gap: 2,
-            flexBasis: { xs: '100%', md: '40%' },
-            order: { xs: 1, md: 2 }
-          }}>
-            {/* Table Type Filter */}
-            <Box sx={{ 
-              backgroundColor: darkMode ? 'rgba(30, 41, 59, 0.6)' : 'rgba(255, 255, 255, 0.8)',
-              borderRadius: 2,
-              border: '1px solid',
-              borderColor: darkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
-              display: 'flex',
-              alignItems: 'center',
-              position: 'relative',
-              minWidth: 140,
-              height: '38px'
-            }}>
-              <Select
-                value={tableTypeFilter}
-                onChange={handleTableTypeFilterChange}
-                displayEmpty
-                variant="standard"
-                sx={{ 
-                  fontSize: '0.875rem',
-                  '& .MuiSelect-select': {
-                    pl: 2,
-                    pr: 4,
-                    py: 1,
-                    backgroundColor: 'transparent',
-                  },
-                  '&:before, &:after': {
-                    display: 'none'
-                  },
-                  '& .MuiSelect-icon': {
-                    right: 8
-                  },
-                  width: '100%'
-                }}
-                MenuProps={{ 
-                  PaperProps: { 
-                    sx: { 
-                      maxHeight: 300,
-                      mt: 0.5
-                    } 
-                  } 
-                }}
-              >
-                <MenuItem value=""><em>Table Type: All ({jobs.length})</em></MenuItem>
-                {tableTypes.map(type => {
-                  const count = jobs.filter(job => job.TRGTBTYP === type).length;
+          <StyledTableContainer darkMode={darkMode}>
+            <Table stickyHeader size="small" aria-label="jobs table">
+              <TableHead>
+                <TableRow>
+                  {columns.map((column) => (
+                    <TableCell
+                      key={column.id}
+                      align={column.id === 'actions' || column.id === 'STATUS' || column.id === 'view' ? 'center' : 'left'}
+                      sx={{ 
+                        width: column.width,
+                        px: column.id === 'actions' || column.id === 'view' ? 1 : 2,
+                        position: 'sticky',
+                        top: 0,
+                        zIndex: 1,
+                        fontWeight: 600,
+                        fontSize: '0.8125rem',
+                        whiteSpace: 'nowrap',
+                        backgroundColor: darkMode ? '#1A202C' : '#F7FAFC'
+                      }}
+                    >
+                      {column.label}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {filteredJobs.map((job) => {
                   return (
-                    <MenuItem key={type} value={type}>
-                      {type} ({count})
-                    </MenuItem>
+                    <React.Fragment key={job.JOBID}>
+                      <TableRow hover>
+                        {/* Job Details - Mapping Reference */}
+                        <TableCell>
+                          <MappingDetails
+                            mapRef={job.MAPREF}
+                            darkMode={darkMode}
+                          />
+                        </TableCell>
+
+                        {/* Target Table Details */}
+                        <TableCell>
+                          <TargetTableDisplay
+                            targetSchema={job.TRGSCHM}
+                            targetTable={job.TRGTBNM}
+                            tableType={job.TRGTBTYP}
+                            darkMode={darkMode}
+                          />
+                        </TableCell>
+
+                        {/* Status - Display as icon */}
+                        <TableCell align="center">
+                          <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+                            <StatusChip 
+                              status={job.JOB_SCHEDULE_STATUS} 
+                              darkMode={darkMode} 
+                            />
+                          </Box>
+                        </TableCell>
+
+                        {/* Schedule Configuration */}
+                        <TableCell>
+                          <InlineScheduleConfig
+                            jobId={job.JOBFLWID}
+                            scheduleData={scheduleData}
+                            handleScheduleChange={handleScheduleChange}
+                            handleDateChange={handleDateChange}
+                            handleSaveSchedule={handleSaveSchedule}
+                            isScheduled={job.JOB_SCHEDULE_STATUS === 'Scheduled'}
+                            darkMode={darkMode}
+                            scheduleLoading={scheduleLoading}
+                            scheduleSaving={scheduleSaving}
+                          />
+                        </TableCell>
+                        
+                        {/* Schedule Summary */}
+                        <TableCell>
+                          <ScheduleSummary
+                            scheduleData={scheduleData}
+                            jobId={job.JOBFLWID}
+                            darkMode={darkMode}
+                            job={job}
+                          />
+                        </TableCell>
+                        
+                        {/* Dependency */}
+                        <TableCell>
+                          <DependencyDisplay
+                            jobId={job.JOBFLWID}
+                            mapRef={job.MAPREF}
+                            dependency={job.DPND_MAPREF}
+                            darkMode={darkMode}
+                            onDependencyUpdated={(dependencyMapRef) => handleDependencyUpdated(job.JOBFLWID, dependencyMapRef)}
+                            job={job}
+                            allJobs={jobs}
+                          />
+                        </TableCell>
+                        
+                        {/* View Column */}
+                        <TableCell align="center">
+                          <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1 }}>
+                            <Tooltip title="View Details">
+                              <ActionButton
+                                size="small"
+                                color="primary"
+                                darkMode={darkMode}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleViewDetails(job);
+                                }}
+                              >
+                                <VisibilityIcon fontSize="small" sx={{ fontSize: 18 }} />
+                              </ActionButton>
+                            </Tooltip>
+
+                            <Tooltip title="View SQL Logic">
+                              <ActionButton
+                                size="small"
+                                color="info"
+                                darkMode={darkMode}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleViewLogic(job);
+                                }}
+                              >
+                                <CodeIcon fontSize="small" sx={{ fontSize: 18 }} />
+                              </ActionButton>
+                            </Tooltip>
+                          </Box>
+                        </TableCell>
+                        
+                        {/* Actions */}
+                        <TableCell align="center">
+                          <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1 }}>
+                            <Tooltip title="Execute Now">
+                              <ActionButton
+                                size="small"
+                                color="secondary"
+                                darkMode={darkMode}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleExecuteNow(job);
+                                }}
+                              >
+                                <PlayArrowIcon fontSize="small" sx={{ fontSize: 18 }} />
+                              </ActionButton>
+                            </Tooltip>
+
+                            <Tooltip title={job.JOB_SCHEDULE_STATUS === 'Scheduled' ? "Disable Job" : "Enable Job"}>
+                              <ActionButton
+                                size="small"
+                                color={job.JOB_SCHEDULE_STATUS === 'Scheduled' ? "success" : "error"}
+                                darkMode={darkMode}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleEnableDisableJob(job);
+                                }}
+                              >
+                                {job.JOB_SCHEDULE_STATUS === 'Scheduled' ? 
+                                  <ToggleOnIcon fontSize="small" sx={{ fontSize: 18, color: '#2E7D32' }} /> :
+                                  <ToggleOffIcon fontSize="small" sx={{ fontSize: 18, color: '#D32F2F' }} />
+                                }
+                              </ActionButton>
+                            </Tooltip>
+                          </Box>
+                        </TableCell>
+                      </TableRow>
+                    </React.Fragment>
                   );
                 })}
-              </Select>
-            </Box>
-            
-            {/* Schedule Status Filter */}
-            <Box sx={{ 
-              backgroundColor: darkMode ? 'rgba(30, 41, 59, 0.6)' : 'rgba(255, 255, 255, 0.8)',
-              borderRadius: 2,
-              border: '1px solid',
-              borderColor: darkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
-              display: 'flex',
-              alignItems: 'center',
-              position: 'relative',
-              minWidth: 160,
-              height: '38px'
-            }}>
-              <Select
-                value={scheduleStatusFilter}
-                onChange={handleScheduleStatusFilterChange}
-                displayEmpty
-                variant="standard"
-                sx={{ 
-                  fontSize: '0.875rem',
-                  '& .MuiSelect-select': {
-                    pl: 2,
-                    pr: 4,
-                    py: 1,
-                    backgroundColor: 'transparent',
-                  },
-                  '&:before, &:after': {
-                    display: 'none'
-                  },
-                  '& .MuiSelect-icon': {
-                    right: 8
-                  },
-                  width: '100%'
-                }}
-                MenuProps={{ 
-                  PaperProps: { 
-                    sx: { 
-                      maxHeight: 300,
-                      mt: 0.5
-                    } 
-                  } 
-                }}
-              >
-                <MenuItem value=""><em>Status: All ({jobs.length})</em></MenuItem>
-                <MenuItem value="Scheduled">
-                  Scheduled ({jobs.filter(job => job.JOB_SCHEDULE_STATUS === 'Scheduled').length})
-                </MenuItem>
-                <MenuItem value="Not Scheduled">
-                  Not Scheduled ({jobs.filter(job => job.JOB_SCHEDULE_STATUS !== 'Scheduled').length})
-                </MenuItem>
-              </Select>
-            </Box>
-            
-            {/* Refresh button */}
-            <Tooltip title="Refresh Jobs">
-              <IconButton 
-                onClick={handleRefresh}
-                sx={{ 
-                  backgroundColor: darkMode ? 'rgba(30, 41, 59, 0.6)' : 'rgba(255, 255, 255, 0.8)',
-                  border: '1px solid',
-                  borderColor: darkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
-                  color: darkMode ? '#60A5FA' : '#3B82F6',
-                  '&:hover': {
-                    backgroundColor: darkMode ? 'rgba(30, 41, 59, 0.8)' : 'rgba(255, 255, 255, 0.9)',
-                  },
-                  height: '38px',
-                  width: '38px'
-                }}
-              >
-                <RefreshIcon />
-              </IconButton>
-            </Tooltip>
-          </Box>
-        </Box>
-
-        {loading ? (
-          <Box display="flex" justifyContent="center" alignItems="center" height="300px">
-            <CircularProgress color={darkMode ? 'primary' : 'secondary'} />
-          </Box>
-        ) : (
-          <Box
-            ref={contentRef}
-            sx={{ 
-              overflow: 'auto', 
-              flexGrow: 1,
-              maxHeight: 'calc(100vh - 200px)',
-              position: 'relative',
-              '&::-webkit-scrollbar': {
-                width: '8px',
-                height: '8px',
-              },
-              '&::-webkit-scrollbar-track': {
-                backgroundColor: darkMode ? 'rgba(15, 23, 42, 0.3)' : 'rgba(243, 244, 246, 0.5)',
-              },
-              '&::-webkit-scrollbar-thumb': {
-                backgroundColor: darkMode ? 'rgba(59, 130, 246, 0.5)' : 'rgba(59, 130, 246, 0.3)',
-                borderRadius: '4px',
-                '&:hover': {
-                  backgroundColor: darkMode ? 'rgba(59, 130, 246, 0.7)' : 'rgba(59, 130, 246, 0.5)',
-                }
-              }
-            }}
-          >
-            <StyledTableContainer darkMode={darkMode}>
-              <Table stickyHeader size="small" aria-label="jobs table">
-                <TableHead>
+                {filteredJobs.length === 0 && (
                   <TableRow>
-                    {columns.map((column) => (
-                      <TableCell
-                        key={column.id}
-                        align={column.id === 'actions' || column.id === 'STATUS' || column.id === 'view' ? 'center' : 'left'}
-                        sx={{ 
-                          width: column.width,
-                          px: column.id === 'actions' || column.id === 'view' ? 1 : 2,
-                          position: 'sticky',
-                          top: 0,
-                          zIndex: 1,
-                          fontWeight: 600,
-                          fontSize: '0.8125rem',
-                          whiteSpace: 'nowrap',
-                          backgroundColor: darkMode ? '#1A202C' : '#F7FAFC'
-                        }}
-                      >
-                        {column.label}
-                      </TableCell>
-                    ))}
+                    <TableCell colSpan={8} align="center" sx={{ py: 4 }}>
+                      {searchTerm || tableTypeFilter || scheduleStatusFilter ? (
+                        <Typography variant="body1" color={darkMode ? 'gray.300' : 'gray.600'}>
+                          No matching jobs found with current filters
+                        </Typography>
+                      ) : (
+                        <Typography variant="body1" color={darkMode ? 'gray.300' : 'gray.600'}>
+                          No jobs found
+                        </Typography>
+                      )}
+                    </TableCell>
                   </TableRow>
-                </TableHead>
-                <TableBody>
-                  {filteredJobs.map((job) => {
-                    return (
-                      <React.Fragment key={job.JOBID}>
-                        <TableRow hover>
-                          {/* Job Details - Mapping Reference */}
-                          <TableCell>
-                            <MappingDetails
-                              mapRef={job.MAPREF}
-                              darkMode={darkMode}
-                            />
-                          </TableCell>
-
-                          {/* Target Table Details */}
-                          <TableCell>
-                            <TargetTableDisplay
-                              targetSchema={job.TRGSCHM}
-                              targetTable={job.TRGTBNM}
-                              tableType={job.TRGTBTYP}
-                              darkMode={darkMode}
-                            />
-                          </TableCell>
-
-                          {/* Table Type */}
-                          <TableCell sx={{ pr: 1 }}>{job.TRGTBTYP}</TableCell>
-
-                          {/* Status - Display as icon */}
-                          <TableCell align="center" sx={{ pl: 1 }}>
-                            <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-                              <StatusIndicator 
-                                status={job.JOB_SCHEDULE_STATUS} 
-                                darkMode={darkMode} 
-                              />
-                            </Box>
-                          </TableCell>
-
-                          {/* Schedule Configuration */}
-                          <TableCell>
-                            <InlineScheduleConfig
-                              jobId={job.JOBFLWID}
-                              scheduleData={scheduleData}
-                              handleScheduleChange={handleScheduleChange}
-                              handleDateChange={handleDateChange}
-                              handleSaveSchedule={handleSaveSchedule}
-                              isScheduled={job.JOB_SCHEDULE_STATUS === 'Scheduled'}
-                              darkMode={darkMode}
-                              scheduleLoading={scheduleLoading}
-                              scheduleSaving={scheduleSaving}
-                            />
-                          </TableCell>
-                          
-                          {/* Schedule Summary */}
-                          <TableCell>
-                            <ScheduleSummary
-                              scheduleData={scheduleData}
-                              jobId={job.JOBFLWID}
-                              darkMode={darkMode}
-                              job={job}
-                            />
-                          </TableCell>
-                          
-                          {/* Dependency */}
-                          <TableCell>
-                            <DependencyDisplay
-                              jobId={job.JOBFLWID}
-                              mapRef={job.MAPREF}
-                              dependency={job.DPND_MAPREF}
-                              darkMode={darkMode}
-                              onDependencyUpdated={(dependencyMapRef) => handleDependencyUpdated(job.JOBFLWID, dependencyMapRef)}
-                              job={job}
-                              allJobs={jobs}
-                            />
-                          </TableCell>
-                          
-                          {/* View Column */}
-                          <TableCell align="center">
-                            <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1 }}>
-                              <Tooltip title="View Details">
-                                <ActionButton
-                                  size="small"
-                                  color="primary"
-                                  darkMode={darkMode}
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleViewDetails(job);
-                                  }}
-                                >
-                                  <VisibilityIcon fontSize="small" sx={{ fontSize: 18 }} />
-                                </ActionButton>
-                              </Tooltip>
-
-                              <Tooltip title="View SQL Logic">
-                                <ActionButton
-                                  size="small"
-                                  color="info"
-                                  darkMode={darkMode}
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleViewLogic(job);
-                                  }}
-                                >
-                                  <CodeIcon fontSize="small" sx={{ fontSize: 18 }} />
-                                </ActionButton>
-                              </Tooltip>
-                            </Box>
-                          </TableCell>
-                          
-                          {/* Actions */}
-                          <TableCell align="center">
-                            <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1 }}>
-                              <Tooltip title="Execute Now">
-                                <ActionButton
-                                  size="small"
-                                  color="secondary"
-                                  darkMode={darkMode}
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleExecuteNow(job);
-                                  }}
-                                >
-                                  <PlayArrowIcon fontSize="small" sx={{ fontSize: 18 }} />
-                                </ActionButton>
-                              </Tooltip>
-
-                              <Tooltip title={job.JOB_SCHEDULE_STATUS === 'Scheduled' ? "Disable Job" : "Enable Job"}>
-                                <ActionButton
-                                  size="small"
-                                  color={job.JOB_SCHEDULE_STATUS === 'Scheduled' ? "success" : "error"}
-                                  darkMode={darkMode}
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleEnableDisableJob(job);
-                                  }}
-                                >
-                                  {job.JOB_SCHEDULE_STATUS === 'Scheduled' ? 
-                                    <ToggleOnIcon fontSize="small" sx={{ fontSize: 18, color: '#2E7D32' }} /> :
-                                    <ToggleOffIcon fontSize="small" sx={{ fontSize: 18, color: '#D32F2F' }} />
-                                  }
-                                </ActionButton>
-                              </Tooltip>
-                            </Box>
-                          </TableCell>
-                        </TableRow>
-                      </React.Fragment>
-                    );
-                  })}
-                  {filteredJobs.length === 0 && (
-                    <TableRow>
-                      <TableCell colSpan={9} align="center" sx={{ py: 4 }}>
-                        {searchTerm || tableTypeFilter || scheduleStatusFilter ? (
-                          <Typography variant="body1" color={darkMode ? 'gray.300' : 'gray.600'}>
-                            No matching jobs found with current filters
-                          </Typography>
-                        ) : (
-                          <Typography variant="body1" color={darkMode ? 'gray.300' : 'gray.600'}>
-                            No jobs found
-                          </Typography>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </StyledTableContainer>
-          </Box>
-        )}
-        
-        {/* Scroll to top button */}
-        {showScrollTop && (
-          <ScrollToTopButton
-            size="small"
-            aria-label="scroll to top"
-            onClick={scrollToTop}
-            darkMode={darkMode}
-          >
-            <KeyboardArrowUpIcon />
-          </ScrollToTopButton>
-        )}
-      </Paper>
+                )}
+              </TableBody>
+            </Table>
+          </StyledTableContainer>
+        </Box>
+      )}
+      
+      {/* Scroll to top button */}
+      <Fade in={showScrollTop}>
+        <ScrollToTopButton
+          size="small"
+          aria-label="scroll to top"
+          onClick={scrollToTop}
+          darkMode={darkMode}
+        >
+          <KeyboardArrowUpIcon />
+        </ScrollToTopButton>
+      </Fade>
 
       {/* Job Details Dialog */}
       <JobDetailsDialog 

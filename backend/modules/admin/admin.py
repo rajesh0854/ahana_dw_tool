@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 from modules.login.login import token_required, hash_password, generate_salt, is_valid_password
 from datetime import datetime
 import json
+import re
 from functools import wraps
 from modules.license.license_manager import LicenseManager
 
@@ -1080,4 +1081,269 @@ def deactivate_license():
     return jsonify({
         'success': success,
         'message': message
-    }) 
+    })
+
+@admin_bp.route('/modules', methods=['GET'])
+@token_required
+@admin_required
+def get_modules(current_user_id):
+    """Get all modules for the system"""
+    try:
+        session = Session()
+        
+        # Check if modules table exists
+        table_exists = session.execute(
+            text("""
+                SELECT name FROM sqlite_master 
+                WHERE type='table' AND name='modules'
+            """)
+        ).fetchone()
+        
+        # Create modules table if it doesn't exist
+        if not table_exists:
+            session.execute(
+                text("""
+                    CREATE TABLE modules (
+                        module_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        module_name TEXT UNIQUE NOT NULL,
+                        display_name TEXT NOT NULL,
+                        description TEXT,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    )
+                """)
+            )
+            session.commit()
+            
+            # Add default modules
+            default_modules = [
+                ('dashboard', 'Dashboard', 'Main dashboard features'),
+                ('users', 'Users Management', 'User management features'),
+                ('reports', 'Reports', 'Reporting features'),
+                ('analytics', 'Analytics', 'Analytics features'),
+                ('settings', 'Settings', 'System settings')
+            ]
+            
+            for module in default_modules:
+                session.execute(
+                    text("""
+                        INSERT INTO modules (module_name, display_name, description)
+                        VALUES (:module_name, :display_name, :description)
+                    """),
+                    {
+                        'module_name': module[0],
+                        'display_name': module[1],
+                        'description': module[2]
+                    }
+                )
+            session.commit()
+        
+        # Get all modules
+        modules = session.execute(
+            text("""
+                SELECT module_id, module_name, display_name, description, 
+                       created_at, updated_at
+                FROM modules
+                ORDER BY module_name
+            """)
+        ).fetchall()
+        
+        # Format response
+        result = []
+        for module in modules:
+            result.append({
+                'module_id': module.module_id,
+                'module_name': module.module_name,
+                'display_name': module.display_name,
+                'description': module.description,
+                'created_at': str(module.created_at) if module.created_at else None,
+                'updated_at': str(module.updated_at) if module.updated_at else None
+            })
+        
+        return jsonify(result)
+    except Exception as e:
+        print(f"Error getting modules: {str(e)}")
+        return jsonify({'error': 'Failed to retrieve modules'}), 500
+    finally:
+        session.close()
+
+@admin_bp.route('/modules', methods=['POST'])
+@token_required
+@admin_required
+def create_module(current_user_id):
+    """Create a new module"""
+    try:
+        data = request.get_json()
+        
+        # Validate required fields
+        if not data.get('module_name') or not data.get('display_name'):
+            return jsonify({'error': 'Module name and display name are required'}), 400
+        
+        # Validate module_name format (lowercase, underscores, alphanumeric)
+        if not re.match(r'^[a-z0-9_]+$', data['module_name']):
+            return jsonify({'error': 'Module name must contain only lowercase letters, numbers, and underscores'}), 400
+        
+        session = Session()
+        
+        # Check if module name already exists
+        existing_module = session.execute(
+            text("SELECT module_id FROM modules WHERE module_name = :module_name"),
+            {'module_name': data['module_name']}
+        ).fetchone()
+        
+        if existing_module:
+            return jsonify({'error': 'Module name already exists'}), 400
+        
+        # Create new module
+        result = session.execute(
+            text("""
+                INSERT INTO modules (module_name, display_name, description)
+                VALUES (:module_name, :display_name, :description)
+                RETURNING module_id
+            """),
+            {
+                'module_name': data['module_name'],
+                'display_name': data['display_name'],
+                'description': data.get('description', '')
+            }
+        )
+        
+        module_id = result.fetchone()[0]
+        session.commit()
+        
+        return jsonify({
+            'message': 'Module created successfully',
+            'module_id': module_id
+        }), 201
+    except Exception as e:
+        print(f"Error creating module: {str(e)}")
+        return jsonify({'error': f'Failed to create module: {str(e)}'}), 500
+    finally:
+        session.close()
+
+@admin_bp.route('/modules/<int:module_id>', methods=['PUT'])
+@token_required
+@admin_required
+def update_module(current_user_id, module_id):
+    """Update an existing module"""
+    try:
+        data = request.get_json()
+        session = Session()
+        
+        # Check if module exists
+        existing_module = session.execute(
+            text("SELECT * FROM modules WHERE module_id = :module_id"),
+            {'module_id': module_id}
+        ).fetchone()
+        
+        if not existing_module:
+            return jsonify({'error': 'Module not found'}), 404
+        
+        # Validate required fields
+        if not data.get('display_name'):
+            return jsonify({'error': 'Display name is required'}), 400
+        
+        # Update module
+        session.execute(
+            text("""
+                UPDATE modules 
+                SET display_name = :display_name,
+                    description = :description,
+                    updated_at = CURRENT_TIMESTAMP
+                WHERE module_id = :module_id
+            """),
+            {
+                'module_id': module_id,
+                'display_name': data['display_name'],
+                'description': data.get('description', '')
+            }
+        )
+        
+        # If the module_name is being changed, need to update permission_matrix references
+        if 'module_name' in data and data['module_name'] != existing_module.module_name:
+            # Validate module_name format
+            if not re.match(r'^[a-z0-9_]+$', data['module_name']):
+                return jsonify({'error': 'Module name must contain only lowercase letters, numbers, and underscores'}), 400
+                
+            # Check if new module name already exists
+            name_exists = session.execute(
+                text("SELECT module_id FROM modules WHERE module_name = :module_name AND module_id != :module_id"),
+                {'module_name': data['module_name'], 'module_id': module_id}
+            ).fetchone()
+            
+            if name_exists:
+                return jsonify({'error': 'Module name already exists'}), 400
+                
+            # Update module name
+            session.execute(
+                text("UPDATE modules SET module_name = :module_name WHERE module_id = :module_id"),
+                {'module_name': data['module_name'], 'module_id': module_id}
+            )
+            
+            # Update permission_matrix references
+            session.execute(
+                text("""
+                    UPDATE permission_matrix
+                    SET module_name = :new_module_name
+                    WHERE module_name = :old_module_name
+                """),
+                {
+                    'new_module_name': data['module_name'],
+                    'old_module_name': existing_module.module_name
+                }
+            )
+        
+        session.commit()
+        return jsonify({'message': 'Module updated successfully'})
+    except Exception as e:
+        print(f"Error updating module: {str(e)}")
+        return jsonify({'error': f'Failed to update module: {str(e)}'}), 500
+    finally:
+        session.close()
+
+@admin_bp.route('/modules/<int:module_id>', methods=['DELETE'])
+@token_required
+@admin_required
+def delete_module(current_user_id, module_id):
+    """Delete a module"""
+    try:
+        session = Session()
+        
+        # Check if module exists
+        module = session.execute(
+            text("SELECT * FROM modules WHERE module_id = :module_id"),
+            {'module_id': module_id}
+        ).fetchone()
+        
+        if not module:
+            return jsonify({'error': 'Module not found'}), 404
+        
+        # Check if module is used in permission_matrix
+        permissions_using_module = session.execute(
+            text("""
+                SELECT COUNT(*) as count 
+                FROM permission_matrix 
+                WHERE module_name = :module_name and can_view=1
+            """),
+            {'module_name': module.module_name}
+        ).fetchone()
+        
+        if permissions_using_module.count > 0:
+            return jsonify({
+                'error': 'Cannot delete module that is being used in role permissions',
+                'count': permissions_using_module.count
+            }), 400
+        
+        # Delete module
+        session.execute(
+            text("DELETE FROM modules WHERE module_id = :module_id"),
+            {'module_id': module_id}
+        )
+        
+        session.commit()
+        return jsonify({'message': 'Module deleted successfully'})
+    except Exception as e:
+        print(f"Error deleting module: {str(e)}")
+        return jsonify({'error': f'Failed to delete module: {str(e)}'}), 500
+    finally:
+        session.close() 

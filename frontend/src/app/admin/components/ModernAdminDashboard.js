@@ -1,17 +1,19 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Box, useTheme, alpha, Typography, Container, CircularProgress, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TablePagination, Paper, Chip, Stack, Avatar, IconButton, Tooltip, TextField, Button, InputAdornment } from '@mui/material';
+import { Box, useTheme, alpha, Typography, Container, CircularProgress, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TablePagination, Paper, Chip, Stack, Avatar, IconButton, Tooltip, TextField, Button, InputAdornment, Divider } from '@mui/material';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../context/AuthContext';
 import { API_BASE_URL } from '../../config';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
 import { message } from 'antd';
-
 // Import components
 import TabsLayout from './TabsLayout';
 import MetricsSection from './MetricsSection';
 import UsersTable from './UsersTable';
 import LicenseManager from './LicenseManager';
+import UserDialog from './UserDialogs';
+import RoleDialog from './RoleDialogs';
+import ModuleDialog from './ModuleDialog';
 import { AboutTabContent } from './';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import SecurityIcon from '@mui/icons-material/Security';
@@ -21,6 +23,7 @@ import FilterListIcon from '@mui/icons-material/FilterList';
 import AddIcon from '@mui/icons-material/Add';
 import SearchIcon from '@mui/icons-material/Search';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
+import SettingsIcon from '@mui/icons-material/Settings';
 
 // Page variants for animations
 const pageVariants = {
@@ -36,19 +39,20 @@ const tabContentVariants = {
   exit: { opacity: 0, y: -15 }
 };
 
-const ModernAdminDashboard = () => {
-  const theme = useTheme();
-  const [activeTab, setActiveTab] = useState(0);
+const ModernAdminDashboard = ({ initialActiveTab = 0 }) => {  const theme = useTheme();  const [activeTab, setActiveTab] = useState(initialActiveTab);
   const [users, setUsers] = useState([]);
   const [roles, setRoles] = useState([]);
+  const [modules, setModules] = useState([]);
   const [pendingApprovals, setPendingApprovals] = useState([]);
   const [auditLogs, setAuditLogs] = useState([]);
   const [openDialog, setOpenDialog] = useState(false);
   const [dialogType, setDialogType] = useState('');
   const [selectedUser, setSelectedUser] = useState(null);
   const [selectedRole, setSelectedRole] = useState(null);
+  const [selectedModule, setSelectedModule] = useState(null);
   const [isLoadingUsers, setIsLoadingUsers] = useState(false);
   const [isLoadingRoles, setIsLoadingRoles] = useState(false);
+  const [isLoadingModules, setIsLoadingModules] = useState(false);
   const [auditLogsLoading, setAuditLogsLoading] = useState(false);
   const { user, loading, handleTokenExpiration } = useAuth();
   const router = useRouter();
@@ -70,9 +74,16 @@ const ModernAdminDashboard = () => {
 
   const handleOpenDialog = (type, data = null) => {
     if (type === 'editUser') {
+      console.log('Edit User - data:', data);
       setSelectedUser(data);
     } else if (type === 'editRole') {
       setSelectedRole(data);
+    } else if (type === 'editModule') {
+      setSelectedModule(data);
+    } else if (type === 'resetPassword') {
+      console.log('Reset Password - data:', data);
+      console.log('User ID type:', typeof data.user_id);
+      setSelectedUser(data);
     }
     setDialogType(type);
     setOpenDialog(true);
@@ -82,6 +93,7 @@ const ModernAdminDashboard = () => {
     setOpenDialog(false);
     setSelectedUser(null);
     setSelectedRole(null);
+    setSelectedModule(null);
   };
 
   const loadUsers = async () => {
@@ -127,6 +139,30 @@ const ModernAdminDashboard = () => {
       message.error(err.response?.data?.error || 'Error loading roles');
     } finally {
       setIsLoadingRoles(false);
+    }
+  };
+
+  const loadModules = async () => {
+    try {
+      setIsLoadingModules(true);
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      const response = await axios.get(`${API_BASE_URL}/admin/modules`, {
+        withCredentials: true,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.data) {
+        setModules(response.data);
+      }
+    } catch (err) {
+      message.error(err.response?.data?.error || 'Error loading modules');
+    } finally {
+      setIsLoadingModules(false);
     }
   };
 
@@ -268,6 +304,7 @@ const ModernAdminDashboard = () => {
   const refreshData = useCallback(() => {
     loadUsers();
     loadRoles();
+    loadModules();
     loadPendingApprovals();
     if (activeTab === 2) loadAuditLogs();
   }, [activeTab]);
@@ -321,169 +358,284 @@ const ModernAdminDashboard = () => {
 
   const renderRolesTable = () => {
     return (
-      <TableContainer 
-        component={motion.div}
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
-        sx={{
-          borderRadius: 3,
-          boxShadow: `0 8px 32px 0 ${alpha(theme.palette.common.black, 0.1)}`,
-          backgroundColor: alpha(theme.palette.background.paper, 0.95),
-          backdropFilter: 'blur(10px)',
-          overflow: 'hidden',
-        }}
-      >
-        <Table size="small">
-          <TableHead>
-            <TableRow
+      <>
+        <Box sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          mb: 2,
+          pb: 2,
+          borderBottom: `1px solid ${alpha(theme.palette.divider, 0.1)}`
+        }}>
+          <Typography variant="h6" sx={{ fontWeight: 600 }}>
+            Role Management
+          </Typography>
+          
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <TextField
+              placeholder="Search roles..."
+              size="small"
+              value={roleSearchTerm}
+              onChange={(e) => setRoleSearchTerm(e.target.value)}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon fontSize="small" />
+                  </InputAdornment>
+                ),
+                sx: {
+                  borderRadius: 2,
+                  backgroundColor: alpha(theme.palette.background.paper, 0.5),
+                  '&:hover': {
+                    backgroundColor: alpha(theme.palette.background.paper, 0.8),
+                  }
+                }
+              }}
+              sx={{ width: 200 }}
+            />
+            
+            <Tooltip title="Refresh Roles">
+              <IconButton 
+                onClick={loadRoles}
+                disabled={isLoadingRoles}
+                sx={{
+                  backgroundColor: alpha(theme.palette.background.paper, 0.5),
+                  borderRadius: 2,
+                  '&:hover': {
+                    backgroundColor: alpha(theme.palette.background.paper, 0.8),
+                  }
+                }}
+              >
+                <RefreshIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+            
+            <Tooltip title="Manage Modules">
+              <IconButton
+                onClick={() => handleOpenDialog('manageModules')}
+                sx={{
+                  backgroundColor: alpha(theme.palette.warning.main, 0.1),
+                  borderRadius: 2,
+                  '&:hover': {
+                    backgroundColor: alpha(theme.palette.warning.main, 0.2),
+                  }
+                }}
+              >
+                <SettingsIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+            
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={() => handleOpenDialog('newRole')}
               sx={{
-                backgroundColor: alpha(theme.palette.primary.main, 0.03),
-                '& th': {
-                  borderBottom: `2px solid ${alpha(theme.palette.primary.main, 0.1)}`,
-                  color: theme.palette.text.secondary,
-                  fontWeight: 600,
-                  fontSize: '0.75rem',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.5px',
-                  py: 1.5,
-                },
+                borderRadius: 2,
+                textTransform: 'none',
+                boxShadow: 2,
+                backgroundColor: theme.palette.success.main,
+                '&:hover': {
+                  backgroundColor: theme.palette.success.dark,
+                }
               }}
             >
-              <TableCell>Role Name</TableCell>
-              <TableCell>Description</TableCell>
-              <TableCell>System Role</TableCell>
-              <TableCell>Permissions</TableCell>
-              <TableCell align="right">Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {filteredRoles.length > 0 ? (
-              filteredRoles
-                .slice(rolesPage * rolesPerPage, rolesPage * rolesPerPage + rolesPerPage)
-                .map((role) => (
-                <TableRow
-                  key={role.role_id}
-                  sx={{
-                    height: '48px',
-                    '&:hover': {
-                      backgroundColor: alpha(theme.palette.primary.main, 0.04),
-                    },
-                    '& td': { borderBottom: `1px solid ${alpha(theme.palette.divider, 0.1)}` },
-                  }}
-                >
-                  <TableCell>
-                    <Typography variant="body2" fontWeight={600}>
-                      {role.role_name}
-                    </Typography>
-                  </TableCell>
-                  <TableCell>
-                    <Typography variant="body2" color="text.secondary" noWrap>
-                      {role.description || 'No description provided'}
-                    </Typography>
-                  </TableCell>
-                  <TableCell>
-                    <Chip
-                      label={role.is_system_role ? 'Yes' : 'No'}
-                      size="small"
-                      color={role.is_system_role ? 'primary' : 'default'}
-                      sx={{
-                        height: '24px',
-                        fontSize: '0.75rem',
-                        borderRadius: '6px',
-                      }}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <Stack direction="row" spacing={0.5} flexWrap="wrap">
-                      {Object.keys(role.permissions || {}).map((module) => (
-                        <Chip
-                          key={module}
-                          label={module}
-                          size="small"
-                          sx={{
-                            height: '20px',
-                            fontSize: '0.7rem',
-                            backgroundColor: alpha(theme.palette.info.main, 0.1),
-                            color: theme.palette.info.main,
-                            borderRadius: '4px',
-                            mb: 0.5,
-                          }}
-                        />
-                      ))}
-                    </Stack>
-                  </TableCell>
-                  <TableCell align="right">
-                    <Stack direction="row" spacing={1} justifyContent="flex-end">
-                      <Tooltip title="Edit Role">
-                        <IconButton
-                          size="small"
-                          color="primary"
-                          disabled={role.is_system_role}
-                          onClick={() => handleOpenDialog('editRole', role)}
-                          sx={{
-                            backgroundColor: alpha(theme.palette.primary.main, 0.1),
-                            '&:hover': {
-                              backgroundColor: alpha(theme.palette.primary.main, 0.2),
-                            }
-                          }}
-                        >
-                          <EditIcon fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title="Delete Role">
-                        <IconButton
-                          size="small"
-                          color="error"
-                          disabled={role.is_system_role}
-                          onClick={() => {
-                            if (window.confirm('Are you sure you want to delete this role?')) {
-                              deleteRole(role.role_id);
-                            }
-                          }}
-                          sx={{
-                            backgroundColor: alpha(theme.palette.error.main, 0.1),
-                            '&:hover': {
-                              backgroundColor: alpha(theme.palette.error.main, 0.2),
-                            }
-                          }}
-                        >
-                          <DeleteIcon fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
-                    </Stack>
-                  </TableCell>
-                </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={5} align="center" sx={{ py: 3 }}>
-                  <Typography variant="body1">No roles found</Typography>
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-        <Box
+              New Role
+            </Button>
+          </Box>
+        </Box>
+      
+        <TableContainer 
+          component={motion.div}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
           sx={{
-            display: 'flex',
-            justifyContent: 'flex-end',
-            alignItems: 'center',
-            p: 1,
-            borderTop: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+            borderRadius: 3,
+            boxShadow: `0 8px 32px 0 ${alpha(theme.palette.common.black, 0.1)}`,
+            backgroundColor: alpha(theme.palette.background.paper, 0.95),
+            backdropFilter: 'blur(10px)',
+            overflow: 'hidden',
           }}
         >
-          <TablePagination
-            component="div"
-            count={filteredRoles.length}
-            page={rolesPage}
-            onPageChange={handleRolesPageChange}
-            rowsPerPage={rolesPerPage}
-            onRowsPerPageChange={handleRolesPerPageChange}
-            rowsPerPageOptions={[5, 10, 25]}
-          />
-        </Box>
-      </TableContainer>
+          {isLoadingRoles ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', py: 4 }}>
+              <CircularProgress size={40} thickness={4} />
+            </Box>
+          ) : (
+            <>
+              <Table size="small">
+                <TableHead>
+                  <TableRow
+                    sx={{
+                      backgroundColor: alpha(theme.palette.primary.main, 0.03),
+                      '& th': {
+                        borderBottom: `2px solid ${alpha(theme.palette.primary.main, 0.1)}`,
+                        color: theme.palette.text.secondary,
+                        fontWeight: 600,
+                        fontSize: '0.75rem',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.5px',
+                        py: 1.5,
+                      },
+                    }}
+                  >
+                    <TableCell>Role Name</TableCell>
+                    <TableCell>Description</TableCell>
+                    <TableCell>System Role</TableCell>
+                    <TableCell>Permissions</TableCell>
+                    <TableCell align="right">Actions</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {filteredRoles.length > 0 ? (
+                    filteredRoles
+                      .slice(rolesPage * rolesPerPage, rolesPage * rolesPerPage + rolesPerPage)
+                      .map((role) => (
+                      <TableRow
+                        key={role.role_id}
+                        sx={{
+                          height: '48px',
+                          '&:hover': {
+                            backgroundColor: alpha(theme.palette.primary.main, 0.04),
+                          },
+                          '& td': { borderBottom: `1px solid ${alpha(theme.palette.divider, 0.1)}` },
+                        }}
+                      >
+                        <TableCell>
+                          <Typography variant="body2" fontWeight={600}>
+                            {role.role_name}
+                          </Typography>
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant="body2" color="text.secondary" noWrap>
+                            {role.description || 'No description provided'}
+                          </Typography>
+                        </TableCell>
+                        <TableCell>
+                          <Chip
+                            label={role.is_system_role ? 'Yes' : 'No'}
+                            size="small"
+                            color={role.is_system_role ? 'primary' : 'default'}
+                            sx={{
+                              height: '24px',
+                              fontSize: '0.75rem',
+                              borderRadius: '6px',
+                            }}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Stack direction="row" spacing={0.5} flexWrap="wrap">
+                            {Object.keys(role.permissions || {}).map((module) => {
+                              const permissions = role.permissions[module];
+                              const permCount = Object.values(permissions).filter(Boolean).length;
+                              return (
+                                <Tooltip 
+                                  key={module} 
+                                  title={
+                                    <Box>
+                                      <Typography variant="caption" sx={{ fontWeight: 600 }}>
+                                        {module.charAt(0).toUpperCase() + module.slice(1)}
+                                      </Typography>
+                                      <Box component="ul" sx={{ m: 0, pl: 2 }}>
+                                        {permissions.can_view && <li>View</li>}
+                                        {permissions.can_create && <li>Create</li>}
+                                        {permissions.can_edit && <li>Edit</li>}
+                                        {permissions.can_delete && <li>Delete</li>}
+                                      </Box>
+                                    </Box>
+                                  }
+                                >
+                                  <Chip
+                                    label={`${module} (${permCount})`}
+                                    size="small"
+                                    sx={{
+                                      height: '20px',
+                                      fontSize: '0.7rem',
+                                      backgroundColor: alpha(theme.palette.info.main, 0.1),
+                                      color: theme.palette.info.main,
+                                      borderRadius: '4px',
+                                      mb: 0.5,
+                                    }}
+                                  />
+                                </Tooltip>
+                              );
+                            })}
+                          </Stack>
+                        </TableCell>
+                        <TableCell align="right">
+                          <Stack direction="row" spacing={1} justifyContent="flex-end">
+                            <Tooltip title="Edit Role">
+                              <IconButton
+                                size="small"
+                                color="primary"
+                                disabled={role.is_system_role}
+                                onClick={() => handleOpenDialog('editRole', role)}
+                                sx={{
+                                  backgroundColor: alpha(theme.palette.primary.main, 0.1),
+                                  '&:hover': {
+                                    backgroundColor: alpha(theme.palette.primary.main, 0.2),
+                                  }
+                                }}
+                              >
+                                <EditIcon fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
+                            <Tooltip title="Delete Role">
+                              <IconButton
+                                size="small"
+                                color="error"
+                                disabled={role.is_system_role}
+                                onClick={() => {
+                                  if (window.confirm('Are you sure you want to delete this role?')) {
+                                    deleteRole(role.role_id);
+                                  }
+                                }}
+                                sx={{
+                                  backgroundColor: alpha(theme.palette.error.main, 0.1),
+                                  '&:hover': {
+                                    backgroundColor: alpha(theme.palette.error.main, 0.2),
+                                  }
+                                }}
+                              >
+                                <DeleteIcon fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
+                          </Stack>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={5} align="center" sx={{ py: 3 }}>
+                        <Typography variant="body1">No roles found</Typography>
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+              <Box
+                sx={{
+                  display: 'flex',
+                  justifyContent: 'flex-end',
+                  alignItems: 'center',
+                  p: 1,
+                  borderTop: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+                }}
+              >
+                <TablePagination
+                  component="div"
+                  count={filteredRoles.length}
+                  page={rolesPage}
+                  onPageChange={handleRolesPageChange}
+                  rowsPerPage={rolesPerPage}
+                  onRowsPerPageChange={handleRolesPerPageChange}
+                  rowsPerPageOptions={[5, 10, 25]}
+                />
+              </Box>
+            </>
+          )}
+        </TableContainer>
+      </>
     );
   };
 
@@ -661,108 +813,6 @@ const ModernAdminDashboard = () => {
             exit="exit"
             transition={{ duration: 0.3 }}
           >
-            <Box sx={{ mb: 2 }}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                <Typography variant="h6" sx={{ fontWeight: 600 }}>Role Management</Typography>
-                <Tooltip title="Refresh">
-                  <IconButton
-                    onClick={loadRoles}
-                    size="small"
-                    sx={{
-                      backgroundColor: alpha(theme.palette.primary.main, 0.1),
-                      '&:hover': {
-                        backgroundColor: alpha(theme.palette.primary.main, 0.2),
-                      }
-                    }}
-                  >
-                    <RefreshIcon fontSize="small" />
-                  </IconButton>
-                </Tooltip>
-              </Box>
-              
-              <Paper
-                elevation={0}
-                sx={{
-                  p: 1.5,
-                  mb: 2,
-                  display: 'flex',
-                  flexWrap: 'wrap',
-                  alignItems: 'center',
-                  gap: 1.5,
-                  borderRadius: 3,
-                  backdropFilter: 'blur(10px)',
-                  background: alpha(theme.palette.background.paper, 0.8),
-                  boxShadow: `0 6px 16px 0 ${alpha(theme.palette.primary.main, 0.1)}`,
-                }}
-              >
-                <TextField
-                  placeholder="Search roles..."
-                  variant="outlined"
-                  size="small"
-                  value={roleSearchTerm}
-                  onChange={(e) => setRoleSearchTerm(e.target.value)}
-                  InputProps={{
-                    startAdornment: <SearchIcon sx={{ mr: 1, color: 'text.secondary', fontSize: '1.1rem' }} />,
-                    sx: {
-                      borderRadius: 2,
-                      height: 36,
-                      backgroundColor: theme.palette.background.paper,
-                      '& .MuiOutlinedInput-notchedOutline': {
-                        borderColor: alpha(theme.palette.divider, 0.4),
-                      }
-                    }
-                  }}
-                  sx={{ flex: 1, minWidth: { xs: '100%', sm: 200 } }}
-                />
-                
-                <Stack direction="row" spacing={1} sx={{ ml: { xs: 0, sm: 'auto' } }}>
-                  <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                    <Button
-                      variant="outlined"
-                      startIcon={<FilterListIcon />}
-                      sx={{
-                        borderRadius: 2,
-                        px: 1.5,
-                        py: 0.6,
-                        backgroundColor: alpha(theme.palette.background.paper, 0.6),
-                        borderColor: alpha(theme.palette.divider, 0.4),
-                        color: theme.palette.text.primary,
-                        fontSize: '0.8rem',
-                        '&:hover': {
-                          backgroundColor: alpha(theme.palette.background.paper, 0.8),
-                          borderColor: alpha(theme.palette.primary.main, 0.6),
-                        },
-                      }}
-                    >
-                      Filters
-                    </Button>
-                  </motion.div>
-                  
-                  <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                    <Button
-                      variant="contained"
-                      startIcon={<AddIcon />}
-                      onClick={() => handleOpenDialog('newRole')}
-                      sx={{
-                        borderRadius: 2,
-                        px: 1.5,
-                        py: 0.6,
-                        fontSize: '0.8rem',
-                        background: `linear-gradient(90deg, ${theme.palette.primary.main}, ${alpha(theme.palette.primary.dark, 0.9)})`,
-                        boxShadow: `0 3px 8px ${alpha(theme.palette.primary.main, 0.4)}`,
-                        color: theme.palette.primary.contrastText,
-                        '&:hover': {
-                          boxShadow: `0 4px 12px ${alpha(theme.palette.primary.main, 0.6)}`,
-                        },
-                      }}
-                    >
-                      Create Role
-                    </Button>
-                  </motion.div>
-                </Stack>
-              </Paper>
-            </Box>
-            
             {renderRolesTable()}
           </motion.div>
         );
@@ -955,7 +1005,42 @@ const ModernAdminDashboard = () => {
         </Container>
       </Box>
       
-      {/* Dialogs would be added here */}
+      {/* User Dialogs */}
+      <UserDialog
+        open={openDialog && ['newUser', 'editUser', 'resetPassword'].includes(dialogType)}
+        onClose={handleCloseDialog}
+        dialogType={dialogType}
+        selectedUser={selectedUser}
+        roles={roles}
+        onSuccess={refreshData}
+      />
+      
+      {/* Role Dialogs */}
+      <RoleDialog
+        open={openDialog && ['newRole', 'editRole'].includes(dialogType)}
+        onClose={handleCloseDialog}
+        dialogType={dialogType}
+        selectedRole={selectedRole}
+        onSuccess={loadRoles}
+        modules={modules}
+      />
+      
+      {/* Module Dialogs */}
+      <ModuleDialog
+        open={openDialog && ['newModule', 'editModule', 'manageModules'].includes(dialogType)}
+        onClose={handleCloseDialog}
+        dialogType={dialogType}
+        selectedModule={selectedModule}
+        onSuccess={(action, data) => {
+          if (action === 'editModule' && data) {
+            handleOpenDialog('editModule', data);
+          } else {
+            loadModules();
+          }
+        }} 
+        modules={modules}
+        setModules={setModules}
+      />
     </motion.div>
   );
 };
