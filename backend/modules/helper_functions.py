@@ -316,9 +316,9 @@ def create_update_mapping_detail(connection, p_mapref, p_trgclnm, p_trgcldtyp, p
         v_mapdtlid = cursor.var(oracledb.NUMBER)
         
         # SQL to execute with named parameters
-        sql = """
+        sql = f"""
         BEGIN
-            :result := TRG.PKGDWMAPR.CREATE_UPDATE_MAPPING_DETAIL(
+            :result := {ORACLE_SCHEMA}.PKGDWMAPR.CREATE_UPDATE_MAPPING_DETAIL(
                 p_mapref => :p_mapref,
                 p_trgclnm => :p_trgclnm,
                 p_trgcldtyp => :p_trgcldtyp,
