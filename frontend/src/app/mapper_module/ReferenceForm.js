@@ -80,13 +80,43 @@ import { format } from 'sql-formatter'
 import { z } from 'zod'
 import axios from 'axios'
 import { motion } from 'framer-motion'
+// Add the useReferenceLock import
+import { useReferenceLock, releaseReferenceLock } from './lockUtils'
 
 // Using memo to prevent unnecessary rerenders
-const ReferenceForm = memo(({ handleReturnToReferenceTable, reference }) => {
+const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFailed }) => {
   const { darkMode } = useTheme()
 
   // Add state for user data
   const [userData, setUserData] = useState(null)
+
+  // Use the locking hook to acquire a lock when the component mounts
+  useReferenceLock(reference, onLockFailed);
+
+  // Modify handleReturnToReferenceTable to release the lock
+  const handleReturnWithUnlock = () => {
+    if (reference) {
+      // Release the lock when returning to the table
+      console.log(`Releasing lock for reference ${reference} before navigation`);
+      
+      // First clean up any local state related to the lock
+      localStorage.removeItem(`mapper_lock_${reference}`);
+      
+      // Then call the API to release the lock
+      releaseReferenceLock(reference)
+        .then((result) => {
+          console.log(`Lock release result for ${reference}:`, result);
+          handleReturnToReferenceTable();
+        })
+        .catch((error) => {
+          console.error(`Error releasing lock for ${reference}:`, error);
+          // Navigate anyway, even if there was an error
+          handleReturnToReferenceTable();
+        });
+    } else {
+      handleReturnToReferenceTable();
+    }
+  };
 
   // New state variables for the table view
   const [showReferenceTable, setShowReferenceTable] = useState(true)
@@ -2032,6 +2062,18 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference }) => {
     }
   }, [])
 
+  // Add a cleanup effect to release locks when component unmounts
+  useEffect(() => {
+    // Cleanup function to release lock on unmount
+    return () => {
+      if (reference) {
+        releaseReferenceLock(reference).catch(error => {
+          console.error('Error releasing lock on unmount:', error);
+        });
+      }
+    };
+  }, [reference]);
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -2053,7 +2095,7 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference }) => {
             <div className="flex items-center gap-2">
               <Button
                 variant="outlined"
-                onClick={handleReturnToReferenceTable}
+                onClick={handleReturnWithUnlock}
                 className="transition-all duration-200"
                 sx={{
                   height: '30px',

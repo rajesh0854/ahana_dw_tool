@@ -178,7 +178,8 @@ def login():
             'last_name': user_profile.last_name if user_profile and user_profile.last_name else None,
             'phone': user_profile.phone if user_profile and user_profile.phone else None,
             'department': user_profile.department if user_profile and user_profile.department else None,
-            'role': user_profile.role_name if user_profile and user_profile.role_name else 'User'
+            'role': user_profile.role_name if user_profile and user_profile.role_name else 'User',
+            'change_password': bool(user.change_password)
         }
         
         # Create response and set cookie
@@ -377,3 +378,85 @@ def token_required(f):
 @token_required
 def verify_token(current_user_id):
     return jsonify({'valid': True, 'user_id': current_user_id}) 
+
+@auth_bp.route('/change-password-after-login', methods=['POST'])
+@token_required
+def change_password_after_login(current_user_id):
+    try:
+        data = request.get_json()
+        new_password = data.get('new_password')
+        
+        if not new_password:
+            return jsonify({'error': 'New password is required'}), 400
+            
+        if not is_valid_password(new_password):
+            return jsonify({
+                'error': 'Password must be at least 8 characters long and contain uppercase, lowercase, numbers, and special characters'
+            }), 400
+        
+        session = Session()
+        
+        # Find user
+        user = session.execute(
+            text("SELECT * FROM users WHERE user_id = :user_id"),
+            {'user_id': current_user_id}
+        ).fetchone()
+        
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+        
+        # Check if change_password is set (only allow if true or force_change parameter is provided)
+        force_change = data.get('force_change', False)
+        if not user.change_password and not force_change:
+            return jsonify({'error': 'Password change not required for this user'}), 403
+        
+        # Check password history
+        old_passwords = session.execute(
+            text("SELECT password_hash FROM password_history WHERE user_id = :user_id ORDER BY created_at DESC LIMIT 5"),
+            {'user_id': current_user_id}
+        ).fetchall()
+        
+        new_salt = generate_salt()
+        new_hash = hash_password(new_password, new_salt)
+        
+        # Check if new password matches any of the last 5 passwords
+        for old_pass in old_passwords:
+            if old_pass.password_hash == new_hash:
+                return jsonify({'error': 'Cannot reuse any of your last 5 passwords'}), 400
+        
+        # Update password and reset change_password flag
+        session.execute(
+            text("""
+                UPDATE users 
+                SET password_hash = :hash,
+                    salt = :salt,
+                    change_password = 0
+                WHERE user_id = :user_id
+            """),
+            {
+                'hash': new_hash,
+                'salt': new_salt,
+                'user_id': current_user_id
+            }
+        )
+        
+        # Add to password history
+        session.execute(
+            text("""
+                INSERT INTO password_history (user_id, password_hash, created_at)
+                VALUES (:user_id, :password_hash, datetime('now'))
+            """),
+            {
+                'user_id': current_user_id,
+                'password_hash': new_hash
+            }
+        )
+        
+        session.commit()
+        return jsonify({'message': 'Password has been changed successfully'}), 200
+        
+    except Exception as e:
+        print(f"Change password error: {str(e)}")
+        return jsonify({'error': 'An error occurred changing your password'}), 500
+    finally:
+        session.close() 

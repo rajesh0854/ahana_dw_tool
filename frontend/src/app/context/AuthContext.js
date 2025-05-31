@@ -111,11 +111,29 @@ export const AuthProvider = ({ children }) => {
     const token = localStorage.getItem('token');
     const isAuthRoute = pathname?.startsWith('/auth/');
     
-    // Don't redirect if we're already on the login page
-    if (!token && !isAuthRoute && pathname !== '/auth/login') {
+    // Use a more stable approach to prevent redirection loops
+    // Special case for change-password to prevent screen shaking
+    if (token && isAuthRoute && pathname === '/auth/change-password') {
+      // On change-password page with token, check if the user needs to change password
+      try {
+        const userData = JSON.parse(localStorage.getItem('user') || '{}');
+        if (!userData.change_password) {
+          router.push('/');
+        }
+        // If they do need to change password, stay on this page
+      } catch (err) {
+        console.error("Failed to parse user data:", err);
+      }
+    } 
+    // Standard redirection logic for other pages
+    else if (!token && !isAuthRoute) {
       router.push('/auth/login');
-    } else if (token && isAuthRoute && pathname !== '/auth/logout') {
-      router.push('/');
+    } 
+    else if (token && isAuthRoute && pathname !== '/auth/logout') {
+      // Only redirect if not on change-password
+      if (pathname !== '/auth/change-password') {
+        router.push('/');
+      }
     }
   }, [loading, pathname, router]);
 
@@ -150,7 +168,8 @@ export const AuthProvider = ({ children }) => {
         last_name: data.last_name,
         phone: data.phone,
         department: data.department,
-        role: data.role
+        role: data.role,
+        change_password: data.change_password
       }));
 
       Cookies.set('token', data.token);
@@ -163,7 +182,8 @@ export const AuthProvider = ({ children }) => {
         last_name: data.last_name,
         phone: data.phone,
         department: data.department,
-        role: data.role
+        role: data.role,
+        change_password: data.change_password
       });
 
       // Check license status after successful login
@@ -248,6 +268,52 @@ export const AuthProvider = ({ children }) => {
     setUser(updatedUser);
   };
 
+  const needsPasswordChange = () => {
+    if (!user) return false;
+    return !!user.change_password;
+  };
+
+  const changePasswordAfterLogin = async (newPassword) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        return { success: false, error: 'Authentication required' };
+      }
+      
+      const response = await axios.post(
+        `${API_BASE_URL}/auth/change-password-after-login`,
+        { new_password: newPassword },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          withCredentials: true
+        }
+      );
+      
+      if (response.status === 200) {
+        // Update the user state to reflect that password has been changed
+        const updatedUser = {
+          ...user,
+          change_password: false
+        };
+        
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+        setUser(updatedUser);
+        
+        return { success: true, message: response.data.message };
+      } else {
+        return { success: false, error: response.data.error || 'Failed to change password' };
+      }
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error.response?.data?.error || error.message || 'Failed to change password' 
+      };
+    }
+  };
+
   const value = {
     user,
     loading,
@@ -258,9 +324,11 @@ export const AuthProvider = ({ children }) => {
     forgotPassword,
     resetPassword,
     updateUserProfile,
+    changePasswordAfterLogin,
     isAuthenticated: !!user,
     licenseStatus,
-    checkLicenseStatus
+    checkLicenseStatus,
+    needsPasswordChange
   };
 
   return (

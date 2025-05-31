@@ -12,6 +12,7 @@ import {
 import { useRouter } from 'next/navigation'
 import { useTheme as useMuiTheme } from '@mui/material/styles'
 import { useTheme } from '@/context/ThemeContext'
+import { useAuth } from '../context/AuthContext'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   AdminPanelSettings,
@@ -28,6 +29,7 @@ import {
 const Page = () => {
   const router = useRouter()
   const { darkMode } = useTheme()
+  const { user, needsPasswordChange } = useAuth()
   const muiTheme = useMuiTheme()
   const isMobile = useMediaQuery(muiTheme.breakpoints.down('sm'))
   const isTablet = useMediaQuery(muiTheme.breakpoints.down('md'))
@@ -36,7 +38,12 @@ const Page = () => {
 
   useEffect(() => {
     setIsLoaded(true)
-  }, [])
+    
+    // Redirect if user needs to change password
+    if (needsPasswordChange()) {
+      router.push('/auth/change-password')
+    }
+  }, [needsPasswordChange, router])
 
   const cards = [
     {

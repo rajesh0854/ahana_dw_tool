@@ -169,11 +169,11 @@ def create_user(current_user_id):
                 text("""
                     INSERT INTO users (
                         username, email, password_hash, salt, 
-                        created_by, account_status, is_active
+                        created_by, account_status, is_active, change_password
                     )
                     VALUES (
                         :username, :email, :password_hash, :salt,
-                        :created_by, 'PENDING', :is_active
+                        :created_by, 'PENDING', :is_active, :change_password
                     )
                     RETURNING user_id
                 """),
@@ -183,7 +183,8 @@ def create_user(current_user_id):
                     'password_hash': password_hash,
                     'salt': salt,
                     'created_by': current_user_id,
-                    'is_active': data.get('is_active', True)
+                    'is_active': data.get('is_active', True),
+                    'change_password': data.get('change_password', False)
                 }
             )
             user_id = result.fetchone()[0]
@@ -408,6 +409,10 @@ def update_user(current_user_id, user_id):
             # Handle is_active update
             if 'is_active' in data:
                 user_updates['is_active'] = 1 if data['is_active'] else 0
+                
+            # Handle change_password update
+            if 'change_password' in data:
+                user_updates['change_password'] = 1 if data['change_password'] else 0
 
             # Update user table if there are changes
             if user_updates:

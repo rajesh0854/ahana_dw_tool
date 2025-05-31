@@ -390,7 +390,23 @@ const LoginPage = () => {
         (ENABLE_RECAPTCHA && RECAPTCHA_SITE_KEY) ? recaptchaToken : undefined
       )
       if (result.success) {
-        router.push('/home')
+        // Check if user needs to change password
+        try {
+          const userData = localStorage.getItem('user');
+          if (userData) {
+            const user = JSON.parse(userData);
+            if (user.change_password) {
+              router.push('/auth/change-password');
+            } else {
+              router.push('/home');
+            }
+          } else {
+            router.push('/home');
+          }
+        } catch (err) {
+          console.error("Failed to parse user data:", err);
+          router.push('/home');
+        }
       } else {
         setError(result.error)
         if (ENABLE_RECAPTCHA && recaptchaRef.current) {

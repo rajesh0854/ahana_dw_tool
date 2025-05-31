@@ -6,15 +6,16 @@ export function middleware(request) {
   
   // Define public and protected paths
   const isAuthPath = path.startsWith('/auth');
-  const isPublicPath = isAuthPath;
+  const isChangePasswordPath = path === '/auth/change-password';
+  const isPublicPath = isAuthPath && !isChangePasswordPath;
   
   // If user is not authenticated and trying to access a protected route, redirect to login
   if (!token && !isPublicPath) {
     return NextResponse.redirect(new URL('/auth/login', request.url));
   }
   
-  // If user is authenticated and trying to access auth routes, redirect to home
-  if (token && isAuthPath) {
+  // If user is authenticated and trying to access auth routes (except change-password), redirect to home
+  if (token && isAuthPath && !isChangePasswordPath) {
     return NextResponse.redirect(new URL('/home', request.url));
   }
   

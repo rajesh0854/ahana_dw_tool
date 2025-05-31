@@ -4,6 +4,9 @@ import React, { useState, useEffect } from 'react'
 import { useTheme } from '@/context/ThemeContext'
 import ReferenceTable from './ReferenceTable'
 import ReferenceForm from './ReferenceForm'
+import LockDialog from './LockDialog'
+import { checkReferenceLock, overrideReferenceLock, releaseReferenceLock } from './lockUtils'
+import { message } from 'antd'
 
 const MapperModule = () => {
   const { darkMode } = useTheme()
@@ -14,8 +17,13 @@ const MapperModule = () => {
   const [showMapperForm, setShowMapperForm] = useState(false)
   
   const [selectedReference, setSelectedReference] = useState(null)
+  
+  // Add state for lock dialog
+  const [showLockDialog, setShowLockDialog] = useState(false)
+  const [lockInfo, setLockInfo] = useState(null)
+  const [isOverridingLock, setIsOverridingLock] = useState(false)
+  const [pendingReference, setPendingReference] = useState(null)
 
- 
   // Function to handle creating a new reference
   const handleCreateNewReference = () => {
     // Reset form data
@@ -27,25 +35,96 @@ const MapperModule = () => {
   }
 
   // Function to handle editing an existing reference
-  const handleEditReference = (reference) => {
+  const handleEditReference = async (reference) => {
     if (reference) {
-      // The existing fetchReferenceDetails function will be called with this reference
-      // fetchReferenceDetails(reference)
-      setSelectedReference(reference)
-      // Show the mapper form and hide the reference table
-      setShowReferenceTable(false)
-      setShowMapperForm(true)
+      // Check if the reference is locked by another user
+      const lockStatus = await checkReferenceLock(reference);
+      
+      if (lockStatus.isLocked) {
+        // Show lock dialog
+        setLockInfo(lockStatus);
+        setShowLockDialog(true);
+        setPendingReference(reference);
+        return;
+      }
+      
+      // If not locked, proceed with editing
+      setSelectedReference(reference);
+      setShowReferenceTable(false);
+      setShowMapperForm(true);
+    }
+  }
+
+  // Function to handle lock failure from within the ReferenceForm
+  const handleLockFailed = (lockStatus) => {
+    if (lockStatus.isLocked) {
+      // Show lock dialog
+      setLockInfo(lockStatus);
+      setShowLockDialog(true);
+      
+      // Return to table view
+      setShowMapperForm(false);
+      setShowReferenceTable(true);
+      setSelectedReference(null);
     }
   }
 
   // Function to return to the reference table view
   const handleReturnToReferenceTable = () => {
-    setShowMapperForm(false)
-    setShowReferenceTable(true)
-    // Reset search state
-    // setSearchQuery('')
-    // Refresh the references list
-    // fetchAllReferences()
+    // Release any existing lock if there's a selected reference
+    if (selectedReference) {
+      console.log(`Page component: Releasing lock for reference: ${selectedReference}`);
+      
+      // Clean up local storage first
+      localStorage.removeItem(`mapper_lock_${selectedReference}`);
+      
+      // Then call API
+      releaseReferenceLock(selectedReference)
+        .then(result => {
+          console.log(`Page component: Lock release result for ${selectedReference}:`, result);
+        })
+        .catch(error => {
+          console.error('Page component: Error releasing lock:', error);
+        });
+    }
+    
+    setShowMapperForm(false);
+    setShowReferenceTable(true);
+    setSelectedReference(null);
+  }
+  
+  // Function to handle overriding a lock
+  const handleOverrideLock = async () => {
+    setIsOverridingLock(true);
+    try {
+      const result = await overrideReferenceLock(pendingReference);
+      
+      if (result) {
+        // Lock override successful
+        message.success('Lock overridden successfully');
+        setShowLockDialog(false);
+        
+        // Proceed with editing
+        setSelectedReference(pendingReference);
+        setShowReferenceTable(false);
+        setShowMapperForm(true);
+      } else {
+        message.error('Failed to override lock');
+      }
+    } catch (error) {
+      console.error('Error overriding lock:', error);
+      message.error('Failed to override lock');
+    } finally {
+      setIsOverridingLock(false);
+      setPendingReference(null);
+    }
+  }
+  
+  // Function to close lock dialog
+  const handleCloseLockDialog = () => {
+    setShowLockDialog(false);
+    setPendingReference(null);
+    setLockInfo(null);
   }
 
   return (
@@ -71,9 +150,18 @@ const MapperModule = () => {
         <ReferenceForm
           handleReturnToReferenceTable={handleReturnToReferenceTable}
           reference={selectedReference}
-          l̥
+          onLockFailed={handleLockFailed}
         />
       )}
+      
+      {/* Lock Dialog */}
+      <LockDialog 
+        open={showLockDialog}
+        onClose={handleCloseLockDialog}
+        lockInfo={lockInfo}
+        onOverrideLock={handleOverrideLock}
+        isOverriding={isOverridingLock}
+      />
 
       <style jsx global>{`
         ::-webkit-scrollbar {

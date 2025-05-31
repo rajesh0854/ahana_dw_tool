@@ -1,8 +1,11 @@
+'use client';
+
 import localFont from "next/font/local";
 import './globals.css';
 import LayoutWrapper from '@/components/LayoutWrapper';
 import { ThemeProvider } from '@/context/ThemeContext';
 import { AuthProvider } from './context/AuthContext';
+import { Inter } from 'next/font/google';
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -16,21 +19,20 @@ const geistMono = localFont({
   weight: "100 900",
 });
 
-export const metadata = {
-  title: "Data Mapper",
-  description: "Data Mapper",
-};
+const inter = Inter({ subsets: ['latin'] });
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <head>
+        <title>Data Mapper</title>
+        <meta name="description" content="Data Mapper" />
         <link
           href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
           rel="stylesheet"
         />
       </head>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased font-sans`}>
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased font-sans ${inter.className}`}>
         <ThemeProvider>
           <AuthProvider>
             <LayoutWrapper>{children}</LayoutWrapper>

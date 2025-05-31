@@ -51,7 +51,8 @@ export const UserDialog = ({
     department: '',
     position: '',
     role_id: '',
-    is_active: true
+    is_active: true,
+    change_password: false
   });
 
   // Password state for reset
@@ -81,7 +82,8 @@ export const UserDialog = ({
         department: selectedUser.department || '',
         position: selectedUser.position || '',
         role_id: selectedUser.role_id || '',
-        is_active: selectedUser.is_active
+        is_active: selectedUser.is_active,
+        change_password: selectedUser.change_password || false
       });
     } else if (isResetPassword && selectedUser) {
       console.log("Reset Password - selectedUser:", selectedUser);
@@ -102,7 +104,8 @@ export const UserDialog = ({
         department: '',
         position: '',
         role_id: '',
-        is_active: true
+        is_active: true,
+        change_password: false
       });
     }
   }, [open, dialogType, selectedUser, isEditUser, isNewUser, isResetPassword]);
@@ -151,6 +154,8 @@ export const UserDialog = ({
   const handleChange = (e) => {
     const { name, value, checked } = e.target;
     if (name === 'is_active') {
+      setFormData(prev => ({ ...prev, [name]: checked }));
+    } else if (name === 'change_password') {
       setFormData(prev => ({ ...prev, [name]: checked }));
     } else {
       setFormData(prev => ({ ...prev, [name]: value }));
@@ -220,7 +225,8 @@ export const UserDialog = ({
             department: formData.department,
             position: formData.position,
             role_id: formData.role_id,
-            is_active: formData.is_active
+            is_active: formData.is_active,
+            change_password: formData.change_password
           },
           {
             withCredentials: true,
@@ -249,7 +255,8 @@ export const UserDialog = ({
             department: formData.department,
             position: formData.position,
             role_id: formData.role_id,
-            is_active: formData.is_active
+            is_active: formData.is_active,
+            change_password: formData.change_password
           },
           {
             withCredentials: true,
@@ -560,6 +567,18 @@ export const UserDialog = ({
             />
           }
           label="Active"
+        />
+        <FormControlLabel
+          control={
+            <Switch
+              checked={formData.change_password}
+              onChange={handleChange}
+              name="change_password"
+              color="primary"
+            />
+          }
+          label="Require Password Change On Next Login"
+          sx={{ ml: 2 }}
         />
       </Grid>
     </Grid>
