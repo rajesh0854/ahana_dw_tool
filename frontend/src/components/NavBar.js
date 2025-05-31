@@ -13,7 +13,9 @@ import {
   KeyboardArrowDownOutlined,
   SpeedOutlined,
   HomeOutlined,
-  SettingsOutlined
+  SettingsOutlined,
+  FullscreenOutlined,
+  FullscreenExitOutlined
 } from '@mui/icons-material';
 
 const getPageTitle = (pathname) => {
@@ -68,6 +70,7 @@ const NavBar = ({ userProfile, showProfile, setShowProfile, sidebarOpen }) => {
   const pageTitle = getPageTitle(pathname);
   const [greeting, setGreeting] = useState(getGreeting());
   const pageIcon = getIcon(pathname);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   
   // Update greeting every minute
   useEffect(() => {
@@ -76,6 +79,28 @@ const NavBar = ({ userProfile, showProfile, setShowProfile, sidebarOpen }) => {
     }, 60000);
     return () => clearInterval(interval);
   }, []);
+
+  // Check fullscreen status on mount and when it changes
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
+
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(err => {
+        console.error(`Error attempting to enable fullscreen: ${err.message}`);
+      });
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      }
+    }
+  };
 
   const profileRef = useClickOutside(() => {
     if (showProfile) setShowProfile(false);
@@ -123,6 +148,24 @@ const NavBar = ({ userProfile, showProfile, setShowProfile, sidebarOpen }) => {
         
         {/* Right section */}
         <div className="flex items-center space-x-3">
+          {/* Fullscreen Toggle Button */}
+          <button
+            onClick={toggleFullscreen}
+            className={`
+              p-1.5 rounded-full transition-all duration-200 hover:scale-105
+              ${darkMode 
+                ? 'bg-gray-800 text-indigo-300 hover:bg-gray-700' 
+                : 'bg-gray-100 text-indigo-600 hover:bg-gray-200'
+              }
+            `}
+            aria-label="Toggle fullscreen"
+          >
+            {isFullscreen ? 
+              <FullscreenExitOutlined className="w-4 h-4" /> : 
+              <FullscreenOutlined className="w-4 h-4" />
+            }
+          </button>
+
           {/* Theme Toggle with improved styling */}
           <button
             onClick={() => setDarkMode(!darkMode)}

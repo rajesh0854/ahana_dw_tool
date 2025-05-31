@@ -83,20 +83,23 @@ const StyledTableContainer = styled(TableContainer)(({ theme, darkMode }) => ({
     backgroundColor: darkMode ? '#1A202C' : '#F7FAFC', 
     color: darkMode ? '#E2E8F0' : '#2D3748',
     fontWeight: 600,
-    fontSize: '0.875rem',
-    padding: '14px 16px',
+    fontSize: '0.8125rem',
+    padding: '10px 12px',
     whiteSpace: 'nowrap',
     borderBottom: darkMode ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(0, 0, 0, 0.1)',
     position: 'sticky',
     top: 0,
     zIndex: 10,
-    backdropFilter: 'blur(8px)'
+    backdropFilter: 'blur(8px)',
+    height: '40px'
   },
   '& .MuiTableCell-body': {
     color: darkMode ? '#E2E8F0' : '#2D3748',
-    padding: '10px 16px',
-    fontSize: '0.875rem',
+    padding: '6px 12px',
+    fontSize: '0.8125rem',
     transition: 'background-color 0.2s ease',
+    height: '42px',
+    verticalAlign: 'middle'
   },
   '& .MuiTableRow-root:hover': {
     backgroundColor: darkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)',
@@ -106,10 +109,10 @@ const StyledTableContainer = styled(TableContainer)(({ theme, darkMode }) => ({
 
 // Define ActionButton if it's missing
 const ActionButton = styled(IconButton)(({ theme, darkMode, color = 'primary' }) => ({
-  padding: '6px',
-  margin: '0 3px',
-  width: '32px',
-  height: '32px',
+  padding: '4px',
+  margin: '0 2px',
+  width: '28px',
+  height: '28px',
   backgroundColor: darkMode 
     ? (color === 'primary' ? 'rgba(59, 130, 246, 0.15)' : 
       color === 'info' ? 'rgba(6, 182, 212, 0.15)' : 
@@ -185,13 +188,13 @@ const ScrollToTopButton = styled(Fab)(({ theme, darkMode }) => ({
 const FiltersContainer = styled(Box)(({ theme, darkMode }) => ({
   display: 'flex',
   flexWrap: 'wrap',
-  gap: '12px',
+  gap: '8px',
   alignItems: 'center',
-  padding: '12px 16px',
-  borderRadius: '12px',
+  padding: '8px 12px',
+  borderRadius: '10px',
   backgroundColor: darkMode ? 'rgba(17, 24, 39, 0.6)' : 'rgba(249, 250, 251, 0.8)',
   backdropFilter: 'blur(8px)',
-  boxShadow: darkMode ? '0 4px 6px rgba(0, 0, 0, 0.2)' : '0 1px 3px rgba(0, 0, 0, 0.1)',
+  boxShadow: darkMode ? '0 2px 4px rgba(0, 0, 0, 0.2)' : '0 1px 2px rgba(0, 0, 0, 0.1)',
   border: darkMode ? '1px solid rgba(255, 255, 255, 0.05)' : '1px solid rgba(0, 0, 0, 0.05)',
   transition: 'all 0.3s ease',
 }));
@@ -199,7 +202,8 @@ const FiltersContainer = styled(Box)(({ theme, darkMode }) => ({
 const StyledSearchField = styled(TextField)(({ theme, darkMode }) => ({
   '& .MuiOutlinedInput-root': {
     backgroundColor: darkMode ? 'rgba(26, 32, 44, 0.8)' : 'rgba(255, 255, 255, 0.8)',
-    borderRadius: '8px',
+    borderRadius: '6px',
+    height: '32px',
     '&:hover .MuiOutlinedInput-notchedOutline': {
       borderColor: darkMode ? 'rgba(99, 102, 241, 0.5)' : 'rgba(99, 102, 241, 0.5)',
     },
@@ -208,18 +212,24 @@ const StyledSearchField = styled(TextField)(({ theme, darkMode }) => ({
     }
   },
   '& .MuiInputLabel-root': {
-    fontSize: '0.875rem',
+    fontSize: '0.75rem',
+    transform: 'translate(14px, 8px) scale(1)',
+    '&.MuiInputLabel-shrink': {
+      transform: 'translate(14px, -6px) scale(0.75)',
+    }
   },
   '& .MuiInputBase-input': {
-    padding: '10px 12px',
+    padding: '7px 10px',
+    fontSize: '0.8125rem',
   }
 }));
 
 const StyledFormControl = styled(FormControl)(({ theme, darkMode }) => ({
-  minWidth: 150,
+  minWidth: 120,
   '& .MuiOutlinedInput-root': {
     backgroundColor: darkMode ? 'rgba(26, 32, 44, 0.8)' : 'rgba(255, 255, 255, 0.8)',
-    borderRadius: '8px',
+    borderRadius: '6px',
+    height: '32px',
     '&:hover .MuiOutlinedInput-notchedOutline': {
       borderColor: darkMode ? 'rgba(99, 102, 241, 0.5)' : 'rgba(99, 102, 241, 0.5)',
     },
@@ -228,7 +238,15 @@ const StyledFormControl = styled(FormControl)(({ theme, darkMode }) => ({
     }
   },
   '& .MuiInputLabel-root': {
-    fontSize: '0.875rem',
+    fontSize: '0.75rem',
+    transform: 'translate(14px, 8px) scale(1)',
+    '&.MuiInputLabel-shrink': {
+      transform: 'translate(14px, -6px) scale(0.75)',
+    }
+  },
+  '& .MuiSelect-select': {
+    padding: '7px 14px 7px 10px',
+    fontSize: '0.8125rem',
   }
 }));
 
@@ -236,12 +254,14 @@ const StyledFormControl = styled(FormControl)(({ theme, darkMode }) => ({
 const StyledButton = styled(Button)(({ theme, darkMode }) => ({
   textTransform: 'none',
   fontWeight: 600,
-  borderRadius: '8px',
-  padding: '8px 16px',
+  borderRadius: '6px',
+  padding: '5px 12px',
+  fontSize: '0.75rem',
+  minHeight: '32px',
   boxShadow: 'none',
   transition: 'all 0.2s ease',
   '&:hover': {
-    boxShadow: '0 2px 6px rgba(0, 0, 0, 0.1)',
+    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
     transform: 'translateY(-1px)',
   },
   '&:active': {
@@ -265,8 +285,9 @@ const PageHeader = styled(Box)(({ theme, darkMode }) => ({
 
 const StatusChip = styled(Chip)(({ theme, darkMode, status }) => ({
   fontWeight: 600,
-  fontSize: '0.75rem',
-  borderRadius: '6px',
+  fontSize: '0.7rem',
+  borderRadius: '4px',
+  height: '22px',
   backgroundColor: 
     status === 'Scheduled' ? (darkMode ? 'rgba(34, 197, 94, 0.2)' : 'rgba(34, 197, 94, 0.1)') :
     (darkMode ? 'rgba(245, 158, 11, 0.2)' : 'rgba(245, 158, 11, 0.1)'),
@@ -278,7 +299,7 @@ const StatusChip = styled(Chip)(({ theme, darkMode, status }) => ({
     status === 'Scheduled' ? (darkMode ? 'rgba(34, 197, 94, 0.3)' : 'rgba(34, 197, 94, 0.2)') :
     (darkMode ? 'rgba(245, 158, 11, 0.3)' : 'rgba(245, 158, 11, 0.2)'),
   '& .MuiChip-label': {
-    padding: '0 6px',
+    padding: '0 4px',
   }
 }));
 
@@ -918,73 +939,88 @@ const JobsPage = () => {
       transition={{ duration: 0.5 }}
       style={{ height: '100%', display: 'flex', flexDirection: 'column' }}
     >
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
         {/* Filters */}
-        <FiltersContainer darkMode={darkMode} sx={{ mb: 0, flexGrow: 1, mr: 2 }}>
-          <StyledSearchField
-            label="Search Jobs"
-            variant="outlined"
-            size="small"
-            value={searchTerm}
-            onChange={handleSearchChange}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon />
-                </InputAdornment>
-              ),
-            }}
-            darkMode={darkMode}
-            sx={{ flexGrow: 1, minWidth: { xs: '100%', sm: '200px' } }}
-          />
-          
-          <StyledFormControl size="small" darkMode={darkMode}>
-            <InputLabel>Table Type</InputLabel>
-            <Select
-              value={tableTypeFilter}
-              onChange={handleTableTypeFilterChange}
-              label="Table Type"
-            >
-              <MenuItem value="">All Types</MenuItem>
-              <MenuItem value="FACT">Fact</MenuItem>
-              <MenuItem value="DIM">Dimension</MenuItem>
-              <MenuItem value="STG">Staging</MenuItem>
-            </Select>
-          </StyledFormControl>
-          
-          <StyledFormControl size="small" darkMode={darkMode}>
-            <InputLabel>Schedule Status</InputLabel>
-            <Select
-              value={scheduleStatusFilter}
-              onChange={handleScheduleStatusFilterChange}
-              label="Schedule Status"
-            >
-              <MenuItem value="">All Statuses</MenuItem>
-              <MenuItem value="Scheduled">Scheduled</MenuItem>
-              <MenuItem value="Not Scheduled">Not Scheduled</MenuItem>
-            </Select>
-          </StyledFormControl>
-          
-          <StyledButton
-            variant="outlined"
-            size="small"
-            onClick={clearAllFilters}
-            darkMode={darkMode}
-          >
-            Clear Filters
-          </StyledButton>
+        <FiltersContainer darkMode={darkMode} sx={{ mb: 0, flexGrow: 1, mr: 1.5 }}>
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: '8px', width: '100%', alignItems: 'center' }}>
+            <StyledSearchField
+              placeholder="Search jobs..."
+              variant="outlined"
+              size="small"
+              value={searchTerm}
+              onChange={handleSearchChange}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon sx={{ fontSize: '0.9rem' }} />
+                  </InputAdornment>
+                ),
+              }}
+              darkMode={darkMode}
+              sx={{ flexGrow: 1, minWidth: { xs: '100%', sm: '180px' } }}
+            />
+            
+            <StyledFormControl size="small" darkMode={darkMode}>
+              <InputLabel sx={{ fontSize: '0.75rem' }}>Table Type</InputLabel>
+              <Select
+                value={tableTypeFilter}
+                onChange={handleTableTypeFilterChange}
+                label="Table Type"
+                MenuProps={{
+                  PaperProps: {
+                    sx: { maxHeight: 200 }
+                  }
+                }}
+              >
+                <MenuItem value="">All Types</MenuItem>
+                <MenuItem value="FACT">Fact</MenuItem>
+                <MenuItem value="DIM">Dimension</MenuItem>
+                <MenuItem value="STG">Staging</MenuItem>
+              </Select>
+            </StyledFormControl>
+            
+            <StyledFormControl size="small" darkMode={darkMode}>
+              <InputLabel sx={{ fontSize: '0.75rem' }}>Status</InputLabel>
+              <Select
+                value={scheduleStatusFilter}
+                onChange={handleScheduleStatusFilterChange}
+                label="Status"
+                MenuProps={{
+                  PaperProps: {
+                    sx: { maxHeight: 200 }
+                  }
+                }}
+              >
+                <MenuItem value="">All Statuses</MenuItem>
+                <MenuItem value="Scheduled">Scheduled</MenuItem>
+                <MenuItem value="Not Scheduled">Not Scheduled</MenuItem>
+              </Select>
+            </StyledFormControl>
+            
+            <Box sx={{ display: 'flex', gap: '6px' }}>
+              <StyledButton
+                variant="outlined"
+                size="small"
+                onClick={clearAllFilters}
+                darkMode={darkMode}
+                sx={{ fontSize: '0.75rem', height: '32px' }}
+              >
+                Clear
+              </StyledButton>
+              
+              <StyledButton
+                variant="contained"
+                color="primary"
+                startIcon={<RefreshIcon sx={{ fontSize: '1rem' }} />}
+                onClick={handleRefresh}
+                darkMode={darkMode}
+                sx={{ height: '32px', fontSize: '0.75rem' }}
+              >
+                Refresh
+              </StyledButton>
+            </Box>
+          </Box>
         </FiltersContainer>
-
-        <StyledButton
-          variant="contained"
-          color="primary"
-          startIcon={<RefreshIcon />}
-          onClick={handleRefresh}
-          darkMode={darkMode}
-          sx={{ height: '38px', whiteSpace: 'nowrap' }}
-        >
-          Refresh Jobs
-        </StyledButton>
       </Box>
 
       {/* Success/Error Messages */}
@@ -1088,7 +1124,7 @@ const JobsPage = () => {
                         top: 0,
                         zIndex: 1,
                         fontWeight: 600,
-                        fontSize: '0.8125rem',
+                        fontSize: '0.75rem',
                         whiteSpace: 'nowrap',
                         backgroundColor: darkMode ? '#1A202C' : '#F7FAFC'
                       }}
@@ -1104,7 +1140,7 @@ const JobsPage = () => {
                     <React.Fragment key={job.JOBID}>
                       <TableRow hover>
                         {/* Job Details - Mapping Reference */}
-                        <TableCell>
+                        <TableCell sx={{ py: 0.5 }}>
                           <MappingDetails
                             mapRef={job.MAPREF}
                             darkMode={darkMode}
@@ -1112,7 +1148,7 @@ const JobsPage = () => {
                         </TableCell>
 
                         {/* Target Table Details */}
-                        <TableCell>
+                        <TableCell sx={{ py: 0.5 }}>
                           <TargetTableDisplay
                             targetSchema={job.TRGSCHM}
                             targetTable={job.TRGTBNM}
@@ -1122,7 +1158,7 @@ const JobsPage = () => {
                         </TableCell>
 
                         {/* Status - Display as icon */}
-                        <TableCell align="center">
+                        <TableCell align="center" sx={{ py: 0.5 }}>
                           <Box sx={{ display: 'flex', justifyContent: 'center' }}>
                             <StatusChip 
                               status={job.JOB_SCHEDULE_STATUS} 
@@ -1132,7 +1168,7 @@ const JobsPage = () => {
                         </TableCell>
 
                         {/* Schedule Configuration */}
-                        <TableCell>
+                        <TableCell sx={{ py: 0.5 }}>
                           <InlineScheduleConfig
                             jobId={job.JOBFLWID}
                             scheduleData={scheduleData}
@@ -1147,7 +1183,7 @@ const JobsPage = () => {
                         </TableCell>
                         
                         {/* Schedule Summary */}
-                        <TableCell>
+                        <TableCell sx={{ py: 0.5 }}>
                           <ScheduleSummary
                             scheduleData={scheduleData}
                             jobId={job.JOBFLWID}
@@ -1157,7 +1193,7 @@ const JobsPage = () => {
                         </TableCell>
                         
                         {/* Dependency */}
-                        <TableCell>
+                        <TableCell sx={{ py: 0.5 }}>
                           <DependencyDisplay
                             jobId={job.JOBFLWID}
                             mapRef={job.MAPREF}
@@ -1170,8 +1206,8 @@ const JobsPage = () => {
                         </TableCell>
                         
                         {/* View Column */}
-                        <TableCell align="center">
-                          <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1 }}>
+                        <TableCell align="center" sx={{ py: 0.5 }}>
+                          <Box sx={{ display: 'flex', justifyContent: 'center', gap: 0.5 }}>
                             <Tooltip title="View Details">
                               <ActionButton
                                 size="small"
@@ -1182,7 +1218,7 @@ const JobsPage = () => {
                                   handleViewDetails(job);
                                 }}
                               >
-                                <VisibilityIcon fontSize="small" sx={{ fontSize: 18 }} />
+                                <VisibilityIcon fontSize="small" sx={{ fontSize: 16 }} />
                               </ActionButton>
                             </Tooltip>
 
@@ -1196,15 +1232,15 @@ const JobsPage = () => {
                                   handleViewLogic(job);
                                 }}
                               >
-                                <CodeIcon fontSize="small" sx={{ fontSize: 18 }} />
+                                <CodeIcon fontSize="small" sx={{ fontSize: 16 }} />
                               </ActionButton>
                             </Tooltip>
                           </Box>
                         </TableCell>
                         
                         {/* Actions */}
-                        <TableCell align="center">
-                          <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1 }}>
+                        <TableCell align="center" sx={{ py: 0.5 }}>
+                          <Box sx={{ display: 'flex', justifyContent: 'center', gap: 0.5 }}>
                             <Tooltip title="Execute Now">
                               <ActionButton
                                 size="small"
@@ -1215,7 +1251,7 @@ const JobsPage = () => {
                                   handleExecuteNow(job);
                                 }}
                               >
-                                <PlayArrowIcon fontSize="small" sx={{ fontSize: 18 }} />
+                                <PlayArrowIcon fontSize="small" sx={{ fontSize: 16 }} />
                               </ActionButton>
                             </Tooltip>
 
@@ -1230,8 +1266,8 @@ const JobsPage = () => {
                                 }}
                               >
                                 {job.JOB_SCHEDULE_STATUS === 'Scheduled' ? 
-                                  <ToggleOnIcon fontSize="small" sx={{ fontSize: 18, color: '#2E7D32' }} /> :
-                                  <ToggleOffIcon fontSize="small" sx={{ fontSize: 18, color: '#D32F2F' }} />
+                                  <ToggleOnIcon fontSize="small" sx={{ fontSize: 16, color: '#2E7D32' }} /> :
+                                  <ToggleOffIcon fontSize="small" sx={{ fontSize: 16, color: '#D32F2F' }} />
                                 }
                               </ActionButton>
                             </Tooltip>
@@ -1243,7 +1279,7 @@ const JobsPage = () => {
                 })}
                 {filteredJobs.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={8} align="center" sx={{ py: 4 }}>
+                    <TableCell colSpan={8} align="center" sx={{ py: 3 }}>
                       {searchTerm || tableTypeFilter || scheduleStatusFilter ? (
                         <Typography variant="body1" color={darkMode ? 'gray.300' : 'gray.600'}>
                           No matching jobs found with current filters
