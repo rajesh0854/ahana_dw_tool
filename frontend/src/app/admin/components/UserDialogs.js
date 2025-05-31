@@ -403,7 +403,7 @@ export const UserDialog = ({
   };
 
   const renderUserForm = () => (
-    <Grid container spacing={2}>
+    <Grid container spacing={1.5}>
       <Grid item xs={12} sm={6}>
         <TextField
           fullWidth
@@ -414,7 +414,8 @@ export const UserDialog = ({
           error={!!errors.username}
           helperText={errors.username}
           variant="outlined"
-          margin="normal"
+          margin="dense"
+          size="small"
           disabled={isEditUser && selectedUser?.is_system_user}
         />
       </Grid>
@@ -429,7 +430,8 @@ export const UserDialog = ({
           error={!!errors.email}
           helperText={errors.email}
           variant="outlined"
-          margin="normal"
+          margin="dense"
+          size="small"
         />
       </Grid>
       <Grid item xs={12} sm={6}>
@@ -442,7 +444,8 @@ export const UserDialog = ({
           error={!!errors.first_name}
           helperText={errors.first_name}
           variant="outlined"
-          margin="normal"
+          margin="dense"
+          size="small"
         />
       </Grid>
       <Grid item xs={12} sm={6}>
@@ -455,7 +458,8 @@ export const UserDialog = ({
           error={!!errors.last_name}
           helperText={errors.last_name}
           variant="outlined"
-          margin="normal"
+          margin="dense"
+          size="small"
         />
       </Grid>
       <Grid item xs={12} sm={6}>
@@ -466,7 +470,8 @@ export const UserDialog = ({
           value={formData.department}
           onChange={handleChange}
           variant="outlined"
-          margin="normal"
+          margin="dense"
+          size="small"
         />
       </Grid>
       <Grid item xs={12} sm={6}>
@@ -477,11 +482,12 @@ export const UserDialog = ({
           value={formData.position}
           onChange={handleChange}
           variant="outlined"
-          margin="normal"
+          margin="dense"
+          size="small"
         />
       </Grid>
       <Grid item xs={12}>
-        <FormControl fullWidth margin="normal" error={!!errors.role_id}>
+        <FormControl fullWidth margin="dense" error={!!errors.role_id} size="small">
           <InputLabel id="role-select-label">Role</InputLabel>
           <Select
             labelId="role-select-label"
@@ -513,15 +519,17 @@ export const UserDialog = ({
               error={!!errors.password}
               helperText={errors.password}
               variant="outlined"
-              margin="normal"
+              margin="dense"
+              size="small"
               InputProps={{
                 endAdornment: (
                   <InputAdornment position="end">
                     <IconButton
                       onClick={handleTogglePasswordVisibility}
                       edge="end"
+                      size="small"
                     >
-                      {showPassword ? <VisibilityOff /> : <Visibility />}
+                      {showPassword ? <VisibilityOff fontSize="small" /> : <Visibility fontSize="small" />}
                     </IconButton>
                   </InputAdornment>
                 )
@@ -539,15 +547,17 @@ export const UserDialog = ({
               error={!!errors.confirmPassword}
               helperText={errors.confirmPassword}
               variant="outlined"
-              margin="normal"
+              margin="dense"
+              size="small"
               InputProps={{
                 endAdornment: (
                   <InputAdornment position="end">
                     <IconButton
                       onClick={handleToggleConfirmPasswordVisibility}
                       edge="end"
+                      size="small"
                     >
-                      {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
+                      {showConfirmPassword ? <VisibilityOff fontSize="small" /> : <Visibility fontSize="small" />}
                     </IconButton>
                   </InputAdornment>
                 )
@@ -557,29 +567,33 @@ export const UserDialog = ({
         </>
       )}
       <Grid item xs={12}>
-        <FormControlLabel
-          control={
-            <Switch
-              checked={formData.is_active}
-              onChange={handleChange}
-              name="is_active"
-              color="primary"
-            />
-          }
-          label="Active"
-        />
-        <FormControlLabel
-          control={
-            <Switch
-              checked={formData.change_password}
-              onChange={handleChange}
-              name="change_password"
-              color="primary"
-            />
-          }
-          label="Require Password Change On Next Login"
-          sx={{ ml: 2 }}
-        />
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', mt: 0.5 }}>
+          <FormControlLabel
+            control={
+              <Switch
+                checked={formData.is_active}
+                onChange={handleChange}
+                name="is_active"
+                color="primary"
+                size="small"
+              />
+            }
+            label={<Typography variant="body2">Active</Typography>}
+          />
+          <FormControlLabel
+            control={
+              <Switch
+                checked={formData.change_password}
+                onChange={handleChange}
+                name="change_password"
+                color="primary"
+                size="small"
+              />
+            }
+            label={<Typography variant="body2">Require Password Change On Next Login</Typography>}
+            sx={{ ml: 2 }}
+          />
+        </Box>
       </Grid>
     </Grid>
   );
@@ -597,22 +611,22 @@ export const UserDialog = ({
     
     return (
       <form onSubmit={handleResetPassword}>
-        <Grid container spacing={2}>
+        <Grid container spacing={1.5}>
           <Grid item xs={12}>
-            <Alert severity="info" sx={{ mb: 2 }}>
+            <Alert severity="info" sx={{ mb: 1, py: 0.5, fontSize: '0.85rem' }}>
               Reset password for user: <strong>{username}</strong>
-              {userId ? <Box mt={1}>User ID: {userId}</Box> : <Box mt={1} color="error.main">Error: No user ID found!</Box>}
+              {userId ? <Box mt={0.5} fontSize="0.75rem">User ID: {userId}</Box> : <Box mt={0.5} color="error.main" fontSize="0.75rem">Error: No user ID found!</Box>}
             </Alert>
           </Grid>
           {resetPasswordSuccess && (
             <Grid item xs={12}>
-              <Alert severity="success" sx={{ mb: 2 }}>
+              <Alert severity="success" sx={{ mb: 1, py: 0.5, fontSize: '0.85rem' }}>
                 Password has been reset successfully!
               </Alert>
             </Grid>
           )}
           <Grid item xs={12}>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block' }}>
               {getPasswordRequirementsText()}
             </Typography>
           </Grid>
@@ -627,15 +641,17 @@ export const UserDialog = ({
               error={!!errors.new_password}
               helperText={errors.new_password}
               variant="outlined"
-              margin="normal"
+              margin="dense"
+              size="small"
               InputProps={{
                 endAdornment: (
                   <InputAdornment position="end">
                     <IconButton
                       onClick={handleTogglePasswordVisibility}
                       edge="end"
+                      size="small"
                     >
-                      {showPassword ? <VisibilityOff /> : <Visibility />}
+                      {showPassword ? <VisibilityOff fontSize="small" /> : <Visibility fontSize="small" />}
                     </IconButton>
                   </InputAdornment>
                 )
@@ -653,40 +669,43 @@ export const UserDialog = ({
               error={!!errors.confirm_password}
               helperText={errors.confirm_password}
               variant="outlined"
-              margin="normal"
+              margin="dense"
+              size="small"
               InputProps={{
                 endAdornment: (
                   <InputAdornment position="end">
                     <IconButton
                       onClick={handleToggleConfirmPasswordVisibility}
                       edge="end"
+                      size="small"
                     >
-                      {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
+                      {showConfirmPassword ? <VisibilityOff fontSize="small" /> : <Visibility fontSize="small" />}
                     </IconButton>
                   </InputAdornment>
                 )
               }}
             />
           </Grid>
-          <Grid item xs={12} sx={{ mt: 2 }}>
+          <Grid item xs={12} sx={{ mt: 1 }}>
             <Button
               type="submit"
               variant="contained"
               fullWidth
               disabled={loading || resetPasswordSuccess || !userId}
+              size="small"
               sx={{
-                borderRadius: 2,
-                py: 1,
+                borderRadius: 1.5,
+                py: 0.75,
                 background: `linear-gradient(90deg, ${theme.palette.primary.main}, ${alpha(theme.palette.primary.dark, 0.9)})`,
-                boxShadow: `0 3px 8px ${alpha(theme.palette.primary.main, 0.3)}`,
+                boxShadow: `0 3px 6px ${alpha(theme.palette.primary.main, 0.3)}`,
                 '&:hover': {
-                  boxShadow: `0 4px 12px ${alpha(theme.palette.primary.main, 0.5)}`,
+                  boxShadow: `0 4px 10px ${alpha(theme.palette.primary.main, 0.5)}`,
                 }
               }}
             >
               {loading ? (
                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                  <CircularProgress size={16} color="inherit" sx={{ mr: 1 }} />
+                  <CircularProgress size={14} color="inherit" sx={{ mr: 1 }} />
                   Processing...
                 </Box>
               ) : resetPasswordSuccess ? 'Password Reset' : 'Reset Password'}
@@ -701,7 +720,7 @@ export const UserDialog = ({
     <Dialog
       open={open}
       onClose={onClose}
-      maxWidth="md"
+      maxWidth="sm"
       fullWidth
       PaperProps={{
         component: motion.div,
@@ -716,19 +735,21 @@ export const UserDialog = ({
       }}
     >
       <DialogTitle sx={{ 
-        p: 2.5, 
+        py: 1.5, 
+        px: 2,
         display: 'flex', 
         justifyContent: 'space-between', 
         alignItems: 'center',
         backgroundColor: alpha(theme.palette.primary.main, 0.05),
         borderBottom: `1px solid ${alpha(theme.palette.divider, 0.1)}`
       }}>
-        <Typography variant="h6" component="div" fontWeight={600}>
+        <Typography variant="subtitle1" component="div" fontWeight={600}>
           {renderTitle()}
         </Typography>
         <IconButton
           edge="end"
           onClick={onClose}
+          size="small"
           sx={{
             color: theme.palette.text.secondary,
             backgroundColor: alpha(theme.palette.text.secondary, 0.05),
@@ -737,23 +758,24 @@ export const UserDialog = ({
             }
           }}
         >
-          <CloseIcon />
+          <CloseIcon fontSize="small" />
         </IconButton>
       </DialogTitle>
-      <DialogContent sx={{ p: 3 }}>
+      <DialogContent sx={{ p: 2 }}>
         {(isNewUser || isEditUser) && renderUserForm()}
         {isResetPassword && renderPasswordResetForm()}
       </DialogContent>
       {(isNewUser || isEditUser) && (
-        <DialogActions sx={{ p: 2.5, borderTop: `1px solid ${alpha(theme.palette.divider, 0.1)}` }}>
+        <DialogActions sx={{ p: 2, borderTop: `1px solid ${alpha(theme.palette.divider, 0.1)}` }}>
           <Button 
             onClick={onClose}
             variant="outlined"
+            size="small"
             sx={{
-              borderRadius: 2,
-              px: 2,
-              py: 0.8,
-              fontSize: '0.875rem',
+              borderRadius: 1.5,
+              px: 1.5,
+              py: 0.6,
+              fontSize: '0.8rem',
               borderColor: alpha(theme.palette.divider, 0.5),
               color: theme.palette.text.secondary,
               '&:hover': {
@@ -768,22 +790,23 @@ export const UserDialog = ({
             onClick={handleSubmit}
             variant="contained"
             disabled={loading}
+            size="small"
             sx={{
-              borderRadius: 2,
-              px: 2,
-              py: 0.8,
-              fontSize: '0.875rem',
+              borderRadius: 1.5,
+              px: 1.5,
+              py: 0.6,
+              fontSize: '0.8rem',
               background: `linear-gradient(90deg, ${theme.palette.primary.main}, ${alpha(theme.palette.primary.dark, 0.9)})`,
-              boxShadow: `0 3px 8px ${alpha(theme.palette.primary.main, 0.3)}`,
+              boxShadow: `0 3px 6px ${alpha(theme.palette.primary.main, 0.3)}`,
               '&:hover': {
-                boxShadow: `0 4px 12px ${alpha(theme.palette.primary.main, 0.5)}`,
+                boxShadow: `0 4px 10px ${alpha(theme.palette.primary.main, 0.5)}`,
               },
               '&.Mui-disabled': {
                 opacity: 0.7,
                 background: `linear-gradient(90deg, ${alpha(theme.palette.primary.main, 0.8)}, ${alpha(theme.palette.primary.dark, 0.7)})`
               }
             }}
-            startIcon={loading ? <CircularProgress size={16} color="inherit" /> : null}
+            startIcon={loading ? <CircularProgress size={14} color="inherit" /> : null}
           >
             {loading ? 'Processing...' : isNewUser ? 'Create User' : 'Update User'}
           </Button>

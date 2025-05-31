@@ -138,38 +138,37 @@ const NotificationManager = () => {
   };
 
   return (
-    <Box>
+    <Box sx={{ width: '100%' }}>
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
       >
-
-
         {/* Notification Form */}
         <Paper
           elevation={0}
           sx={{
-            p: 3,
-            borderRadius: 3,
+            p: 2,
+            borderRadius: 2,
             border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
             background: alpha(theme.palette.background.paper, 0.8),
             backdropFilter: 'blur(10px)',
             boxShadow: `0 8px 32px 0 ${alpha(theme.palette.common.black, 0.1)}`,
             overflow: 'hidden',
-            mb: 4
+            mb: 3,
+            width: '100%'
           }}
         >
           <form onSubmit={handleSubmit}>
             <Typography variant="h6" fontWeight={600} gutterBottom>
               Notification Details
             </Typography>
-            <Divider sx={{ mb: 3 }} />
+            <Divider sx={{ mb: 2 }} />
 
             {success && (
               <Alert 
                 severity="success" 
-                sx={{ mb: 3, borderRadius: 2 }}
+                sx={{ mb: 2, borderRadius: 2 }}
               >
                 Notification created successfully! All users will see it on their next login.
               </Alert>
@@ -178,7 +177,7 @@ const NotificationManager = () => {
             {error && (
               <Alert 
                 severity="error" 
-                sx={{ mb: 3, borderRadius: 2 }}
+                sx={{ mb: 2, borderRadius: 2 }}
               >
                 {error}
               </Alert>
@@ -192,10 +191,11 @@ const NotificationManager = () => {
               onChange={(e) => setTitle(e.target.value)}
               placeholder="E.g., New Dashboard Features Released"
               required
-              sx={{ mb: 3 }}
+              sx={{ mb: 2 }}
+              size="small"
             />
 
-            <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
+            <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 1 }}>
               <Tabs 
                 value={tabValue} 
                 onChange={handleTabChange}
@@ -203,7 +203,7 @@ const NotificationManager = () => {
                 sx={{
                   '& .MuiTab-root': {
                     textTransform: 'none',
-                    minHeight: 48,
+                    minHeight: 40,
                     fontSize: '0.875rem'
                   }
                 }}
@@ -226,10 +226,10 @@ const NotificationManager = () => {
               <Box
                 sx={{
                   display: 'flex',
-                  gap: 1,
+                  gap: 0.5,
                   flexWrap: 'wrap',
-                  mb: 2,
-                  p: 1,
+                  mb: 1,
+                  p: 0.5,
                   backgroundColor: alpha(theme.palette.background.default, 0.5),
                   borderRadius: 1
                 }}
@@ -238,7 +238,7 @@ const NotificationManager = () => {
                   size="small" 
                   variant="outlined"
                   onClick={() => insertMarkdown('# $1', 'Heading 1')}
-                  sx={{ textTransform: 'none', minWidth: 'auto' }}
+                  sx={{ textTransform: 'none', minWidth: 'auto', py: 0.5, px: 1 }}
                 >
                   H1
                 </Button>
@@ -246,7 +246,7 @@ const NotificationManager = () => {
                   size="small" 
                   variant="outlined"
                   onClick={() => insertMarkdown('## $1', 'Heading 2')}
-                  sx={{ textTransform: 'none', minWidth: 'auto' }}
+                  sx={{ textTransform: 'none', minWidth: 'auto', py: 0.5, px: 1 }}
                 >
                   H2
                 </Button>
@@ -254,7 +254,7 @@ const NotificationManager = () => {
                   size="small" 
                   variant="outlined"
                   onClick={() => insertMarkdown('### $1', 'Heading 3')}
-                  sx={{ textTransform: 'none', minWidth: 'auto' }}
+                  sx={{ textTransform: 'none', minWidth: 'auto', py: 0.5, px: 1 }}
                 >
                   H3
                 </Button>
@@ -262,7 +262,7 @@ const NotificationManager = () => {
                   size="small" 
                   variant="outlined"
                   onClick={() => insertMarkdown('**$1**', 'bold text')}
-                  sx={{ textTransform: 'none', fontWeight: 'bold' }}
+                  sx={{ textTransform: 'none', fontWeight: 'bold', py: 0.5, px: 1 }}
                 >
                   B
                 </Button>
@@ -270,7 +270,7 @@ const NotificationManager = () => {
                   size="small" 
                   variant="outlined"
                   onClick={() => insertMarkdown('*$1*', 'italic text')}
-                  sx={{ textTransform: 'none', fontStyle: 'italic' }}
+                  sx={{ textTransform: 'none', fontStyle: 'italic', py: 0.5, px: 1 }}
                 >
                   I
                 </Button>
@@ -278,7 +278,7 @@ const NotificationManager = () => {
                   size="small" 
                   variant="outlined"
                   onClick={() => insertMarkdown('- $1', 'List item')}
-                  sx={{ textTransform: 'none' }}
+                  sx={{ textTransform: 'none', py: 0.5, px: 1 }}
                 >
                   • List
                 </Button>
@@ -286,7 +286,7 @@ const NotificationManager = () => {
                   size="small" 
                   variant="outlined"
                   onClick={() => insertMarkdown('[$1](https://example.com)', 'link text')}
-                  sx={{ textTransform: 'none' }}
+                  sx={{ textTransform: 'none', py: 0.5, px: 1 }}
                 >
                   Link
                 </Button>
@@ -294,7 +294,7 @@ const NotificationManager = () => {
                   size="small" 
                   variant="outlined"
                   onClick={() => insertMarkdown('```\n$1\n```', 'code block')}
-                  sx={{ textTransform: 'none', fontFamily: 'monospace' }}
+                  sx={{ textTransform: 'none', fontFamily: 'monospace', py: 0.5, px: 1 }}
                 >
                   Code
                 </Button>
@@ -308,12 +308,13 @@ const NotificationManager = () => {
                 variant="outlined"
                 fullWidth
                 multiline
-                rows={12}
+                rows={8}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="## What's New\n\n- Added new dashboard widgets\n- Improved performance\n- Fixed bugs\n\n### How to Use\n\nClick on the **dashboard** to explore the new features."
                 required
-                sx={{ mb: 3, fontFamily: 'monospace' }}
+                sx={{ mb: 2, fontFamily: 'monospace' }}
+                size="small"
               />
             </Box>
 
@@ -321,10 +322,10 @@ const NotificationManager = () => {
               <Paper
                 elevation={0}
                 sx={{
-                  p: 2,
-                  mb: 3,
-                  minHeight: '300px',
-                  maxHeight: '500px',
+                  p: 1.5,
+                  mb: 2,
+                  minHeight: '200px',
+                  maxHeight: '350px',
                   overflow: 'auto',
                   borderRadius: 2,
                   border: `1px solid ${alpha(theme.palette.divider, 0.2)}`,
@@ -338,18 +339,19 @@ const NotificationManager = () => {
                         color: theme.palette.primary.main
                       },
                       '& ul': {
-                        pl: 2
+                        pl: 2,
+                        m: 0
                       }
                     }}
                   >
                     <ReactMarkdown
                       components={{
-                        h1: ({node, ...props}) => <Typography variant="h5" gutterBottom style={markdownStyles.h1} {...props} />,
-                        h2: ({node, ...props}) => <Typography variant="h6" gutterBottom style={markdownStyles.h2} {...props} />,
-                        h3: ({node, ...props}) => <Typography variant="subtitle1" gutterBottom style={markdownStyles.h3} {...props} />,
-                        p: ({node, ...props}) => <Typography variant="body2" paragraph style={markdownStyles.p} {...props} />,
-                        ul: ({node, ...props}) => <Box component="ul" sx={markdownStyles.ul} {...props} />,
-                        li: ({node, ...props}) => <Box component="li" sx={markdownStyles.li} {...props} />,
+                        h1: ({node, ...props}) => <Typography variant="h6" gutterBottom style={markdownStyles.h1} {...props} />,
+                        h2: ({node, ...props}) => <Typography variant="subtitle1" gutterBottom style={markdownStyles.h2} {...props} />,
+                        h3: ({node, ...props}) => <Typography variant="subtitle2" gutterBottom style={markdownStyles.h3} {...props} />,
+                        p: ({node, ...props}) => <Typography variant="body2" paragraph style={{...markdownStyles.p, marginBottom: '0.3rem'}} {...props} />,
+                        ul: ({node, ...props}) => <Box component="ul" sx={{...markdownStyles.ul, marginBottom: '0.3rem'}} {...props} />,
+                        li: ({node, ...props}) => <Box component="li" sx={{...markdownStyles.li, marginBottom: '0.1rem'}} {...props} />,
                         a: ({node, ...props}) => <Box component="a" sx={markdownStyles.a} target="_blank" rel="noopener" {...props} />
                       }}
                     >
@@ -367,12 +369,12 @@ const NotificationManager = () => {
             <Button
               type="submit"
               variant="contained"
-              size="large"
+              size="medium"
               disabled={loading}
-              startIcon={loading ? <CircularProgress size={20} /> : <SendIcon />}
+              startIcon={loading ? <CircularProgress size={16} /> : <SendIcon />}
               sx={{
-                py: 1.5,
-                px: 4,
+                py: 1,
+                px: 3,
                 borderRadius: 2,
                 textTransform: 'none',
                 fontWeight: 600,
@@ -387,7 +389,6 @@ const NotificationManager = () => {
             </Button>
           </form>
         </Paper>
-{/*  */}
       </motion.div>
     </Box>
   );

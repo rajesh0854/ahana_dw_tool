@@ -184,14 +184,14 @@ export const RoleDialog = ({  open,  onClose,  dialogType,  selectedRole,  onSuc
 
   // Render the form for creating/editing roles
   const renderRoleForm = () => (
-    <Box sx={{ p: 1 }}>
+    <Box>
       {selectedRole?.is_system_role && (
-        <Alert severity="warning" sx={{ mb: 2 }}>
+        <Alert severity="warning" sx={{ mb: 1.5, py: 0.5, fontSize: '0.85rem' }}>
           This is a system role. Some fields may not be editable.
         </Alert>
       )}
       
-      <Grid container spacing={2}>
+      <Grid container spacing={1.5}>
         <Grid item xs={12}>
           <TextField
             fullWidth
@@ -202,6 +202,8 @@ export const RoleDialog = ({  open,  onClose,  dialogType,  selectedRole,  onSuc
             error={!!errors.role_name}
             helperText={errors.role_name}
             disabled={selectedRole?.is_system_role}
+            size="small"
+            margin="dense"
             required
           />
         </Grid>
@@ -214,20 +216,22 @@ export const RoleDialog = ({  open,  onClose,  dialogType,  selectedRole,  onSuc
             value={formData.description}
             onChange={handleChange}
             multiline
-            rows={2}
+            rows={1}
+            size="small"
+            margin="dense"
           />
         </Grid>
         
         <Grid item xs={12}>
-          <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 600 }}>
+          <Typography variant="subtitle2" sx={{ mb: 0.5, fontWeight: 600, fontSize: '0.85rem' }}>
             Permissions
           </Typography>
-          <Divider sx={{ mb: 2 }} />
+          <Divider sx={{ mb: 1 }} />
           
           <Paper 
             elevation={0} 
             sx={{ 
-              p: 2, 
+              p: 1, 
               bgcolor: alpha(theme.palette.background.paper, 0.5),
               border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
               borderRadius: 1
@@ -235,44 +239,44 @@ export const RoleDialog = ({  open,  onClose,  dialogType,  selectedRole,  onSuc
           >
             <Grid container spacing={0}>
               <Grid item xs={4}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 600, p: 1 }}>
+                <Typography variant="caption" sx={{ fontWeight: 600, p: 0.5, display: 'block' }}>
                   Module
                 </Typography>
               </Grid>
               <Grid item xs={2}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 600, p: 1, textAlign: 'center' }}>
+                <Typography variant="caption" sx={{ fontWeight: 600, p: 0.5, textAlign: 'center', display: 'block' }}>
                   View
                 </Typography>
               </Grid>
               <Grid item xs={2}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 600, p: 1, textAlign: 'center' }}>
+                <Typography variant="caption" sx={{ fontWeight: 600, p: 0.5, textAlign: 'center', display: 'block' }}>
                   Create
                 </Typography>
               </Grid>
               <Grid item xs={2}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 600, p: 1, textAlign: 'center' }}>
+                <Typography variant="caption" sx={{ fontWeight: 600, p: 0.5, textAlign: 'center', display: 'block' }}>
                   Edit
                 </Typography>
               </Grid>
               <Grid item xs={2}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 600, p: 1, textAlign: 'center' }}>
+                <Typography variant="caption" sx={{ fontWeight: 600, p: 0.5, textAlign: 'center', display: 'block' }}>
                   Delete
                 </Typography>
               </Grid>
             </Grid>
             
-            <Divider sx={{ my: 1 }} />
+            <Divider sx={{ my: 0.5 }} />
             
             {modules.map((module, index) => (
               <Box key={module.module_name}>
                 <Grid container spacing={0} sx={{ 
-                  py: 1, 
+                  py: 0.5, 
                   alignItems: 'center',
                   backgroundColor: index % 2 === 0 ? alpha(theme.palette.background.paper, 0.5) : 'transparent',
                   borderRadius: 1
                 }}>
                   <Grid item xs={4}>
-                    <Typography variant="body2" sx={{ pl: 1 }}>
+                    <Typography variant="caption" sx={{ pl: 0.5 }}>
                       {module.display_name}
                     </Typography>
                   </Grid>
@@ -309,7 +313,7 @@ export const RoleDialog = ({  open,  onClose,  dialogType,  selectedRole,  onSuc
                     />
                   </Grid>
                 </Grid>
-                {index < modules.length - 1 && <Divider sx={{ my: 0.5 }} />}
+                {index < modules.length - 1 && <Divider sx={{ my: 0 }} />}
               </Box>
             ))}
           </Paper>
@@ -327,7 +331,7 @@ export const RoleDialog = ({  open,  onClose,  dialogType,  selectedRole,  onSuc
     <Dialog
       open={open}
       onClose={loading ? null : onClose}
-      maxWidth="md"
+      maxWidth="sm"
       fullWidth
       PaperProps={{
         elevation: 6,
@@ -340,12 +344,13 @@ export const RoleDialog = ({  open,  onClose,  dialogType,  selectedRole,  onSuc
       }}
     >
       <DialogTitle sx={{ 
-        pb: 1,
+        py: 1,
+        px: 2,
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center'
       }}>
-        <Typography variant="h6" component="div" sx={{ fontWeight: 600 }}>
+        <Typography variant="subtitle1" component="div" sx={{ fontWeight: 600 }}>
           {renderTitle()}
         </Typography>
         <IconButton
@@ -354,26 +359,28 @@ export const RoleDialog = ({  open,  onClose,  dialogType,  selectedRole,  onSuc
           onClick={onClose}
           disabled={loading}
           aria-label="close"
+          size="small"
         >
-          <CloseIcon />
+          <CloseIcon fontSize="small" />
         </IconButton>
       </DialogTitle>
       
       <Divider />
       
-      <DialogContent sx={{ pt: 2 }}>
+      <DialogContent sx={{ py: 1.5, px: 2 }}>
         {renderRoleForm()}
       </DialogContent>
       
-      <DialogActions sx={{ px: 3, pb: 2, pt: 1 }}>
+      <DialogActions sx={{ px: 2, py: 1 }}>
         <Button 
           onClick={onClose} 
           disabled={loading}
           variant="outlined"
+          size="small"
           sx={{ 
             borderRadius: 1,
             textTransform: 'none',
-            px: 3
+            px: 2
           }}
         >
           Cancel
@@ -381,12 +388,13 @@ export const RoleDialog = ({  open,  onClose,  dialogType,  selectedRole,  onSuc
         <Button
           onClick={handleSubmit}
           variant="contained"
+          size="small"
           disabled={loading || (selectedRole?.is_system_role)}
-          startIcon={loading ? <CircularProgress size={20} color="inherit" /> : null}
+          startIcon={loading ? <CircularProgress size={16} color="inherit" /> : null}
           sx={{ 
             borderRadius: 1,
             textTransform: 'none',
-            px: 3
+            px: 2
           }}
         >
           {isNewRole ? 'Create Role' : 'Update Role'}

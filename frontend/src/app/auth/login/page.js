@@ -33,9 +33,9 @@ import React from 'react'
 const dwTheme = createTheme({
   palette: {
     primary: {
-      main: '#1A73E8',
-      light: '#4285F4',
-      dark: '#0D47A1',
+      main: '#2196F3',
+      light: '#64B5F6',
+      dark: '#1976D2',
     },
     secondary: {
       main: '#34A853',
@@ -95,7 +95,7 @@ const LeftPanel = styled(Box)`
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #1A73E8 0%, #0D47A1 100%);
+  background: linear-gradient(135deg, #64B5F6 0%, #2196F3 100%);
   overflow: hidden;
 
   &::before {
@@ -105,8 +105,8 @@ const LeftPanel = styled(Box)`
     left: 0;
     right: 0;
     bottom: 0;
-    background: radial-gradient(circle at 30% 50%, rgba(66, 133, 244, 0.6) 0%, rgba(26, 115, 232, 0) 70%),
-               radial-gradient(circle at 70% 20%, rgba(13, 71, 161, 0.4) 0%, rgba(13, 71, 161, 0) 70%);
+    background: radial-gradient(circle at 30% 50%, rgba(144, 202, 249, 0.6) 0%, rgba(33, 150, 243, 0) 70%),
+               radial-gradient(circle at 70% 20%, rgba(25, 118, 210, 0.4) 0%, rgba(25, 118, 210, 0) 70%);
     z-index: 1;
   }
 
@@ -124,14 +124,14 @@ const RightPanel = styled(Box)`
   align-items: center;
   padding: 2rem;
   position: relative;
-  background: rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.9);
   backdrop-filter: blur(10px);
   z-index: 2;
 
   @media (max-width: 960px) {
     flex: none;
     width: 100%;
-    background: linear-gradient(135deg, #1A73E8 0%, #0D47A1 100%);
+    background: linear-gradient(135deg, #64B5F6 0%, #2196F3 100%);
   }
 `;
 
@@ -165,7 +165,7 @@ const LoginButton = styled(motion.button)`
   margin-top: 1.5rem;
   border: none;
   border-radius: 0.75rem;
-  background: linear-gradient(90deg, #1A73E8 0%, #0D47A1 100%);
+  background: linear-gradient(90deg, #2196F3 0%, #1976D2 100%);
   color: white;
   font-size: 1rem;
   font-weight: 600;
@@ -178,7 +178,7 @@ const LoginButton = styled(motion.button)`
   transition: all 0.3s ease;
 
   &:hover {
-    background: linear-gradient(90deg, #4285F4 0%, #1A73E8 100%);
+    background: linear-gradient(90deg, #64B5F6 0%, #2196F3 100%);
   }
 
   &::after {
@@ -220,16 +220,16 @@ const StyledTextField = styled(TextField)`
 
     &.Mui-focused {
       background: rgba(255, 255, 255, 0.95);
-      box-shadow: 0 4px 12px rgba(26, 115, 232, 0.15);
+      box-shadow: 0 4px 12px rgba(33, 150, 243, 0.15);
       
       .MuiOutlinedInput-notchedOutline {
-        border-color: #1A73E8;
+        border-color: #2196F3;
         border-width: 2px;
       }
     }
 
     &:hover .MuiOutlinedInput-notchedOutline {
-      border-color: #4285F4;
+      border-color: #64B5F6;
     }
   }
 
@@ -237,12 +237,12 @@ const StyledTextField = styled(TextField)`
     font-size: 0.9375rem;
 
     &.Mui-focused {
-      color: #1A73E8;
+      color: #2196F3;
     }
   }
 
   .MuiInputAdornment-root {
-    color: #1A73E8;
+    color: #2196F3;
   }
 `;
 
@@ -258,7 +258,7 @@ const Logo = styled(motion.div)`
   span {
     display: inline-block;
     margin-left: 0.5rem;
-    background: linear-gradient(90deg, #1A73E8, #0D47A1);
+    background: linear-gradient(90deg, #2196F3, #1976D2);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
   }
@@ -291,7 +291,7 @@ const FloatingIcon = ({ icon: Icon, style, delay, duration }) => {
       }}
       style={{
         position: 'absolute',
-        color: 'rgba(255, 255, 255, 0.25)',
+        color: 'rgba(255, 255, 255, 0.6)',
         zIndex: 0,
         ...style
       }}
@@ -490,7 +490,7 @@ const LoginPage = () => {
               sx={{
                 fontWeight: 800,
                 marginBottom: 3,
-                textShadow: '0 2px 15px rgba(0, 0, 0, 0.2)',
+                textShadow: '0 2px 10px rgba(0, 0, 0, 0.15)',
                 letterSpacing: '-0.5px',
                 fontSize: { xs: '2rem', sm: '2.5rem', md: '3rem' },
                 lineHeight: 1.2,
@@ -504,7 +504,7 @@ const LoginPage = () => {
                 fontWeight: 400,
                 marginBottom: 4,
                 opacity: 0.9,
-                textShadow: '0 2px 10px rgba(0, 0, 0, 0.15)',
+                textShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
                 maxWidth: '80%',
                 mx: 'auto',
                 lineHeight: 1.6,
@@ -541,12 +541,12 @@ const LoginPage = () => {
                   whileHover={{ 
                     scale: 1.05, 
                     y: -8,
-                    boxShadow: '0 12px 30px rgba(0, 0, 0, 0.15)' 
+                    boxShadow: '0 12px 25px rgba(0, 0, 0, 0.1)' 
                   }}
                 >
                   <Box
                     sx={{
-                      background: 'rgba(255, 255, 255, 0.1)',
+                      background: 'rgba(255, 255, 255, 0.18)',
                       backdropFilter: 'blur(10px)',
                       padding: { xs: 2, sm: 2.5 },
                       borderRadius: 3,
@@ -556,7 +556,7 @@ const LoginPage = () => {
                       display: 'flex',
                       flexDirection: 'column',
                       justifyContent: 'center',
-                      border: '1px solid rgba(255, 255, 255, 0.2)',
+                      border: '1px solid rgba(255, 255, 255, 0.3)',
                       position: 'relative',
                       overflow: 'hidden',
                     }}
@@ -567,7 +567,7 @@ const LoginPage = () => {
                         position: 'absolute',
                         width: '100%',
                         height: '100%',
-                        background: 'radial-gradient(circle at center, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 70%)',
+                        background: 'radial-gradient(circle at center, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0) 70%)',
                         top: 0,
                         left: 0,
                       }}
@@ -630,9 +630,9 @@ const LoginPage = () => {
                   >
                     <StorageOutlinedIcon sx={{ 
                       fontSize: '2.25rem', 
-                      color: '#1A73E8',
+                      color: '#2196F3',
                       marginRight: '0.5rem',
-                      filter: 'drop-shadow(0px 2px 4px rgba(26, 115, 232, 0.3))'
+                      filter: 'drop-shadow(0px 2px 4px rgba(33, 150, 243, 0.3))'
                     }} />
                     DW<span>Tool</span>
                   </Logo>
@@ -646,7 +646,7 @@ const LoginPage = () => {
                         fontWeight: 700,
                         mb: 3,
                         fontSize: '1.375rem',
-                        background: 'linear-gradient(90deg, #1A73E8, #0D47A1)',
+                        background: 'linear-gradient(90deg, #2196F3, #1976D2)',
                         backgroundClip: 'text',
                         WebkitBackgroundClip: 'text',
                         WebkitTextFillColor: 'transparent',
@@ -689,7 +689,7 @@ const LoginPage = () => {
                       required
                       InputProps={{
                         startAdornment: (
-                          <AccountCircleOutlinedIcon sx={{ mr: 1, color: '#1A73E8' }} />
+                          <AccountCircleOutlinedIcon sx={{ mr: 1, color: '#2196F3' }} />
                         ),
                       }}
                     />
@@ -706,7 +706,7 @@ const LoginPage = () => {
                       required
                       InputProps={{
                         startAdornment: (
-                          <LockOutlinedIcon sx={{ mr: 1, color: '#1A73E8' }} />
+                          <LockOutlinedIcon sx={{ mr: 1, color: '#2196F3' }} />
                         ),
                         endAdornment: (
                           <InputAdornment position="end">
@@ -716,7 +716,7 @@ const LoginPage = () => {
                               onMouseDown={handleMouseDownPassword}
                               edge="end"
                               size="small"
-                              sx={{ color: '#1A73E8' }}
+                              sx={{ color: '#2196F3' }}
                             >
                               {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
                             </IconButton>
@@ -742,7 +742,7 @@ const LoginPage = () => {
                           onChange={(e) => setRememberMe(e.target.checked)}
                           sx={{
                             color: '#adb5bd',
-                            '&.Mui-checked': { color: '#1A73E8' },
+                            '&.Mui-checked': { color: '#2196F3' },
                             '& .MuiSvgIcon-root': { fontSize: '1.125rem' },
                           }}
                           size="small"
@@ -753,7 +753,7 @@ const LoginPage = () => {
                     <Link
                       href="/auth/forgot-password"
                       style={{
-                        color: '#1A73E8',
+                        color: '#2196F3',
                         textDecoration: 'none',
                         fontWeight: 600,
                         fontSize: '0.875rem',

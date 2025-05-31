@@ -5,22 +5,27 @@ from database.dbconnect import create_oracle_connection
 dashboard_bp = Blueprint('dashboard', __name__)
 
 
-@dashboard_bp.route("/mappers_and_jobs_count", methods=["GET"])
-def dashboard():
+@dashboard_bp.route("/all_metrics", methods=["GET"])
+def all_metrics():
     connection = create_oracle_connection()
     cursor = connection.cursor()
     query=""" 
-    SELECT 
-    (SELECT COUNT(*) FROM DWJOBSCH WHERE CURFLG = 'Y') AS TOTAL_JOBS,
-    (SELECT COUNT(*) FROM DWJOBSCH WHERE CURFLG = 'Y' AND STFLG = 'A') AS ACTIVE_JOBS,
-    (SELECT COUNT(*) FROM DWJOBSCH WHERE CURFLG = 'Y' AND STFLG = 'N') AS NOT_ACTIVE_JOBS,
-    
-    (SELECT COUNT(*) FROM DWMAPR WHERE CURFLG = 'Y') AS TOTAL_MAPPINGS,
-    (SELECT COUNT(*) FROM DWMAPR WHERE CURFLG = 'Y' AND STFLG = 'A') AS ACTIVE_MAPPINGS,
-    (SELECT COUNT(*) FROM DWMAPR WHERE CURFLG = 'Y' AND STFLG = 'N') AS NOT_ACTIVE_MAPPINGS,
-    (SELECT COUNT(*) FROM DWMAPR WHERE CURFLG = 'Y' AND STFLG = 'A' AND LGVRFYFLG = 'Y') AS LOGIC_VERIFIED_MAPPINGS,
-    (SELECT COUNT(*) FROM DWMAPR WHERE CURFLG = 'Y' AND STFLG = 'A' AND LGVRFYFLG = 'N') AS LOGIC_NOT_VERIFIED_MAPPINGS
-    FROM dual
+        select count(m.mapref) total_mappings
+              ,sum(case when m.lgvrfyflg = 'Y' then 1 else 0 end) logic_verified
+              ,sum(case when m.stflg = 'A' then 1 else 0 end) active_mappings
+              ,sum(case when j.mapref is not null then 1 else 0 end) total_jobs
+              ,sum(case when j.stflg = 'A' then 1 else 0 end) Active_jobs
+              ,sum(case when f.mapref is not null then 1 else 0 end) job_flow_created
+              ,sum(case when s.mapref is not null then 1 else 0 end) schedule_created
+        from dwmapr m, dwjob j, dwjobflw f, dwjobsch s
+        where m.curflg = 'Y'
+        and   j.mapref (+) = m.mapref
+        and   j.curflg (+) = m.curflg
+        and   f.mapref (+) = j.mapref
+        and   f.jobid (+) = j.jobid
+        and   f.curflg (+) = 'Y'
+        and   s.jobflwid (+) = f.jobflwid
+        and   s.curflg (+) = 'Y'
     """
 
     try:
@@ -34,18 +39,17 @@ def dashboard():
     
 
 
-@dashboard_bp.route("/todays-jobs-status", methods=["GET"])
-def todays_jobs_status():
+@dashboard_bp.route("/jobs_overview", methods=["GET"])
+def jobs_overview():
     connection = create_oracle_connection()
     cursor = connection.cursor()
     query=""" 
-        SELECT STATUS, 
-        COUNT(CASE WHEN STATUS = 'PC' THEN 1 END ) AS COMPLETED,
-        COUNT(CASE WHEN STATUS = 'IP' THEN 1 END ) AS INPROGRESS,
-        COUNT(CASE WHEN STATUS = 'FL' THEN 1 END ) AS FAILED
-        FROM DWPRCLOG
-        WHERE TRUNC(RECUPDT) = TRUNC(SYSDATE)
-        GROUP BY STATUS
+        select l.mapref, count(l.mapref) times_processed, avg(l.srcrows) average_src_rows_processed, ceil(avg(l.trgrows)) average_trg_rows_processed
+              ,max(enddt - strtdt) Max_job_duration, min(enddt - strtdt) Min_job_duration
+        from  dwjoblog l, dwprclog p
+        where p.jobid (+) = l.jobid
+        group by l.mapref
+ 
         """
     try:
         cursor.execute(query)

@@ -288,8 +288,8 @@ const ModuleDialog = ({
 
   // Render the form for creating/editing a single module
   const renderModuleForm = () => (
-    <Box sx={{ p: 1 }}>
-      <Grid container spacing={2}>
+    <Box>
+      <Grid container spacing={1}>
         <Grid item xs={12} sm={6}>
           <TextField
             fullWidth
@@ -298,7 +298,7 @@ const ModuleDialog = ({
             value={formData.module_name}
             onChange={handleChange}
             error={!!errors.module_name}
-            //helperText={errors.module_name || "Lowercase letters, numbers, and underscores only"}
+            size="small"
             required
             disabled={isEditModule} // Don't allow changing the module name once created
           />
@@ -313,6 +313,7 @@ const ModuleDialog = ({
             onChange={handleChange}
             error={!!errors.display_name}
             helperText={errors.display_name}
+            size="small"
             required
           />
         </Grid>
@@ -325,7 +326,9 @@ const ModuleDialog = ({
             value={formData.description}
             onChange={handleChange}
             multiline
-            rows={2}
+            rows={1}
+            size="small"
+            margin="dense"
           />
         </Grid>
       </Grid>
@@ -334,26 +337,26 @@ const ModuleDialog = ({
 
   // Render the module management interface
   const renderModuleManagement = () => (
-    <Box sx={{ p: 1 }}>
-      <Alert severity="info" sx={{ mb: 2 }}>
+    <Box>
+      <Alert severity="info" sx={{ mb: 1.5, py: 0.5, fontSize: '0.85rem' }}>
         Modules define the functional areas that permissions can be assigned to in roles.
       </Alert>
       
       <Paper 
         elevation={0} 
         sx={{ 
-          p: 2, 
-          mb: 3,
+          p: 1.5, 
+          mb: 2,
           bgcolor: alpha(theme.palette.background.paper, 0.5),
           border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
           borderRadius: 1
         }}
       >
-        <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 600 }}>
+        <Typography variant="subtitle2" sx={{ mb: 1.5, fontWeight: 600 }}>
           Add New Module
         </Typography>
         
-        <Grid container spacing={2} alignItems="center">
+        <Grid container spacing={1} alignItems="center">
           <Grid item xs={12} sm={3}>
             <TextField
               fullWidth
@@ -362,7 +365,6 @@ const ModuleDialog = ({
               value={newModuleName}
               onChange={(e) => setNewModuleName(e.target.value)}
               placeholder="e.g. analytics"
-              //helperText="Lowercase letters, numbers, and underscores only"
             />
           </Grid>
           <Grid item xs={12} sm={3}>
@@ -392,60 +394,66 @@ const ModuleDialog = ({
               startIcon={<AddIcon />}
               onClick={handleAddModule}
               disabled={loading}
+              size="small"
               sx={{ 
                 borderRadius: 1,
                 textTransform: 'none',
-                px: 3
+                px: 2
               }}
             >
-              {loading ? <CircularProgress size={24} /> : 'Add Module'}
+              {loading ? <CircularProgress size={20} /> : 'Add Module'}
             </Button>
           </Grid>
         </Grid>
       </Paper>
       
-      <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 600 }}>
+      <Typography variant="subtitle2" sx={{ mb: 0.5, fontWeight: 600 }}>
         Existing Modules
       </Typography>
       
       {isModulesLoading ? (
-        <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
-          <CircularProgress />
+        <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
+          <CircularProgress size={24} />
         </Box>
       ) : (
         <List sx={{ 
           bgcolor: alpha(theme.palette.background.paper, 0.5),
           border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-          borderRadius: 1
+          borderRadius: 1,
+          py: 0
         }}>
           {modules.length > 0 ? (
             modules.map((module, index) => (
               <React.Fragment key={module.module_id || index}>
                 <ListItem 
                   sx={{ 
-                    py: 1.5,
+                    py: 0.75,
                     backgroundColor: index % 2 === 0 ? alpha(theme.palette.background.paper, 0.3) : 'transparent',
                   }}
                 >
                   <ListItemText 
                     primary={
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Typography variant="body1" fontWeight={500}>
+                        <Typography variant="body2" fontWeight={500}>
                           {module.display_name}
                         </Typography>
                         <Chip 
                           label={module.module_name} 
                           size="small"
                           sx={{ 
-                            height: 20, 
-                            fontSize: '0.7rem',
+                            height: 18, 
+                            fontSize: '0.65rem',
                             backgroundColor: alpha(theme.palette.info.main, 0.1),
                             color: theme.palette.info.main
                           }}
                         />
                       </Box>
                     }
-                    secondary={module.description || 'No description provided'}
+                    secondary={
+                      <Typography variant="caption">
+                        {module.description || 'No description provided'}
+                      </Typography>
+                    }
                   />
                   <ListItemSecondaryAction>
                     <IconButton 
@@ -496,7 +504,7 @@ const ModuleDialog = ({
     <Dialog
       open={open}
       onClose={loading ? null : onClose}
-      maxWidth={isManageModules ? "md" : "sm"}
+      maxWidth={isManageModules ? "sm" : "xs"}
       fullWidth
       PaperProps={{
         elevation: 6,
@@ -509,12 +517,13 @@ const ModuleDialog = ({
       }}
     >
       <DialogTitle sx={{ 
-        pb: 1,
+        py: 1,
+        px: 2,
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center'
       }}>
-        <Typography variant="h6" component="div" sx={{ fontWeight: 600 }}>
+        <Typography variant="subtitle1" component="div" sx={{ fontWeight: 600 }}>
           {renderTitle()}
         </Typography>
         <IconButton
@@ -523,29 +532,31 @@ const ModuleDialog = ({
           onClick={onClose}
           disabled={loading}
           aria-label="close"
+          size="small"
         >
-          <CloseIcon />
+          <CloseIcon fontSize="small" />
         </IconButton>
       </DialogTitle>
       
       <Divider />
       
-      <DialogContent sx={{ pt: 2 }}>
+      <DialogContent sx={{ py: 1.5, px: 2 }}>
         {isManageModules 
           ? renderModuleManagement()
           : renderModuleForm()
         }
       </DialogContent>
       
-      <DialogActions sx={{ px: 3, pb: 2, pt: 1 }}>
+      <DialogActions sx={{ px: 2, py: 1 }}>
         <Button 
           onClick={onClose} 
           disabled={loading}
           variant="outlined"
+          size="small"
           sx={{ 
             borderRadius: 1,
             textTransform: 'none',
-            px: 3
+            px: 2
           }}
         >
           Close
@@ -555,12 +566,13 @@ const ModuleDialog = ({
           <Button
             onClick={handleSubmit}
             variant="contained"
+            size="small"
             disabled={loading}
-            startIcon={loading ? <CircularProgress size={20} color="inherit" /> : null}
+            startIcon={loading ? <CircularProgress size={16} color="inherit" /> : null}
             sx={{ 
               borderRadius: 1,
               textTransform: 'none',
-              px: 3
+              px: 2
             }}
           >
             {isNewModule ? 'Create Module' : 'Update Module'}
