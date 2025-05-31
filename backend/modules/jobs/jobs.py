@@ -253,34 +253,78 @@ def get_job_schedule_details(job_flow_id):
 def get_scheduled_jobs():
     try:
         conn = create_oracle_connection()
-        query = """ 
-        SELECT 
-            MAPREF as MAP_REFERENCE,
-            STFLG as STATUS,
-            FRQCD as FREQUENCY_CODE,
-            FRQDD as FREQUENCY_DAY,
-            FRQHH as FREQUENCY_HOUR,
-            FRQMI as FREQUENCY_MINUTE
-        FROM DWJOBSCH 
-        WHERE CURFLG = 'Y' 
-        """
-        cursor = conn.cursor()
-        cursor.execute(query)
-        column_names = [desc[0] for desc in cursor.description]
-        scheduled_jobs = cursor.fetchall()
-        
-        # Debug information
-        print(f"Column names: {column_names}")
-        print(f"Number of jobs found: {len(scheduled_jobs)}")
-        if len(scheduled_jobs) > 0:
-            print(f"Sample job data: {scheduled_jobs[0]}")
+        try:
+            query = """ 
+            SELECT 
+                l.log_date,
+                REGEXP_REPLACE(l.job_name, '_[0-9]{12}$', '') AS job_name,
+                l.status,
+                ld.req_start_date,
+                ld.actual_start_date,
+                ld.run_duration,
+                ld.errors
+            FROM  
+                all_scheduler_job_log l,
+                all_scheduler_job_run_details ld
+            WHERE 
+                ld.owner = l.owner
+                AND ld.log_id = l.log_id
+                AND l.owner = USER
+            ORDER BY 
+                l.log_id DESC, l.log_date
+            """
+            cursor = conn.cursor()
+            cursor.execute(query)
+            column_names = [desc[0] for desc in cursor.description]
+            raw_jobs = cursor.fetchall()
             
-        return jsonify({
-            'scheduled_jobs': scheduled_jobs
-        })
+            # Convert data to JSON-serializable format
+            scheduled_jobs = []
+            for row in raw_jobs:
+                job_data = []
+                for i, value in enumerate(row):
+                    if value is None:
+                        job_data.append(None)
+                    elif hasattr(value, 'total_seconds'):  # timedelta object
+                        # Convert timedelta to string format
+                        total_seconds = int(value.total_seconds())
+                        hours = total_seconds // 3600
+                        minutes = (total_seconds % 3600) // 60
+                        seconds = total_seconds % 60
+                        job_data.append(f"+00 {hours:02d}:{minutes:02d}:{seconds:02d}.000000")
+                    elif hasattr(value, 'isoformat'):  # datetime object
+                        job_data.append(value.isoformat())
+                    elif hasattr(value, 'read'):  # LOB object
+                        try:
+                            lob_data = value.read()
+                            if isinstance(lob_data, bytes):
+                                job_data.append(lob_data.decode('utf-8'))
+                            else:
+                                job_data.append(str(lob_data))
+                        except Exception as e:
+                            job_data.append(f"Error reading LOB: {str(e)}")
+                    else:
+                        job_data.append(str(value) if value is not None else None)
+                
+                scheduled_jobs.append(job_data)
+            
+            # Debug information
+            print(f"Column names: {column_names}")
+            print(f"Number of jobs found: {len(scheduled_jobs)}")
+            if len(scheduled_jobs) > 0:
+                print(f"Sample job data: {scheduled_jobs[0]}")
+                
+            return jsonify({
+                'scheduled_jobs': scheduled_jobs
+            })
+        finally:
+            conn.close()
     except Exception as e:
         print(f"Error in get_scheduled_jobs: {str(e)}")
         return jsonify({"error": str(e)}), 500
+
+
+
 
 
 # get job and process log details for a scheduled job
