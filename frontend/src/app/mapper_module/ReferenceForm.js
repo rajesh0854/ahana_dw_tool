@@ -2614,13 +2614,17 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
                     ? 'Must start with a letter, only A-Z, 0-9, _'
                     : ''
                 }
+                // Disable the field if this is an update of an existing mapper
+                disabled={isUpdateMode}
                 sx={{
                   '& .MuiOutlinedInput-root': {
                     height: '28px',
                     borderRadius: '6px',
                     backgroundColor: darkMode
                       ? 'rgba(31, 41, 55, 0.5)'
-                      : 'white',
+                      : isUpdateMode
+                        ? 'rgba(229, 231, 235, 0.5)'
+                        : 'white',
                   },
                   '& .MuiInputLabel-root': {
                     fontSize: '0.7rem',
@@ -2656,13 +2660,17 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
                     ? 'Must start with a letter, only A-Z, 0-9, _'
                     : ''
                 }
+                // Disable the field if this is an update of an existing mapper
+                disabled={isUpdateMode}
                 sx={{
                   '& .MuiOutlinedInput-root': {
                     height: '28px',
                     borderRadius: '6px',
                     backgroundColor: darkMode
                       ? 'rgba(31, 41, 55, 0.5)'
-                      : 'white',
+                      : isUpdateMode
+                        ? 'rgba(229, 231, 235, 0.5)'
+                        : 'white',
                   },
                   '& .MuiInputLabel-root': {
                     fontSize: '0.7rem',
@@ -2708,7 +2716,7 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
                 >
                   {TABLE_TYPES.map((type) => (
                     <MenuItem key={type.value} value={type.value}>
-                      {type.label}
+                      {type.value}
                     </MenuItem>
                   ))}
                 </Select>
@@ -2834,9 +2842,15 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
           <TableContainer className="max-h-[calc(100vh-15rem)]">
             {' '}
             {/* Increased height even more to utilize space */}
-            <Table stickyHeader size="small">
+            <Table stickyHeader size="small" sx={{ 
+              borderCollapse: 'collapse',
+              '& .MuiTableCell-root': {
+                padding: '0px',
+                border: darkMode ? '1px solid rgba(75, 85, 99, 0.3)' : '1px solid rgba(229, 231, 235, 1)',
+              }
+            }}>
               <TableHead>
-                <TableRow>
+                <TableRow sx={{ height: '36px' }}>
                   <TableCell
                     align="center"
                     className={`
@@ -2856,7 +2870,8 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
                     sx={{ 
                       fontSize: 'clamp(0.65rem, 0.7vw, 0.7rem)',
                       width: '40px', 
-                      padding: '6px 2px'
+                      padding: '6px 2px',
+                      borderBottom: darkMode ? '2px solid rgba(75, 85, 99, 0.5)' : '2px solid rgba(0, 0, 0, 0.1)',
                     }}
                   >
                     Key?
@@ -3123,7 +3138,23 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
                                 }`
                           }
                         `}
-                    sx={{ height: { xs: '28px', md: '28px' } }}
+                    sx={{ 
+                      height: { xs: '26px', md: '26px' },
+                      '&:hover': {
+                        '& .MuiTableCell-root': {
+                          borderColor: darkMode 
+                            ? 'rgba(96, 165, 250, 0.3)' 
+                            : 'rgba(59, 130, 246, 0.3)',
+                        }
+                      },
+                      '&.Mui-selected, &.Mui-selected:hover': {
+                        '& .MuiTableCell-root': {
+                          borderColor: darkMode 
+                            ? 'rgba(96, 165, 250, 0.5)' 
+                            : 'rgba(59, 130, 246, 0.5)',
+                        }
+                      }
+                    }}
                   >
                     <TableCell className="py-0 px-0" sx={{ padding: '0px 2px' }}>
                       <Checkbox
@@ -3139,7 +3170,7 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
                           darkMode ? 'text-blue-400' : 'text-blue-500'
                         }`}
                         size="small"
-                        sx={{ padding: '2px' }}
+                        sx={{ padding: '2px', height: '26px' }}
                       />
                     </TableCell>
                     <TableCell className="py-0 px-0" sx={{ padding: '0px 2px' }}>
@@ -3159,22 +3190,21 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
                           max: 999,
                           step: 1,
                           className: 'px-2 py-0 text-center',
-                          style: { height: '20px', fontSize: '0.8rem' }
+                          style: { height: '26px', fontSize: '0.8rem' }
                         }}
                         className={`${
                           darkMode ? 'bg-gray-800/50' : 'bg-white'
-                        } rounded-md ${!row.primaryKey ? 'opacity-50' : ''}`}
+                        } rounded-none ${!row.primaryKey ? 'opacity-50' : ''}`}
                         sx={{
                           '& .MuiOutlinedInput-root': {
-                            height: '22px',
+                            height: '26px',
+                            borderRadius: '0',
                             '& fieldset': {
                               borderColor: pkSeqErrors[index + page * 10]
                                 ? darkMode
                                   ? 'rgba(239,68,68,0.7)'
                                   : 'rgba(239,68,68,0.7)'
-                                : darkMode
-                                ? 'rgba(255,255,255,0.1)'
-                                : 'rgba(0,0,0,0.1)',
+                                : 'transparent',
                             },
                             '&:hover fieldset': {
                               borderColor: pkSeqErrors[index + page * 10]
@@ -3182,15 +3212,29 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
                                   ? 'rgba(239,68,68,0.9)'
                                   : 'rgba(239,68,68,0.9)'
                                 : darkMode
-                                ? 'rgba(255,255,255,0.2)'
-                                : 'rgba(0,0,0,0.2)',
+                                ? 'rgba(96, 165, 250, 0.5)'
+                                : 'rgba(59, 130, 246, 0.5)',
                             },
                             '&.Mui-focused fieldset': {
+                              borderWidth: '1px !important',
                               borderColor: pkSeqErrors[index + page * 10]
                                 ? darkMode
                                   ? 'rgba(239,68,68,1)'
                                   : 'rgba(239,68,68,1)'
                                 : '#3b82f6',
+                            },
+                            '&.Mui-disabled': {
+                              backgroundColor: darkMode
+                                ? 'rgba(31, 41, 55, 0.5)'
+                                : 'rgba(229, 231, 235, 0.5)',
+                              '& fieldset': {
+                                borderColor: 'transparent',
+                              },
+                              '& input': {
+                                color: darkMode
+                                  ? 'rgba(255,255,255,0.5)'
+                                  : 'rgba(0,0,0,0.5)',
+                              },
                             },
                           },
                           '& .MuiFormHelperText-root': {
@@ -3226,7 +3270,7 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
                         inputProps={{
                           maxLength: 30,
                           className: 'px-2 py-0',
-                          style: { height: '20px', fontSize: '0.8rem' }
+                          style: { height: '26px', fontSize: '0.8rem' }
                         }}
                         className={`${
                           darkMode
@@ -3234,23 +3278,29 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
                             : row.mapdtlid
                             ? 'bg-gray-100'
                             : 'bg-white'
-                        } rounded-md`}
+                        } rounded-none`}
                         sx={{
                           '& .MuiOutlinedInput-root': {
-                            height: '22px',
+                            height: '26px',
+                            borderRadius: '0',
                             '& fieldset': {
+                              borderColor: 'transparent',
+                            },
+                            '&:hover fieldset': {
                               borderColor: darkMode
-                                ? 'rgba(255,255,255,0.1)'
-                                : 'rgba(0,0,0,0.1)',
+                                ? 'rgba(96, 165, 250, 0.5)'
+                                : 'rgba(59, 130, 246, 0.5)',
+                            },
+                            '&.Mui-focused fieldset': {
+                              borderWidth: '1px !important',
+                              borderColor: '#3b82f6',
                             },
                             '&.Mui-disabled': {
                               backgroundColor: darkMode
                                 ? 'rgba(31, 41, 55, 0.5)'
                                 : 'rgba(229, 231, 235, 0.5)',
                               '& fieldset': {
-                                borderColor: darkMode
-                                  ? 'rgba(255,255,255,0.05)'
-                                  : 'rgba(0,0,0,0.08)',
+                                borderColor: 'transparent',
                               },
                               '& input': {
                                 color: darkMode
@@ -3292,23 +3342,29 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
                                 : row.mapdtlid
                                 ? 'bg-gray-100'
                                 : 'bg-white'
-                            } rounded-md`}
+                            } rounded-none`}
                             sx={{
                               '& .MuiOutlinedInput-root': {
-                                height: '22px',
+                                height: '26px',
+                                borderRadius: '0',
                                 '& fieldset': {
+                                  borderColor: 'transparent',
+                                },
+                                '&:hover fieldset': {
                                   borderColor: darkMode
-                                    ? 'rgba(255,255,255,0.1)'
-                                    : 'rgba(0,0,0,0.1)',
+                                    ? 'rgba(96, 165, 250, 0.5)' 
+                                    : 'rgba(59, 130, 246, 0.5)',
+                                },
+                                '&.Mui-focused fieldset': {
+                                  borderWidth: '1px !important',
+                                  borderColor: '#3b82f6',
                                 },
                                 '&.Mui-disabled': {
                                   backgroundColor: darkMode
                                     ? 'rgba(31, 41, 55, 0.5)'
                                     : 'rgba(229, 231, 235, 0.5)',
                                   '& fieldset': {
-                                    borderColor: darkMode
-                                      ? 'rgba(255,255,255,0.05)'
-                                      : 'rgba(0,0,0,0.08)',
+                                    borderColor: 'transparent',
                                   },
                                   '& input': {
                                     color: darkMode
@@ -3324,6 +3380,8 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
                               '& .MuiInputBase-input': {
                                 padding: '2px 4px !important',
                                 fontSize: '0.8rem',
+                                height: '26px !important',
+                                boxSizing: 'border-box',
                               }
                             }}
                           />
@@ -3364,25 +3422,25 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
                         inputProps={{
                           maxLength: 100,
                           className: 'px-2 py-0',
-                          style: { height: '20px', fontSize: '0.8rem' }
+                          style: { height: '26px', fontSize: '0.8rem' }
                         }}
                         className={`${
                           darkMode ? 'bg-gray-800/50' : 'bg-white'
-                        } rounded-md`}
+                        } rounded-none`}
                         sx={{
                           '& .MuiOutlinedInput-root': {
-                            height: '22px',
+                            height: '26px',
+                            borderRadius: '0',
                             '& fieldset': {
-                              borderColor: darkMode
-                                ? 'rgba(255,255,255,0.1)'
-                                : 'rgba(0,0,0,0.1)',
+                              borderColor: 'transparent',
                             },
                             '&:hover fieldset': {
                               borderColor: darkMode
-                                ? 'rgba(255,255,255,0.2)'
-                                : 'rgba(0,0,0,0.2)',
+                                ? 'rgba(96, 165, 250, 0.5)'
+                                : 'rgba(59, 130, 246, 0.5)',
                             },
                             '&.Mui-focused fieldset': {
+                              borderWidth: '1px !important',
                               borderColor: '#3b82f6',
                             },
                           },
@@ -3398,7 +3456,7 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
                           variant="outlined"
                           className={`${
                             darkMode ? 'bg-gray-800/50' : 'bg-white'
-                          } rounded-md`}
+                          } rounded-none`}
                         >
                           <Select
                             value={row.scdType}
@@ -3418,19 +3476,24 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
                             }}
                             className={darkMode ? 'text-gray-200' : ''}
                             sx={{
-                              height: '22px',
+                              height: '26px',
+                              borderRadius: '0',
                               '& .MuiOutlinedInput-notchedOutline': {
-                                borderColor: darkMode
-                                  ? 'rgba(255,255,255,0.1)'
-                                  : 'rgba(0,0,0,0.1)',
+                                borderColor: 'transparent',
+                                borderRadius: '0',
                               },
                               '&:hover .MuiOutlinedInput-notchedOutline': {
                                 borderColor: darkMode
-                                  ? 'rgba(255,255,255,0.2)'
-                                  : 'rgba(0,0,0,0.2)',
+                                  ? 'rgba(96, 165, 250, 0.5)'
+                                  : 'rgba(59, 130, 246, 0.5)',
                               },
                               '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                borderWidth: '1px !important',
                                 borderColor: '#3b82f6',
+                              },
+                              '& .MuiSelect-select': {
+                                padding: '2px 6px',
+                                fontSize: '0.8rem',
                               },
                             }}
                           >
@@ -3464,33 +3527,47 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
                           placeholder="Click edit to add SQL logic"
                           className={`${
                             darkMode ? 'bg-gray-800/50' : 'bg-white'
-                          } rounded-md`}
+                          } rounded-none`}
                           sx={{
                             '& .MuiOutlinedInput-root': {
                               fontSize: '0.75rem',
-                              minHeight: '22px',
+                              minHeight: '20px',
+                              height: '26px',
+                              borderRadius: '0',
                               '& fieldset': {
-                                borderColor: darkMode
-                                  ? 'rgba(255,255,255,0.1)'
-                                  : 'rgba(0,0,0,0.1)',
+                                borderColor: 'transparent',
+                                borderRadius: '0',
                               },
                               '&:hover fieldset': {
                                 borderColor: darkMode 
-                                  ? 'rgba(255,255,255,0.2)' 
-                                  : 'rgba(0,0,0,0.2)',
+                                  ? 'rgba(96, 165, 250, 0.5)' 
+                                  : 'rgba(59, 130, 246, 0.5)',
                               },
                               '&.Mui-focused fieldset': {
+                                borderWidth: '1px !important',
                                 borderColor: '#3b82f6',
+                              },
+                              '&.Mui-disabled': {
+                                backgroundColor: 'transparent',
+                                '& fieldset': {
+                                  borderColor: 'transparent',
+                                },
+                                '& textarea': {
+                                  color: darkMode
+                                    ? 'rgba(255,255,255,0.8)'
+                                    : 'rgba(0,0,0,0.8)',
+                                },
                               },
                             },
                             '& .MuiInputBase-input': {
                               overflow: 'hidden',
                               textOverflow: 'ellipsis',
                               whiteSpace: 'nowrap',
+                              height: '26px',
+                              boxSizing: 'border-box',
+                              padding: '2px 4px !important',
+                              lineHeight: '1.2',
                             }
-                          }}
-                          inputProps={{
-                            style: { padding: '2px 4px', lineHeight: '1.2' }
                           }}
                         />
                         <div className="absolute top-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -3530,25 +3607,25 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
                         inputProps={{
                           maxLength: 30,
                           className: 'px-2 py-0',
-                          style: { height: '20px', fontSize: '0.8rem' }
+                          style: { height: '26px', fontSize: '0.8rem' }
                         }}
                         className={`${
                           darkMode ? 'bg-gray-800/50' : 'bg-white'
-                        } rounded-md`}
+                        } rounded-none`}
                         sx={{
                           '& .MuiOutlinedInput-root': {
-                            height: '22px',
+                            height: '26px',
+                            borderRadius: '0',
                             '& fieldset': {
-                              borderColor: darkMode
-                                ? 'rgba(255,255,255,0.1)'
-                                : 'rgba(0,0,0,0.1)',
+                              borderColor: 'transparent',
                             },
                             '&:hover fieldset': {
                               borderColor: darkMode
-                                ? 'rgba(255,255,255,0.2)'
-                                : 'rgba(0,0,0,0.2)',
+                                ? 'rgba(96, 165, 250, 0.5)'
+                                : 'rgba(59, 130, 246, 0.5)',
                             },
                             '&.Mui-focused fieldset': {
+                              borderWidth: '1px !important',
                               borderColor: '#3b82f6',
                             },
                           },
@@ -3573,25 +3650,25 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
                         inputProps={{
                           maxLength: 30,
                           className: 'px-2 py-0',
-                          style: { height: '20px', fontSize: '0.8rem' }
+                          style: { height: '26px', fontSize: '0.8rem' }
                         }}
                         className={`${
                           darkMode ? 'bg-gray-800/50' : 'bg-white'
-                        } rounded-md`}
+                        } rounded-none`}
                         sx={{
                           '& .MuiOutlinedInput-root': {
-                            height: '22px',
+                            height: '26px',
+                            borderRadius: '0',
                             '& fieldset': {
-                              borderColor: darkMode
-                                ? 'rgba(255,255,255,0.1)'
-                                : 'rgba(0,0,0,0.1)',
+                              borderColor: 'transparent',
                             },
                             '&:hover fieldset': {
                               borderColor: darkMode
-                                ? 'rgba(255,255,255,0.2)'
-                                : 'rgba(0,0,0,0.2)',
+                                ? 'rgba(96, 165, 250, 0.5)'
+                                : 'rgba(59, 130, 246, 0.5)',
                             },
                             '&.Mui-focused fieldset': {
+                              borderWidth: '1px !important',
                               borderColor: '#3b82f6',
                             },
                           },
@@ -3621,25 +3698,25 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
                           min: 0,
                           max: 5000,
                           className: 'px-2 py-0',
-                          style: { height: '20px', fontSize: '0.8rem' }
+                          style: { height: '26px', fontSize: '0.8rem' }
                         }}
                         className={`${
                           darkMode ? 'bg-gray-800/50' : 'bg-white'
-                        } rounded-md`}
+                        } rounded-none`}
                         sx={{
                           '& .MuiOutlinedInput-root': {
-                            height: '22px',
+                            height: '26px',
+                            borderRadius: '0',
                             '& fieldset': {
-                              borderColor: darkMode
-                                ? 'rgba(255,255,255,0.1)'
-                                : 'rgba(0,0,0,0.1)',
+                              borderColor: 'transparent',
                             },
                             '&:hover fieldset': {
                               borderColor: darkMode
-                                ? 'rgba(255,255,255,0.2)'
-                                : 'rgba(0,0,0,0.2)',
+                                ? 'rgba(96, 165, 250, 0.5)'
+                                : 'rgba(59, 130, 246, 0.5)',
                             },
                             '&.Mui-focused fieldset': {
+                              borderWidth: '1px !important',
                               borderColor: '#3b82f6',
                             },
                           },
@@ -3671,25 +3748,25 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
                         inputProps={{
                           maxLength: 30,
                           className: 'px-2 py-0',
-                          style: { height: '20px', fontSize: '0.8rem' }
+                          style: { height: '26px', fontSize: '0.8rem' }
                         }}
                         className={`${
                           darkMode ? 'bg-gray-800/50' : 'bg-white'
-                        } rounded-md`}
+                        } rounded-none`}
                         sx={{
                           '& .MuiOutlinedInput-root': {
-                            height: '22px',
+                            height: '26px',
+                            borderRadius: '0',
                             '& fieldset': {
-                              borderColor: darkMode
-                                ? 'rgba(255,255,255,0.1)'
-                                : 'rgba(0,0,0,0.1)',
+                              borderColor: 'transparent',
                             },
                             '&:hover fieldset': {
                               borderColor: darkMode
-                                ? 'rgba(255,255,255,0.2)'
-                                : 'rgba(0,0,0,0.2)',
+                                ? 'rgba(96, 165, 250, 0.5)'
+                                : 'rgba(59, 130, 246, 0.5)',
                             },
                             '&.Mui-focused fieldset': {
+                              borderWidth: '1px !important',
                               borderColor: '#3b82f6',
                             },
                           },
@@ -3973,78 +4050,28 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
                 />
               </IconButton>
             </Tooltip>
-            <Tooltip title="Validate Logic">
+            <Tooltip title="Copy to Clipboard">
               <IconButton
                 size="small"
                 onClick={() => {
-                  if (selectedRowIndex !== null) {
-                    // Create a temporary row with current edited content for validation
-                    const tempRow = {
-                      ...rows[selectedRowIndex],
-                      logic: sqlEditorContent // Use the current editor content
-                    };
-                    
-                    // Call validation API with the temporary row
-                    const validateUnsavedLogic = async () => {
-                      try {
-                        const response = await fetch(
-                          `${process.env.NEXT_PUBLIC_API_URL}/mapper/validate-logic`,
-                          {
-                            method: 'POST',
-                            headers: {
-                              'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify({
-                              p_logic: tempRow.logic,
-                              p_keyclnm: tempRow.keyColumn,
-                              p_valclnm: tempRow.valColumn,
-                            }),
-                          }
-                        );
-                        
-                        const data = await response.json();
-                        if (data.status === 'success') {
-                          if (data.is_valid === 'Y') {
-                            message.success('Logic validation successful');
-                            setSqlError(null);
-                          } else {
-                            message.error(data.message || 'Logic validation failed');
-                            setSqlError(data.message || 'Logic validation failed');
-                          }
-                        } else {
-                          throw new Error(data.message || 'Validation failed');
-                        }
-                      } catch (error) {
-                        message.error(error.message || 'Error validating logic');
-                        setSqlError(error.message || 'Error validating logic');
-                      }
-                    };
-                    
-                    // Check if required fields are filled
-                    if (!tempRow.keyColumn || !tempRow.valColumn) {
-                      message.error('Please fill in Key Column and Value Column in the main form first');
-                      setSqlError('Key Column and Value Column are required for validation');
-                      return;
-                    }
-                    
-                    if (!tempRow.logic) {
-                      message.error('Please enter SQL Logic');
-                      setSqlError('SQL Logic is required for validation');
-                      return;
-                    }
-                    
-                    validateUnsavedLogic();
-                  }
+                  navigator.clipboard.writeText(sqlEditorContent)
+                    .then(() => {
+                      message.success('SQL copied to clipboard')
+                    })
+                    .catch(err => {
+                      console.error('Failed to copy: ', err)
+                      message.error('Failed to copy SQL')
+                    })
                 }}
                 sx={{
                   backgroundColor: darkMode
-                    ? 'rgba(245, 158, 11, 0.15)'
-                    : 'rgba(245, 158, 11, 0.1)',
+                    ? 'rgba(59, 130, 246, 0.15)'
+                    : 'rgba(59, 130, 246, 0.1)',
                 }}
               >
-                <VerifyIcon 
+                <CopyIcon 
                   fontSize="small" 
-                  className={darkMode ? 'text-yellow-400' : 'text-yellow-600'} 
+                  className={darkMode ? 'text-blue-400' : 'text-blue-600'} 
                 />
               </IconButton>
             </Tooltip>

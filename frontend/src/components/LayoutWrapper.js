@@ -7,6 +7,7 @@ import Sidebar from './Sidebar';
 import NavBar from './NavBar';
 import { useTheme } from '@/context/ThemeContext';
 import LicenseValidation from './LicenseValidation';
+import Notification from './Notification';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function LayoutWrapper({ children }) {
@@ -46,6 +47,7 @@ export default function LayoutWrapper({ children }) {
                     <main className="flex-1 p-6">
                         {children}
                     </main>
+                    <Notification />
                 </motion.div>
             </div>
         </LicenseValidation>

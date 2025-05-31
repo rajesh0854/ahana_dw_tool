@@ -9,6 +9,7 @@ import json
 import re
 from functools import wraps
 from modules.license.license_manager import LicenseManager
+import os.path
 
 load_dotenv()
 
@@ -19,6 +20,12 @@ Session = sessionmaker(bind=engine)
 # Blueprint setup
 admin_bp = Blueprint('admin', __name__)
 license_manager = LicenseManager()
+
+# Notification file path
+NOTIFICATION_FILE_PATH = os.path.join('data', 'notifications.json')
+
+# Ensure data directory exists
+os.makedirs('data', exist_ok=True)
 
 def check_admin_permission(user_id):
     session = Session()
@@ -1350,5 +1357,93 @@ def delete_module(current_user_id, module_id):
     except Exception as e:
         print(f"Error deleting module: {str(e)}")
         return jsonify({'error': f'Failed to delete module: {str(e)}'}), 500
+    finally:
+        session.close()
+
+@admin_bp.route('/notifications', methods=['POST'])
+@token_required
+@admin_required
+def create_notification(current_user_id):
+    session = Session()
+    try:
+        data = request.get_json()
+        
+        # Validate required fields
+        required_fields = ['title', 'description']
+        missing_fields = [field for field in required_fields if not data.get(field)]
+        if missing_fields:
+            return jsonify({'error': f'Missing required fields: {", ".join(missing_fields)}'}), 400
+        
+        # Create notification object
+        notification = {
+            'id': str(datetime.now().timestamp()),
+            'title': data['title'],
+            'description': data['description'],
+            'created_at': str(datetime.now()),
+            'created_by': current_user_id
+        }
+        
+        # Load existing notifications or create new file
+        try:
+            if os.path.exists(NOTIFICATION_FILE_PATH):
+                with open(NOTIFICATION_FILE_PATH, 'r') as f:
+                    notifications = json.load(f)
+            else:
+                notifications = []
+        except Exception as e:
+            notifications = []
+        
+        # Add new notification
+        notifications.append(notification)
+        
+        # Save to file
+        with open(NOTIFICATION_FILE_PATH, 'w') as f:
+            json.dump(notifications, f, indent=4)
+        
+        # Update all users to show notification
+        session.execute(
+            text("UPDATE users SET show_notification = 1")
+        )
+        session.commit()
+        
+        return jsonify({'success': True, 'notification': notification}), 201
+    except Exception as e:
+        print(f"Error creating notification: {str(e)}")
+        return jsonify({'error': f'Failed to create notification: {str(e)}'}), 500
+    finally:
+        session.close()
+
+@admin_bp.route('/notifications', methods=['GET'])
+@token_required
+def get_notifications(current_user_id):
+    try:
+        # Load notifications from file
+        if os.path.exists(NOTIFICATION_FILE_PATH):
+            with open(NOTIFICATION_FILE_PATH, 'r') as f:
+                notifications = json.load(f)
+        else:
+            notifications = []
+        
+        return jsonify(notifications)
+    except Exception as e:
+        print(f"Error retrieving notifications: {str(e)}")
+        return jsonify({'error': f'Failed to retrieve notifications: {str(e)}'}), 500
+
+@admin_bp.route('/notifications/dismiss', methods=['POST'])
+@token_required
+def dismiss_notification(current_user_id):
+    session = Session()
+    try:
+        # Update user to not show notification
+        session.execute(
+            text("UPDATE users SET show_notification = 0 WHERE user_id = :user_id"),
+            {'user_id': current_user_id}
+        )
+        session.commit()
+        
+        return jsonify({'success': True}), 200
+    except Exception as e:
+        print(f"Error dismissing notification: {str(e)}")
+        return jsonify({'error': f'Failed to dismiss notification: {str(e)}'}), 500
     finally:
         session.close() 

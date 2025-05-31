@@ -6,6 +6,7 @@ import SecurityIcon from '@mui/icons-material/Security';
 import HistoryIcon from '@mui/icons-material/History';
 import VpnKeyIcon from '@mui/icons-material/VpnKey';
 import InfoIcon from '@mui/icons-material/Info';
+import NotificationsIcon from '@mui/icons-material/Notifications';
 
 const TabsLayout = ({ activeTab, handleTabChange, isMobile }) => {
   const theme = useTheme();
@@ -126,6 +127,18 @@ const TabsLayout = ({ activeTab, handleTabChange, isMobile }) => {
           }
           iconPosition="start"
           label="License"
+        />
+        <Tab
+          icon={
+            <motion.div
+              whileHover={{ scale: 1.1, rotate: 5 }}
+              whileTap={{ scale: 0.9 }}
+            >
+              <NotificationsIcon sx={{ fontSize: '1rem', mr: 0.5 }} />
+            </motion.div>
+          }
+          iconPosition="start"
+          label="Notifications"
         />
         <Tab
           icon={

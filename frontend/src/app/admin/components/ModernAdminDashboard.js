@@ -15,6 +15,7 @@ import UserDialog from './UserDialogs';
 import RoleDialog from './RoleDialogs';
 import ModuleDialog from './ModuleDialog';
 import { AboutTabContent } from './';
+import NotificationManager from './NotificationManager';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import SecurityIcon from '@mui/icons-material/Security';
 import EditIcon from '@mui/icons-material/Edit';
@@ -950,7 +951,21 @@ const ModernAdminDashboard = ({ initialActiveTab = 0 }) => {  const theme = useT
           </motion.div>
         );
       
-      case 4: // About
+      case 4: // Notifications
+        return (
+          <motion.div
+            key="notifications-tab"
+            variants={tabContentVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            transition={{ duration: 0.3 }}
+          >
+            <NotificationManager />
+          </motion.div>
+        );
+      
+      case 5: // About
         return (
           <motion.div
             key="about-tab"

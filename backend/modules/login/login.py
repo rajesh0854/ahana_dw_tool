@@ -179,7 +179,8 @@ def login():
             'phone': user_profile.phone if user_profile and user_profile.phone else None,
             'department': user_profile.department if user_profile and user_profile.department else None,
             'role': user_profile.role_name if user_profile and user_profile.role_name else 'User',
-            'change_password': bool(user.change_password)
+            'change_password': bool(user.change_password),
+            'show_notification': bool(user.show_notification)
         }
         
         # Create response and set cookie

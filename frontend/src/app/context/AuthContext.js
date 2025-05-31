@@ -169,7 +169,8 @@ export const AuthProvider = ({ children }) => {
         phone: data.phone,
         department: data.department,
         role: data.role,
-        change_password: data.change_password
+        change_password: data.change_password,
+        show_notification: data.show_notification
       }));
 
       Cookies.set('token', data.token);
@@ -183,7 +184,8 @@ export const AuthProvider = ({ children }) => {
         phone: data.phone,
         department: data.department,
         role: data.role,
-        change_password: data.change_password
+        change_password: data.change_password,
+        show_notification: data.show_notification
       });
 
       // Check license status after successful login
