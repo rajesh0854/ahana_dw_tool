@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useTheme } from '@/context/ThemeContext';
 import { API_BASE_URL } from '../config';
 
-const JobsOverviewTable = () => {
+const JobsOverviewTable = ({ onJobSelect, selectedJob }) => {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -44,6 +44,12 @@ const JobsOverviewTable = () => {
       direction = 'desc';
     }
     setSortConfig({ key, direction });
+  };
+
+  const handleJobClick = (jobName) => {
+    if (onJobSelect) {
+      onJobSelect(jobName);
+    }
   };
 
   const sortedJobs = React.useMemo(() => {
@@ -118,7 +124,7 @@ const JobsOverviewTable = () => {
             <p className={`mt-1 text-sm ${
               darkMode ? 'text-gray-400' : 'text-gray-600'
             }`}>
-              Detailed information about all data warehouse jobs
+              Detailed information about all data warehouse jobs. Click on a job name to view its specific analytics.
             </p>
           </div>
           
@@ -186,61 +192,84 @@ const JobsOverviewTable = () => {
               ? 'bg-gray-800 divide-gray-700' 
               : 'bg-white divide-gray-200'
           }`}>
-            {sortedJobs.map((job, index) => (
-              <tr key={index} className={`transition-colors ${
-                darkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-50'
-              }`}>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="flex items-center">
-                    <div className="flex-shrink-0 h-8 w-8">
-                      <div className={`h-8 w-8 rounded-full flex items-center justify-center ${
-                        darkMode ? 'bg-blue-900' : 'bg-blue-100'
-                      }`}>
-                        <span className={`text-sm font-medium ${
-                          darkMode ? 'text-blue-400' : 'text-blue-600'
+            {sortedJobs.map((job, index) => {
+              const isSelected = selectedJob === job.mapref;
+              return (
+                <tr key={index} className={`transition-colors ${
+                  isSelected 
+                    ? (darkMode ? 'bg-blue-900/50 hover:bg-blue-900/60' : 'bg-blue-50 hover:bg-blue-100')
+                    : (darkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-50')
+                }`}>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center">
+                      <div className="flex-shrink-0 h-8 w-8">
+                        <div className={`h-8 w-8 rounded-full flex items-center justify-center ${
+                          isSelected
+                            ? (darkMode ? 'bg-blue-600' : 'bg-blue-500')
+                            : (darkMode ? 'bg-blue-900' : 'bg-blue-100')
                         }`}>
-                          {job.mapref.charAt(0).toUpperCase()}
-                        </span>
+                          <span className={`text-sm font-medium ${
+                            isSelected
+                              ? 'text-white'
+                              : (darkMode ? 'text-blue-400' : 'text-blue-600')
+                          }`}>
+                            {job.mapref.charAt(0).toUpperCase()}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="ml-4">
+                        <button
+                          onClick={() => handleJobClick(job.mapref)}
+                          className={`text-sm font-medium text-left hover:underline focus:outline-none focus:underline transition-colors ${
+                            isSelected
+                              ? (darkMode ? 'text-blue-400' : 'text-blue-600')
+                              : (darkMode ? 'text-white hover:text-blue-400' : 'text-gray-900 hover:text-blue-600')
+                          }`}
+                        >
+                          {job.mapref}
+                          {isSelected && (
+                            <span className={`ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
+                              darkMode ? 'bg-blue-800 text-blue-200' : 'bg-blue-100 text-blue-800'
+                            }`}>
+                              Selected
+                            </span>
+                          )}
+                        </button>
                       </div>
                     </div>
-                    <div className="ml-4">
-                      <div className={`text-sm font-medium ${
-                        darkMode ? 'text-white' : 'text-gray-900'
-                      }`}>{job.mapref}</div>
-                    </div>
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                    darkMode 
-                      ? 'bg-blue-900 text-blue-200' 
-                      : 'bg-blue-100 text-blue-800'
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                      darkMode 
+                        ? 'bg-blue-900 text-blue-200' 
+                        : 'bg-blue-100 text-blue-800'
+                    }`}>
+                      {job.timesProcessed?.toLocaleString() || '0'}
+                    </span>
+                  </td>
+                  <td className={`px-6 py-4 whitespace-nowrap text-sm ${
+                    darkMode ? 'text-gray-300' : 'text-gray-900'
                   }`}>
-                    {job.timesProcessed?.toLocaleString() || '0'}
-                  </span>
-                </td>
-                <td className={`px-6 py-4 whitespace-nowrap text-sm ${
-                  darkMode ? 'text-gray-300' : 'text-gray-900'
-                }`}>
-                  {job.avgSrcRows?.toLocaleString() || '0'}
-                </td>
-                <td className={`px-6 py-4 whitespace-nowrap text-sm ${
-                  darkMode ? 'text-gray-300' : 'text-gray-900'
-                }`}>
-                  {job.avgTrgRows?.toLocaleString() || '0'}
-                </td>
-                <td className={`px-6 py-4 whitespace-nowrap text-sm ${
-                  darkMode ? 'text-gray-300' : 'text-gray-900'
-                }`}>
-                  {formatDuration(job.maxDuration)}
-                </td>
-                <td className={`px-6 py-4 whitespace-nowrap text-sm ${
-                  darkMode ? 'text-gray-300' : 'text-gray-900'
-                }`}>
-                  {formatDuration(job.minDuration)}
-                </td>
-              </tr>
-            ))}
+                    {job.avgSrcRows?.toLocaleString() || '0'}
+                  </td>
+                  <td className={`px-6 py-4 whitespace-nowrap text-sm ${
+                    darkMode ? 'text-gray-300' : 'text-gray-900'
+                  }`}>
+                    {job.avgTrgRows?.toLocaleString() || '0'}
+                  </td>
+                  <td className={`px-6 py-4 whitespace-nowrap text-sm ${
+                    darkMode ? 'text-gray-300' : 'text-gray-900'
+                  }`}>
+                    {formatDuration(job.maxDuration)}
+                  </td>
+                  <td className={`px-6 py-4 whitespace-nowrap text-sm ${
+                    darkMode ? 'text-gray-300' : 'text-gray-900'
+                  }`}>
+                    {formatDuration(job.minDuration)}
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
         

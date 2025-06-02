@@ -37,6 +37,10 @@ export default function Dashboard() {
     }
   };
 
+  const handleJobSelect = (jobName) => {
+    setSelectedJob(jobName);
+  };
+
   if (loading) {
     return (
       <div className={`min-h-screen flex items-center justify-center ${
@@ -63,51 +67,36 @@ export default function Dashboard() {
         {/* Metrics Cards */}
         <MetricsCards />
 
-        {/* Jobs Overview Table */}
-        <JobsOverviewTable />
+        {/* General Analytics Charts - Moved here */}
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+          {/* Jobs Average Run Duration Chart */}
+          <JobsAverageRunDurationChart />
 
-        {/* Job Selector for Specific Charts */}
-        {jobsList.length > 0 && (
+          {/* Jobs Success/Fail Chart */}
+          <JobsSuccessFailChart />
+        </div>
+
+        {/* Jobs Overview Table */}
+        <JobsOverviewTable onJobSelect={handleJobSelect} selectedJob={selectedJob} />
+
+        {/* Job-Specific Analytics Charts */}
+        {jobsList.length > 0 && selectedJob && (
           <div className={`rounded-xl shadow-sm border p-6 ${
             darkMode 
               ? 'bg-gray-800 border-gray-700' 
               : 'bg-white border-gray-200'
           }`}>
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
-              <div>
-                <h3 className={`text-lg font-semibold ${
-                  darkMode ? 'text-white' : 'text-gray-900'
-                }`}>Job-Specific Analytics</h3>
-                <p className={`mt-1 text-sm ${
-                  darkMode ? 'text-gray-400' : 'text-gray-600'
-                }`}>
-                  Select a job to view detailed processed rows and execution duration metrics
-                </p>
-              </div>
-              
-              <div className="mt-4 sm:mt-0 sm:ml-6">
-                <label htmlFor="job-select" className={`block text-sm font-medium mb-2 ${
-                  darkMode ? 'text-gray-300' : 'text-gray-700'
-                }`}>
-                  Select Job
-                </label>
-                <select
-                  id="job-select"
-                  value={selectedJob}
-                  onChange={(e) => setSelectedJob(e.target.value)}
-                  className={`block w-full px-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm ${
-                    darkMode 
-                      ? 'border-gray-600 bg-gray-700 text-white' 
-                      : 'border-gray-300 bg-white text-gray-900'
-                  }`}
-                >
-                  {jobsList.map((job) => (
-                    <option key={job} value={job}>
-                      {job}
-                    </option>
-                  ))}
-                </select>
-              </div>
+            <div className="mb-4">
+              <h3 className={`text-lg font-semibold ${
+                darkMode ? 'text-white' : 'text-gray-900'
+              }`}>Job-Specific Analytics</h3>
+              <p className={`mt-1 text-sm ${
+                darkMode ? 'text-gray-400' : 'text-gray-600'
+              }`}>
+                Detailed metrics for selected job: <span className={`font-medium ${
+                  darkMode ? 'text-blue-400' : 'text-blue-600'
+                }`}>{selectedJob}</span>
+              </p>
             </div>
 
             {/* Charts Grid for Job-Specific Analytics */}
@@ -120,15 +109,6 @@ export default function Dashboard() {
             </div>
           </div>
         )}
-
-        {/* General Analytics Charts */}
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-          {/* Jobs Average Run Duration Chart */}
-          <JobsAverageRunDurationChart />
-
-          {/* Jobs Success/Fail Chart */}
-          <JobsSuccessFailChart />
-        </div>
       </div>
     </div>
   );

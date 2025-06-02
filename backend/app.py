@@ -39,15 +39,15 @@ app = Flask(__name__)
 # })
 
 # allow all origins with  support credentials
-CORS(app, resources={
-    r"/*": {
-        "origins": ["*"],
-        "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-        "supports_credentials": True,
-    }
-})
+# CORS(app, resources={
+#     r"/*": {
+#         "origins": ["*"],
+#         "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+#         "supports_credentials": True,
+#     }
+# })
 
-
+CORS(app, supports_credentials=True)
 # Load environment variables
 load_dotenv()
 
@@ -65,5 +65,5 @@ os.makedirs('data/drafts', exist_ok=True)
 os.makedirs('data/templates', exist_ok=True)
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)   
+    app.run(debug=True, port=5000, host='0.0.0.0')   
  
