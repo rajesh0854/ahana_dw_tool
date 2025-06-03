@@ -25,8 +25,8 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <head>
-        <title>Data Mapper</title>
-        <meta name="description" content="Data Mapper" />
+        <title>DW Tool</title>
+        <meta name="description" content="Data Warehouse Tool | A tool for data warehouse management" />
         <link
           href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
           rel="stylesheet"
