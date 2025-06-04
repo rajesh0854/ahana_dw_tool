@@ -189,7 +189,7 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
 
   // Pagination state
   const [page, setPage] = useState(0)
-  const [rowsPerPage, setRowsPerPage] = useState(15) // Changed from 10 to 15
+  const [rowsPerPage, setRowsPerPage] = useState(15)
 
   // REMOVED: const [isFullscreen, setIsFullscreen] = useState(false)
 
@@ -963,47 +963,41 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
       )
 
       // Handle successful response
-      message.success('Mapper configuration saved successfully')
+      message.success('Mapper configuration saved successfully');
 
-      // Update mapperId if it was a new mapping
-      if (!isUpdateMode && response.data.mapperId) {
-        setFormData((prev) => ({
-          ...prev,
-          mapperId: response.data.mapperId,
-        }))
-      }
+      // Perform a "silent refresh" by re-fetching the data.
+      // This ensures the form state is completely fresh after the save/update,
+      // and all dependent states (validation, activation) are correctly reset.
+      await fetchReferenceDetails(formData.reference);
 
-      // Update mapdtlids for new rows
-      if (response.data.processedRows) {
-        const updatedRows = [...rows]
-        response.data.processedRows.forEach((processedRow) => {
-          if (updatedRows[processedRow.index]) {
-            updatedRows[processedRow.index].mapdtlid = processedRow.mapdtlid
-          }
-        })
-        setRows(updatedRows)
-      }
+      // The fetchReferenceDetails function handles:
+      // - Updating formData, rows with the latest data from the server
+      // - Setting isUpdateMode to true
+      // - Setting originalFormData and originalRows to the fetched data
+      // - Resetting modification tracking (modifiedFields, modifiedRows)
+      // - Setting hasUnsavedChanges to false
+      // - Setting showValidateButton to true
+      // - Resetting validation states (hasBeenValidated, allRowsValidated)
+      // - Resetting activation states (isActivated, isActivationSuccessful is implicitly handled)
+      // - And other relevant cleanups like validationStatus, warnings, etc.
 
-      // Reset state
-      setHasUnsavedChanges(false)
-      setModifiedRows([])
-      setModifiedFields({})
+      // Manual state updates previously here are no longer needed as
+      // fetchReferenceDetails covers them by reloading the authoritative state.
+      // For example:
+      // if (!isUpdateMode && response.data.mapperId) { setFormData(...) }
+      // if (response.data.processedRows) { setRows(...) }
+      // setHasUnsavedChanges(false)
+      // setModifiedRows([])
+      // setModifiedFields({})
+      // setIsUpdateMode(true)
+      // setOriginalFormData({ ...formData })
+      // setOriginalRows([...rows])
+      // setShowValidateButton(true)
+      // setHasBeenValidated(false)
+      // setAllRowsValidated(false)
+      // setIsActivated(false)
+      // setIsActivationSuccessful(false)
 
-      // Set as update mode since we now have IDs
-      setIsUpdateMode(true)
-
-      // Store the current state as the original
-      setOriginalFormData({ ...formData })
-      setOriginalRows([...rows])
-
-      // Enable validate button after successful save/update
-      setShowValidateButton(true)
-      
-      // Reset validation and activation states
-      setHasBeenValidated(false)
-      setAllRowsValidated(false)
-      setIsActivated(false)
-      setIsActivationSuccessful(false)
     } catch (error) {
       console.error('Error saving mapper:', error)
       message.error(
@@ -2524,7 +2518,7 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
             id="file-upload"
             type="file"
             hidden
-            accept=".csv"
+            accept=".xlsx"
             onChange={handleFileUpload}
           />
         </div>
@@ -2710,11 +2704,15 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
                   onChange={(e) =>
                     handleFormChange('tableType', e.target.value)
                   }
+                  disabled={isUpdateMode}
                   label="Table Type"
                   className={`${darkMode ? 'text-gray-200' : ''}`}
-                  sx={{ fontSize: '0.8rem' }}
-                  // Disable the field if this is an update of an existing mapper
-                  disabled={isUpdateMode}
+                  sx={{ 
+                    fontSize: '0.8rem',
+                    backgroundColor: darkMode
+                      ? 'rgba(31, 41, 55, 0.5)'
+                      : isUpdateMode ? 'rgba(229, 231, 235, 0.5)' : 'white',
+                  }}
                 >
                   {TABLE_TYPES.map((type) => (
                     <MenuItem key={type.value} value={type.value}>
@@ -3889,7 +3887,7 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
               onPageChange={handleChangePage}
               rowsPerPage={rowsPerPage}
               onRowsPerPageChange={handleChangeRowsPerPage}
-              rowsPerPageOptions={[10, 15, 25, 50]} // Added 15 to the options
+              rowsPerPageOptions={[10, 25, 50]}
               className={darkMode ? 'text-gray-200' : ''}
               sx={{
                 '.MuiTablePagination-toolbar': {
