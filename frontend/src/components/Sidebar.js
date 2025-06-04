@@ -181,7 +181,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
           }}
         >
           <Image
-            src="https://www.ahana.co.in/wp-content/uploads/2024/03/New1-Ahana-2024-website-Logo-Medium.svg"
+            src="/ahana-logo.svg"
             alt="Ahana Logo"
             fill
             className="object-contain p-1"

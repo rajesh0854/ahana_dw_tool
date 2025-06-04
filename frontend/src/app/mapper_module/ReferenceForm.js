@@ -189,7 +189,7 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
 
   // Pagination state
   const [page, setPage] = useState(0)
-  const [rowsPerPage, setRowsPerPage] = useState(10)
+  const [rowsPerPage, setRowsPerPage] = useState(15) // Changed from 10 to 15
 
   // REMOVED: const [isFullscreen, setIsFullscreen] = useState(false)
 
@@ -2713,6 +2713,8 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
                   label="Table Type"
                   className={`${darkMode ? 'text-gray-200' : ''}`}
                   sx={{ fontSize: '0.8rem' }}
+                  // Disable the field if this is an update of an existing mapper
+                  disabled={isUpdateMode}
                 >
                   {TABLE_TYPES.map((type) => (
                     <MenuItem key={type.value} value={type.value}>
@@ -3114,25 +3116,25 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
                 </TableRow>
               </TableHead>
               <TableBody>
-                {rows.slice(page * 10, page * 10 + 10).map((row, index) => (
+                {rows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row, index) => (
                   <TableRow
                     key={index}
-                    onClick={() => handleRowClick(index + page * 10)}
+                    onClick={() => handleRowClick(index + page * rowsPerPage)}
                     className={`
                           transition-colors duration-150 cursor-pointer
                           ${
-                            modifiedRows.includes(index + page * 10)
+                            modifiedRows.includes(index + page * rowsPerPage)
                               ? darkMode
                                 ? 'bg-green-900/20 hover:bg-green-900/30'
                                 : 'bg-green-50 hover:bg-green-100/70'
                               : darkMode
                               ? `hover:bg-gray-700/50 ${
-                                  selectedRowIndex === index + page * 10
+                                  selectedRowIndex === index + page * rowsPerPage
                                     ? 'bg-gray-700/70'
                                     : ''
                                 }`
                               : `hover:bg-blue-50/30 ${
-                                  selectedRowIndex === index + page * 10
+                                  selectedRowIndex === index + page * rowsPerPage
                                     ? 'bg-blue-50/50'
                                     : ''
                                 }`
@@ -3161,7 +3163,7 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
                         checked={row.primaryKey}
                         onChange={(e) =>
                           handleRowChange(
-                            index + page * 10,
+                            index + page * rowsPerPage,
                             'primaryKey',
                             e.target.checked
                           )
@@ -3177,14 +3179,14 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
                       <TextField
                         value={row.pkSeq}
                         onChange={(e) =>
-                          handleNumberChange(e, index + page * 10, 'pkSeq')
+                          handleNumberChange(e, index + page * rowsPerPage, 'pkSeq')
                         }
                         disabled={!row.primaryKey}
                         size="small"
                         fullWidth
                         variant="outlined"
-                        error={!!pkSeqErrors[index + page * 10]}
-                        helperText={pkSeqErrors[index + page * 10]}
+                        error={!!pkSeqErrors[index + page * rowsPerPage]}
+                        helperText={pkSeqErrors[index + page * rowsPerPage]}
                         inputProps={{
                           min: 0,
                           max: 999,
@@ -3200,14 +3202,14 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
                             height: '26px',
                             borderRadius: '0',
                             '& fieldset': {
-                              borderColor: pkSeqErrors[index + page * 10]
+                              borderColor: pkSeqErrors[index + page * rowsPerPage]
                                 ? darkMode
                                   ? 'rgba(239,68,68,0.7)'
                                   : 'rgba(239,68,68,0.7)'
                                 : 'transparent',
                             },
                             '&:hover fieldset': {
-                              borderColor: pkSeqErrors[index + page * 10]
+                              borderColor: pkSeqErrors[index + page * rowsPerPage]
                                 ? darkMode
                                   ? 'rgba(239,68,68,0.9)'
                                   : 'rgba(239,68,68,0.9)'
@@ -3217,7 +3219,7 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
                             },
                             '&.Mui-focused fieldset': {
                               borderWidth: '1px !important',
-                              borderColor: pkSeqErrors[index + page * 10]
+                              borderColor: pkSeqErrors[index + page * rowsPerPage]
                                 ? darkMode
                                   ? 'rgba(239,68,68,1)'
                                   : 'rgba(239,68,68,1)'
@@ -3259,7 +3261,7 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
                             .toUpperCase()
                             .slice(0, 30)
                           handleRowChange(
-                            index + page * 10,
+                            index + page * rowsPerPage,
                             'fieldName',
                             value
                           )
@@ -3323,7 +3325,7 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
                         disabled={!!row.mapdtlid}
                         onChange={(event, newValue) => {
                           handleRowChange(
-                            index + page * 10,
+                            index + page * rowsPerPage,
                             'dataType',
                             newValue ? newValue.PRCD : ''
                           )
@@ -3411,7 +3413,7 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
                         onChange={(e) => {
                           const value = e.target.value.slice(0, 100)
                           handleRowChange(
-                            index + page * 10,
+                            index + page * rowsPerPage,
                             'fieldDesc',
                             value
                           )
@@ -3462,7 +3464,7 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
                             value={row.scdType}
                             onChange={(e) =>
                               handleRowChange(
-                                index + page * 10,
+                                index + page * rowsPerPage,
                                 'scdType',
                                 e.target.value
                               )
@@ -3575,7 +3577,7 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
                             <IconButton
                               onClick={(e) => {
                                 e.stopPropagation();
-                                handleOpenSqlEditor(index + page * 10);
+                                handleOpenSqlEditor(index + page * rowsPerPage);
                               }}
                               size="small"
                               sx={{ 
@@ -3594,9 +3596,9 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
                       <TextField
                         value={row.keyColumn}
                         onChange={(e) => {
-                          const value = e.target.value.slice(0, 30)
+                          const value = e.target.value.slice(0, 250)
                           handleRowChange(
-                            index + page * 10,
+                            index + page * rowsPerPage,
                             'keyColumn',
                             value
                           )
@@ -3605,7 +3607,7 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
                         fullWidth
                         variant="outlined"
                         inputProps={{
-                          maxLength: 30,
+                          maxLength: 250,
                           className: 'px-2 py-0',
                           style: { height: '26px', fontSize: '0.8rem' }
                         }}
@@ -3637,9 +3639,9 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
                       <TextField
                         value={row.valColumn}
                         onChange={(e) => {
-                          const value = e.target.value.slice(0, 30)
+                          const value = e.target.value.slice(0, 250)
                           handleRowChange(
-                            index + page * 10,
+                            index + page * rowsPerPage,
                             'valColumn',
                             value
                           )
@@ -3648,7 +3650,7 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
                         fullWidth
                         variant="outlined"
                         inputProps={{
-                          maxLength: 30,
+                          maxLength: 250,
                           className: 'px-2 py-0',
                           style: { height: '26px', fontSize: '0.8rem' }
                         }}
@@ -3684,7 +3686,7 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
                           const value = e.target.value;
                           if (value === '' || (/^\d+$/.test(value) && parseInt(value) <= 5000)) {
                             handleRowChange(
-                              index + page * 10,
+                              index + page * rowsPerPage,
                               'execSequence',
                               value
                             )
@@ -3737,7 +3739,7 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
                         onChange={(e) => {
                           const value = e.target.value.slice(0, 30)
                           handleRowChange(
-                            index + page * 10,
+                            index + page * rowsPerPage,
                             'mapCombineCode',
                             value
                           )
@@ -3781,14 +3783,14 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
                             ? 'Validate this row'
                             : row.LogicVerFlag === 'Y'
                             ? 'Logic is valid'
-                            : errorMessages[index + page * 10] ||
+                            : errorMessages[index + page * rowsPerPage] ||
                               'Logic is invalid'
                         }
                       >
                         <IconButton
                           onClick={(e) => {
                             e.stopPropagation() // Prevent row selection
-                            handleValidateRow(index + page * 10)
+                            handleValidateRow(index + page * rowsPerPage)
                           }}
                           size="small"
                           sx={{
@@ -3834,7 +3836,7 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
                     {/* Add Actions cell */}
                     <TableCell className="py-0 px-0" align="center" sx={{ padding: '0px 2px' }}>
                       <IconButton
-                        onClick={(e) => handleRowMenuOpen(e, index + page * 10)}
+                        onClick={(e) => handleRowMenuOpen(e, index + page * rowsPerPage)}
                         size="small"
                         sx={{
                           padding: '2px',
@@ -3887,7 +3889,7 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
               onPageChange={handleChangePage}
               rowsPerPage={rowsPerPage}
               onRowsPerPageChange={handleChangeRowsPerPage}
-              rowsPerPageOptions={[10, 25, 50]}
+              rowsPerPageOptions={[10, 15, 25, 50]} // Added 15 to the options
               className={darkMode ? 'text-gray-200' : ''}
               sx={{
                 '.MuiTablePagination-toolbar': {

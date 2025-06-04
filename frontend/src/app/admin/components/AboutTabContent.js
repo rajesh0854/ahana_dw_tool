@@ -614,16 +614,6 @@ const AboutTabContent = () => {
           >
             Developed with ❤️
           </Typography>
-
-          {/* Google Fonts import */}
-          <Box
-            component="style"
-            dangerouslySetInnerHTML={{
-              __html: `
-                @import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@500&display=swap');
-              `
-            }}
-          />
         </Box>
       </Box>
     </Box>
