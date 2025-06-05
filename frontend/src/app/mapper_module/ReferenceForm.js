@@ -910,13 +910,30 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
     }
 
     // Ensure no rows with duplicate field names
-    const fieldNames = rows
-      .filter((row) => row.fieldName)
-      .map((row) => row.fieldName.toLowerCase())
-    const uniqueFieldNames = new Set(fieldNames)
-    if (fieldNames.length !== uniqueFieldNames.size) {
-      message.error('Field names must be unique')
-      return
+    const fieldNameCounts = {};
+    const duplicateFieldNames = [];
+    const processedFieldNamesForDuplicates = []; // To store names for display
+
+    rows
+      .filter((row) => row.fieldName && row.fieldName.trim() !== '')
+      .forEach((row) => {
+        // FieldName should already be normalized (UPPERCASE_NOSPACE)
+        // For counting, use toLowerCase to ensure case-insensitivity if any variation slips through, though it shouldn't.
+        const countKey = row.fieldName.toLowerCase(); 
+        fieldNameCounts[countKey] = (fieldNameCounts[countKey] || 0) + 1;
+        if (fieldNameCounts[countKey] > 1 && !duplicateFieldNames.includes(row.fieldName)) {
+          // Store the original-cased (but already normalized) fieldName for the error message
+          duplicateFieldNames.push(row.fieldName);
+        }
+      });
+
+    if (duplicateFieldNames.length > 0) {
+      message.error(
+        `Duplicate field names found: ${duplicateFieldNames.join(
+          ', '
+        )}. Please ensure all target column names are unique.`
+      );
+      return;
     }
 
     // Check if all required fields are filled for all rows with a field name
@@ -1125,7 +1142,7 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
       // Remove excluded fields from form data
       const { mapperId, ...cleanedFormData } = data.formData
 
-      // Remove excluded fields from rows
+      // Remove excluded fields from rows and normalize fieldName
       const cleanedRows = data.rows.map((row) => {
         const {
           NewRow,
@@ -1133,9 +1150,34 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
           mapdtlid,
           mapref,
           LogicVerFlag,
-          ...cleanedRow
+          ...cleanedRowData // Renamed to avoid conflict
         } = row
-        return { ...cleanedRow, isNewRow: true } // Set isNewRow to true for all rows
+
+        // Normalize fieldName: convert to uppercase and remove spaces
+        let normalizedFieldName = cleanedRowData.fieldName
+        if (typeof normalizedFieldName === 'string') {
+          normalizedFieldName = normalizedFieldName.toUpperCase().replace(/\s/g, '')
+        }
+
+        return {
+          ...cleanedRowData,
+          fieldName: normalizedFieldName, // Use normalized fieldName
+          // Ensure other essential fields have defaults if not present in upload, similar to fetchReferenceDetails
+          dataType: cleanedRowData.dataType || '',
+          primaryKey: cleanedRowData.primaryKey || false,
+          pkSeq: cleanedRowData.pkSeq || '',
+          nulls: cleanedRowData.nulls || false,
+          logic: cleanedRowData.logic || '',
+          // validator: cleanedRowData.validator || 'N', // validator is in cleanedRowData
+          keyColumn: cleanedRowData.keyColumn || '',
+          valColumn: cleanedRowData.valColumn || '',
+          execSequence: cleanedRowData.execSequence || '',
+          mapCombineCode: cleanedRowData.mapCombineCode || '',
+          // LogicVerFlag: cleanedRowData.LogicVerFlag || '', // LogicVerFlag is in cleanedRowData
+          scdType: cleanedRowData.scdType || (formData.tableType === 'DIM' ? (scdTypeOptions.length > 0 ? scdTypeOptions[0].PRCD : '1') : ''),
+          fieldDesc: cleanedRowData.fieldDesc || '',
+          isNewRow: true, // Set isNewRow to true for all uploaded rows
+        }
       })
 
       setFormData(cleanedFormData)
@@ -1211,6 +1253,10 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
         data.rows.length > 0
           ? data.rows.map((row) => ({
               ...row,
+              // Normalize fieldName on fetch
+              fieldName: typeof row.fieldName === 'string' 
+                ? row.fieldName.toUpperCase().replace(/\s/g, '') 
+                : '',
               validator: row.validator || 'N',
               keyColumn: row.keyColumn || '',
               valColumn: row.valColumn || '',
