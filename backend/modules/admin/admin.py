@@ -37,7 +37,7 @@ def check_admin_permission(user_id):
                 FROM user_roles ur 
                 JOIN roles r ON ur.role_id = r.role_id 
                 WHERE ur.user_id = :user_id 
-                AND r.role_name IN ('SUPER_ADMIN', 'ADMIN')
+                AND r.role_name IN ('ADMIN')
             """),
             {'user_id': user_id}
         ).fetchone()
@@ -1034,7 +1034,7 @@ def reset_user_password(current_user_id, user_id):
                     FROM user_roles ur 
                     JOIN roles r ON ur.role_id = r.role_id 
                     WHERE ur.user_id = :user_id 
-                    AND r.role_name IN ('SUPER_ADMIN', 'ADMIN')
+                    AND r.role_name IN ('ADMIN', 'ADMIN')
                 """),
                 {'user_id': current_user_id}
             ).fetchone()

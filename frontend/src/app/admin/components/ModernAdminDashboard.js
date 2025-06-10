@@ -16,6 +16,8 @@ import RoleDialog from './RoleDialogs';
 import ModuleDialog from './ModuleDialog';
 import { AboutTabContent } from './';
 import NotificationManager from './NotificationManager';
+import NotAuthorized from './NotAuthorized';
+import useAccessControl from '../hooks/useAccessControl';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import SecurityIcon from '@mui/icons-material/Security';
 import EditIcon from '@mui/icons-material/Edit';
@@ -57,6 +59,14 @@ const ModernAdminDashboard = ({ initialActiveTab = 0 }) => {  const theme = useT
   const [auditLogsLoading, setAuditLogsLoading] = useState(false);
   const { user, loading, handleTokenExpiration } = useAuth();
   const router = useRouter();
+  
+  // Access control hook
+  const { 
+    hasAccess, 
+    loading: accessLoading, 
+    error: accessError,
+    getUserRoles 
+  } = useAccessControl('admin_module');
   
   // For roles table pagination
   const [rolesPage, setRolesPage] = useState(0);
@@ -114,7 +124,10 @@ const ModernAdminDashboard = ({ initialActiveTab = 0 }) => {  const theme = useT
 
       setUsers(response.data);
     } catch (err) {
-      message.error(err.response?.data?.error || 'Error loading users');
+      // Only show error message if it's not an access control issue
+      if (err.response?.status !== 403) {
+        message.error(err.response?.data?.error || 'Error loading users');
+      }
     } finally {
       setIsLoadingUsers(false);
     }
@@ -137,7 +150,10 @@ const ModernAdminDashboard = ({ initialActiveTab = 0 }) => {  const theme = useT
 
       setRoles(response.data);
     } catch (err) {
-      message.error(err.response?.data?.error || 'Error loading roles');
+      // Only show error message if it's not an access control issue
+      if (err.response?.status !== 403) {
+        message.error(err.response?.data?.error || 'Error loading roles');
+      }
     } finally {
       setIsLoadingRoles(false);
     }
@@ -161,7 +177,10 @@ const ModernAdminDashboard = ({ initialActiveTab = 0 }) => {  const theme = useT
         setModules(response.data);
       }
     } catch (err) {
-      message.error(err.response?.data?.error || 'Error loading modules');
+      // Only show error message if it's not an access control issue
+      if (err.response?.status !== 403) {
+        message.error(err.response?.data?.error || 'Error loading modules');
+      }
     } finally {
       setIsLoadingModules(false);
     }
@@ -184,7 +203,10 @@ const ModernAdminDashboard = ({ initialActiveTab = 0 }) => {  const theme = useT
         setPendingApprovals(response.data);
       }
     } catch (err) {
-      message.error(err.response?.data?.error || 'Error loading pending approvals');
+      // Only show error message if it's not an access control issue
+      if (err.response?.status !== 403) {
+        message.error(err.response?.data?.error || 'Error loading pending approvals');
+      }
     }
   };
 
@@ -212,7 +234,10 @@ const ModernAdminDashboard = ({ initialActiveTab = 0 }) => {  const theme = useT
 
       setAuditLogs(transformedLogs);
     } catch (err) {
-      message.error(err.response?.data?.error || 'Error loading audit logs');
+      // Only show error message if it's not an access control issue
+      if (err.response?.status !== 403) {
+        message.error(err.response?.data?.error || 'Error loading audit logs');
+      }
     } finally {
       setAuditLogsLoading(false);
     }
@@ -238,7 +263,10 @@ const ModernAdminDashboard = ({ initialActiveTab = 0 }) => {  const theme = useT
       message.success('User deleted successfully');
       loadUsers();
     } catch (err) {
-      message.error(err.response?.data?.error || 'Error deleting user');
+      // Only show error message if it's not an access control issue
+      if (err.response?.status !== 403) {
+        message.error(err.response?.data?.error || 'Error deleting user');
+      }
     }
   };
 
@@ -262,7 +290,10 @@ const ModernAdminDashboard = ({ initialActiveTab = 0 }) => {  const theme = useT
       message.success('Role deleted successfully');
       loadRoles();
     } catch (err) {
-      message.error(err.response?.data?.error || 'Error deleting role');
+      // Only show error message if it's not an access control issue
+      if (err.response?.status !== 403) {
+        message.error(err.response?.data?.error || 'Error deleting role');
+      }
     }
   };
 
@@ -296,8 +327,11 @@ const ModernAdminDashboard = ({ initialActiveTab = 0 }) => {  const theme = useT
         ]);
       }
     } catch (err) {
-      const errorMessage = err.response?.data?.error || 'Error updating approval';
-      message.error(errorMessage);
+      // Only show error message if it's not an access control issue
+      if (err.response?.status !== 403) {
+        const errorMessage = err.response?.data?.error || 'Error updating approval';
+        message.error(errorMessage);
+      }
     }
   };
 
@@ -316,10 +350,11 @@ const ModernAdminDashboard = ({ initialActiveTab = 0 }) => {  const theme = useT
       return;
     }
 
-    if (!loading) {
+    // Only load data if user has access and access control is not loading
+    if (!loading && !accessLoading && hasAccess) {
       refreshData();
     }
-  }, [loading, user, activeTab, refreshData]);
+  }, [loading, user, activeTab, refreshData, accessLoading, hasAccess]);
 
   const handleRolesPageChange = (event, newPage) => {
     setRolesPage(newPage);
@@ -983,6 +1018,36 @@ const ModernAdminDashboard = ({ initialActiveTab = 0 }) => {  const theme = useT
         return null;
     }
   };
+
+  // Show loading state while checking access
+  if (accessLoading || loading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
+        <CircularProgress size={40} />
+      </Box>
+    );
+  }
+
+  // Show error state if there's an access error
+  if (accessError) {
+    return (
+      <NotAuthorized 
+        title="Error Loading Permissions"
+        message={`Failed to load access permissions: ${accessError}`}
+      />
+    );
+  }
+
+  // Show not authorized if user doesn't have access
+  if (!hasAccess) {
+    const userRoles = getUserRoles();
+    return (
+      <NotAuthorized 
+        title="Admin Access Required"
+        message={`You need ADMIN role to access the Admin module. Your current role(s): ${userRoles.length > 0 ? userRoles.join(', ') : 'None'}`}
+      />
+    );
+  }
 
   return (
     <motion.div

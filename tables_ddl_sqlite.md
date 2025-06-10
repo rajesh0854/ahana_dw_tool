@@ -92,9 +92,21 @@ CREATE TABLE users (
     password_reset_token TEXT,
     password_reset_expires TIMESTAMP, failed_login_attempts INTEGER DEFAULT 0,
     FOREIGN KEY (created_by) REFERENCES users(user_id),
-    FOREIGN KEY (approved_by) REFERENCES users(user_id)
+    FOREIGN KEY (approved_by) REFERENCES users(user_id),
+    change_password BOOLEAN DEFAULT 0,
+    show_notification BOOLEAN DEFAULT 0
 );
 
 CREATE INDEX idx_users_username ON users(username);
 
 
+
+
+CREATE TABLE modules (
+                        module_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        module_name TEXT UNIQUE NOT NULL,
+                        display_name TEXT NOT NULL,
+                        description TEXT,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    );
