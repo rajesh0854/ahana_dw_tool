@@ -45,31 +45,18 @@ const JobsExecutionDurationChart = ({ selectedJob }) => {
       );
       const data = await response.json();
       
-      if (Array.isArray(data)) {
-        // Group data by job name and calculate average duration
-        const groupedData = {};
-        data.forEach(item => {
-          const jobName = item[0]; // job_name_no_ts
-          const duration = item[1]; // run_duration_seconds
-          
-          if (!groupedData[jobName]) {
-            groupedData[jobName] = [];
-          }
-          groupedData[jobName].push(duration);
+      if (Array.isArray(data) && data.length > 0) {
+        const labels = data.map(item => {
+          const date = new Date(item[0]);
+          return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
         });
-        
-        // Calculate averages and prepare chart data
-        const labels = Object.keys(groupedData);
-        const durations = labels.map(jobName => {
-          const jobDurations = groupedData[jobName];
-          return jobDurations.reduce((sum, duration) => sum + duration, 0) / jobDurations.length;
-        });
+        const durations = data.map(item => item[2]);
         
         setChartData({
           labels,
           datasets: [
             {
-              label: 'Average Execution Duration (seconds)',
+              label: 'Execution Duration (seconds)',
               data: durations,
               backgroundColor: 'rgba(147, 51, 234, 0.8)',
               borderColor: 'rgb(147, 51, 234)',
@@ -79,6 +66,8 @@ const JobsExecutionDurationChart = ({ selectedJob }) => {
             }
           ]
         });
+      } else {
+        setChartData({ labels: [], datasets: [] });
       }
       setLoading(false);
     } catch (error) {
@@ -179,7 +168,7 @@ const JobsExecutionDurationChart = ({ selectedJob }) => {
             <p className={`mt-1 text-sm ${
               darkMode ? 'text-gray-400' : 'text-gray-600'
             }`}>
-              Average job execution time
+              Job execution time
               {selectedJob && (
                 <span className={`ml-1 font-medium ${
                   darkMode ? 'text-purple-400' : 'text-purple-600'

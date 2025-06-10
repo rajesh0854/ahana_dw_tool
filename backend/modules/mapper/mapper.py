@@ -12,7 +12,7 @@ import traceback
 from openpyxl import Workbook, load_workbook
 from openpyxl.styles import PatternFill, Font, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
-from modules.helper_functions import create_update_mapping,create_update_mapping_detail, validate_logic2, validate_all_mapping_details,  get_mapping_ref  ,get_mapping_details,get_error_messages_list,get_parameter_mapping_datatype,get_parameter_mapping_scd_type,call_activate_deactivate_mapping, call_delete_mapping, call_delete_mapping_details, call_schedule_immediate_job
+from modules.helper_functions import create_update_mapping,create_update_mapping_detail, validate_logic2, validate_all_mapping_details,  get_mapping_ref  ,get_mapping_details,get_error_messages_list,get_parameter_mapping_datatype,get_parameter_mapping_scd_type,call_activate_deactivate_mapping, call_delete_mapping, call_delete_mapping_details
 
 
 # Create blueprint
@@ -880,31 +880,3 @@ def delete_mapping_detail():
             'success': False,
             'message': f'An error occurred while deleting the mapping detail: {str(e)}'
         }), 500
-
-
-# Schedule the job immediately
-@mapper_bp.route('/schedule-job-immediately', methods=['POST'])
-def schedule_job_immediately():
-    try:
-        data = request.json
-        p_mapref = data.get('mapref')
-
-        if not p_mapref:
-            return jsonify({
-                'success': False,
-                'message': 'Missing required parameter: mapref'
-            }), 400
-
-        conn = create_oracle_connection()
-        try:
-            success, message = call_schedule_immediate_job(conn, p_mapref)
-            return jsonify({
-                'success': success,
-                'message': message  
-            })
-        finally:
-            conn.close()
-    except Exception as e:
-        print(f"Error in schedule_job_immediately: {str(e)}")
-        return jsonify({'error': str(e)}), 500
-    

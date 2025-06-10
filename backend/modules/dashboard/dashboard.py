@@ -72,11 +72,21 @@ def jobs_overview():
     connection = create_oracle_connection()
     cursor = connection.cursor()
     query=""" 
-        select l.mapref, count(l.mapref) times_processed, avg(l.srcrows) average_src_rows_processed, ceil(avg(l.trgrows)) average_trg_rows_processed
-              ,max(enddt - strtdt) Max_job_duration, min(enddt - strtdt) Min_job_duration
-        from  dwjoblog l, dwprclog p
-        where p.jobid (+) = l.jobid
-        group by l.mapref
+            SELECT 
+                l.mapref, 
+                COUNT(l.mapref) AS times_processed,
+                AVG(l.srcrows) AS average_src_rows_processed,
+                CEIL(AVG(l.trgrows)) AS average_trg_rows_processed,
+                MAX(enddt - strtdt) AS max_job_duration, 
+                MIN(enddt - strtdt) AS min_job_duration
+            FROM 
+                dwjoblog l,
+                dwprclog p
+            WHERE 
+                p.sessionid = l.sessionid
+                AND p.prcid = l.prcid
+            GROUP BY 
+                l.mapref
  
         """
     try:
@@ -100,21 +110,25 @@ def jobs_processed_rows():
     connection = create_oracle_connection()
     cursor = connection.cursor()
     query=""" 
-        SELECT 
-            MAPREF,
-            TO_CHAR(TRUNC(PRCDT), 'YYYY-MM-DD') AS TIME_GROUP,
-            SUM(SRCROWS) AS TOTAL_SRCROWS,
-            SUM(TRGROWS) AS TOTAL_TRGROWS
-        FROM DWJOBLOG
-        WHERE MAPREF = :mapref
-          AND PRCDT >= 
-              CASE :period
-                  WHEN 'DAY' THEN TRUNC(SYSDATE)
-                  WHEN 'WEEK' THEN TRUNC(SYSDATE) - 6
-                  WHEN 'MONTH' THEN TRUNC(SYSDATE) - 29
-              END
-        GROUP BY MAPREF, TO_CHAR(TRUNC(PRCDT), 'YYYY-MM-DD')
-        ORDER BY TIME_GROUP
+            SELECT 
+                mapref,
+                TO_CHAR(prcdt, 'yyyy-mm-dd') AS time_group,
+                SUM(srcrows) AS total_srcrows,
+                SUM(trgrows) AS total_trgrows
+            FROM 
+                dwjoblog
+            WHERE 
+                mapref = :mapref
+                AND prcdt >= CASE :period
+                    WHEN 'DAY'   THEN TRUNC(SYSDATE)
+                    WHEN 'WEEK'  THEN TRUNC(SYSDATE) - 6
+                    WHEN 'MONTH' THEN TRUNC(SYSDATE) - 29
+                END
+            GROUP BY 
+                mapref, TO_CHAR(prcdt, 'yyyy-mm-dd')
+            ORDER BY 
+                time_group
+
         """
     try:
         cursor.execute(query, (mapref, period))
@@ -130,29 +144,25 @@ def jobs_processed_rows():
 @dashboard_bp.route("/jobs_executed_duration", methods=["GET"])
 def jobs_executed_duration():
     mapref = request.args.get('mapref')
-    period = request.args.get('period', '1')
+    period = request.args.get('period', '7')
     
     connection = create_oracle_connection()
     cursor = connection.cursor()
     query=f""" 
-        select
-            substr(l.job_name, 1, instr(l.job_name, '_', -1) - 1) as job_name_no_ts,
-            (extract(day from ld.run_duration) * 86400 +
-             extract(hour from ld.run_duration) * 3600 +
-             extract(minute from ld.run_duration) * 60 +
-             extract(second from ld.run_duration)) as run_duration_seconds
-        from
-            all_scheduler_job_log l,
-            all_scheduler_job_run_details ld
-        where
-            ld.owner = l.owner
-            and ld.log_id = l.log_id
-            and l.owner = '{SCHEMA}'
-            and l.status = 'SUCCEEDED'
-            and substr(l.job_name, 1, instr(l.job_name, '_', -1) - 1) = :mapref
-            and l.log_date >= sysdate - :period
-        order by
-            l.log_date desc
+            select x.prcdt, x.mapref,
+                   extract(day    from x.run_duration) * 86400 +
+                   extract(hour   from x.run_duration) * 3600 +
+                   extract(minute from x.run_duration) * 60 +
+                   extract(second from x.run_duration) run_durations
+            from (
+                select l.prcdt, l.mapref, enddt - strtdt run_duration
+                from dwjoblog l, dwprclog p
+                where p.sessionid = l.sessionid
+                  and p.prcid = l.prcid
+                  and p.mapref = :mapref
+                  AND l.prcdt >= sysdate - :period 
+            ) x
+            order by 1
         """
     try:
         cursor.execute(query, (mapref, period))
@@ -171,18 +181,19 @@ def jobs_average_run_duration():
     connection = create_oracle_connection()
     cursor = connection.cursor()
     query=f""" 
-        SELECT JOB_NAME, AVG(avg_seconds) as AVG_SECONDS from(
-        select substr(job_name, 1, instr(job_name, '_', -1) - 1) as JOB_NAME,
-        ROUND(AVG(
-            EXTRACT(DAY FROM RUN_DURATION) * 86400 +
-            EXTRACT(HOUR FROM RUN_DURATION) * 3600 +
-            EXTRACT(MINUTE FROM RUN_DURATION) * 60 +
-            EXTRACT(SECOND FROM RUN_DURATION)
-          ),2) AS avg_seconds
-        from all_scheduler_job_run_details
-        where STATUS='SUCCEEDED' and OWNER='{SCHEMA}'
-        group by job_name)
-        group by JOB_NAME
+        select x.mapref AS JOB_NAME
+              ,avg(extract(day    from x.run_duration) * 86400 +
+                   extract(hour   from x.run_duration) * 3600 +
+                   extract(minute from x.run_duration) * 60 +
+                   extract(second from x.run_duration)) avg_seconds
+        from (
+        select l.prcdt, l.mapref, enddt - strtdt run_duration
+        from  dwjoblog l, dwprclog p
+        where p.sessionid = l.sessionid
+        and   p.prcid = l.prcid
+         ) x
+        group by x.mapref
+
         """
     try:
         cursor.execute(query)
@@ -200,21 +211,14 @@ def jobs_successful_failed():
     connection = create_oracle_connection()
     cursor = connection.cursor()
     query=f""" 
-        select 
-            job_name_prefix,
-            sum(failed_count) as failed_count,
-            sum(succeeded_count) as succeeded_count
-        from (
-            select 
-                substr(job_name, 1, instr(job_name, '_', -1) - 1) as job_name_prefix,
-                case when status = 'FAILED' then 1 else 0 end as failed_count,
-                case when status = 'SUCCEEDED' then 1 else 0 end as succeeded_count
-            from 
-                all_scheduler_job_log
-            where 
-                owner = '{SCHEMA}'
-        )
-        group by job_name_prefix
+        select p.mapref AS job_name_prefix
+            --,count(p.mapref) total_count
+        	,sum(case when p.status = 'FL' then 1 else 0 end) failed_count
+            ,sum(case when p.status = 'PC' then 1 else 0 end) succeeded_count
+            
+        from  dwprclog p
+        where status in ('PC','FL')
+        group by p.mapref
         """ 
     try:
         cursor.execute(query)

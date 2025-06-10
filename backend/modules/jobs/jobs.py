@@ -3,6 +3,8 @@ from modules.helper_functions import get_job_list,call_create_update_job,get_map
 from database.dbconnect import create_oracle_connection
 import os
 import dotenv
+import oracledb
+import threading
 dotenv.load_dotenv()
 ORACLE_SCHEMA = os.getenv("SCHEMA")
 # Create blueprint
@@ -255,23 +257,27 @@ def get_scheduled_jobs():
         conn = create_oracle_connection()
         try:
             query = """ 
-            SELECT 
-                l.log_date,
-                REGEXP_REPLACE(l.job_name, '_[0-9]{12}$', '') AS job_name,
-                l.status,
-                ld.req_start_date,
-                ld.actual_start_date,
-                ld.run_duration,
-                ld.errors
-            FROM  
-                all_scheduler_job_log l,
-                all_scheduler_job_run_details ld
-            WHERE 
-                ld.owner = l.owner
-                AND ld.log_id = l.log_id
-                AND l.owner = USER
-            ORDER BY 
-                l.log_id DESC, l.log_date
+                SELECT DISTINCT 
+                    jl.joblogid AS log_id,
+                    jl.reccrdt AS log_date,
+                    jl.mapref AS job_name,
+                    pl.status,
+                    pl.strtdt AS actual_start_date,
+                    -- Convert INTERVAL to total seconds, handle NULL end dates
+                    CASE 
+                        WHEN pl.enddt IS NOT NULL THEN
+                            EXTRACT(DAY FROM (pl.enddt - pl.strtdt)) * 86400 + 
+                            EXTRACT(HOUR FROM (pl.enddt - pl.strtdt)) * 3600 + 
+                            EXTRACT(MINUTE FROM (pl.enddt - pl.strtdt)) * 60 + 
+                            EXTRACT(SECOND FROM (pl.enddt - pl.strtdt))
+                        ELSE NULL
+                    END AS run_duration_seconds,
+                    jl.sessionid AS session_id
+                FROM dwjoblog jl, dwprclog pl
+                WHERE pl.jobid = jl.jobid 
+                    AND TRUNC(pl.strtdt) = TRUNC(jl.prcdt)
+                    AND jl.reccrdt >= SYSDATE - 30
+                ORDER BY jl.reccrdt DESC
             """
             cursor = conn.cursor()
             cursor.execute(query)
@@ -286,12 +292,8 @@ def get_scheduled_jobs():
                     if value is None:
                         job_data.append(None)
                     elif hasattr(value, 'total_seconds'):  # timedelta object
-                        # Convert timedelta to string format
-                        total_seconds = int(value.total_seconds())
-                        hours = total_seconds // 3600
-                        minutes = (total_seconds % 3600) // 60
-                        seconds = total_seconds % 60
-                        job_data.append(f"+00 {hours:02d}:{minutes:02d}:{seconds:02d}.000000")
+                        # Convert timedelta to total seconds as number
+                        job_data.append(int(value.total_seconds()))
                     elif hasattr(value, 'isoformat'):  # datetime object
                         job_data.append(value.isoformat())
                     elif hasattr(value, 'read'):  # LOB object
@@ -303,6 +305,8 @@ def get_scheduled_jobs():
                                 job_data.append(str(lob_data))
                         except Exception as e:
                             job_data.append(f"Error reading LOB: {str(e)}")
+                    elif isinstance(value, (int, float)):  # Numeric values (including duration seconds)
+                        job_data.append(value)
                     else:
                         job_data.append(str(value) if value is not None else None)
                 
@@ -315,6 +319,7 @@ def get_scheduled_jobs():
                 print(f"Sample job data: {scheduled_jobs[0]}")
                 
             return jsonify({
+                'column_names': column_names,
                 'scheduled_jobs': scheduled_jobs
             })
         finally:
@@ -322,6 +327,8 @@ def get_scheduled_jobs():
     except Exception as e:
         print(f"Error in get_scheduled_jobs: {str(e)}")
         return jsonify({"error": str(e)}), 500
+
+
 
 
 
@@ -579,3 +586,146 @@ def enable_disable_job():
     finally:
         conn.close()
         
+
+
+
+
+def call_schedule_immediate_job_async(p_mapref):
+    """
+    Asynchronous version of call_schedule_immediate_job that runs in background
+    """
+    def background_job():
+        connection = None
+        cursor = None
+        try:
+            print(f"Starting background job scheduling for {p_mapref}")
+            connection = create_oracle_connection()
+            cursor = connection.cursor()
+            
+            sql = """
+            DECLARE
+              v_mapref VARCHAR2(100) := :p_mapref;
+            BEGIN
+              PKGDWPRC.SCHEDULE_JOB_IMMEDIATE(p_mapref => v_mapref);
+            END;
+            """
+            
+            # Execute with named parameters
+            cursor.execute(sql, p_mapref=p_mapref)
+            connection.commit()
+            
+            print(f"Job {p_mapref} scheduled for immediate execution successfully")
+            
+        except Exception as e:
+            error_message = f"Exception while scheduling job {p_mapref}: {str(e)}"
+            print(f"Error: {error_message}")
+            if connection:
+                try:
+                    connection.rollback()
+                except:
+                    pass
+        finally:
+            if cursor:
+                try:
+                    cursor.close()
+                except:
+                    pass
+            if connection:
+                try:
+                    connection.close()
+                except:
+                    pass
+    
+    # Start the background thread
+    thread = threading.Thread(target=background_job, daemon=True)
+    thread.start()
+    return True, f"Job {p_mapref} execution started in background"
+
+
+def call_schedule_immediate_job(connection, p_mapref):
+    cursor = None
+    try:
+        cursor = connection.cursor()
+        p_err = cursor.var(oracledb.STRING, 2000)  
+        sql = """
+
+        DECLARE
+          v_mapref VARCHAR2(100) := :p_mapref;
+        BEGIN
+          PKGDWPRC.SCHEDULE_JOB_IMMEDIATE(p_mapref => v_mapref);
+        END;
+        """
+        
+        # Execute with named parameters
+        cursor.execute(
+            sql,
+            p_mapref=p_mapref,
+        )
+        connection.commit()
+        
+        # Get the error message (if any)
+        error_message = p_err.getvalue()
+        
+        if error_message:
+            return False, error_message
+        else:
+            return True, f"Job {p_mapref} scheduled for immediate execution"
+    
+    except Exception as e:
+        error_message = f"Exception while deleting mapping detail: {str(e)}"
+        return False, error_message
+    finally:
+        if cursor:
+            cursor.close()
+
+
+def check_job_already_running(connection, p_mapref):
+    cursor = None
+    try:
+        cursor = connection.cursor()
+        sql = """
+        SELECT COUNT(*) FROM DWPRCLOG  WHERE MAPREF=:p_mapref AND status='IP'
+        """
+        cursor.execute(sql, {'p_mapref': p_mapref})
+        count = cursor.fetchone()[0]
+        return count > 0
+    except Exception as e:
+        return False
+    finally:
+        if cursor:
+            cursor.close()  
+
+# Schedule the job immediately
+@jobs_bp.route('/schedule-job-immediately', methods=['POST'])
+def schedule_job_immediately():
+    try:
+        data = request.json
+        p_mapref = data.get('mapref')
+
+        if not p_mapref:
+            return jsonify({
+                'success': False,
+                'message': 'Missing required parameter: mapref'
+            }), 400
+
+        conn = create_oracle_connection()
+        try:
+            # Check if job is already running
+            if check_job_already_running(conn, p_mapref):
+                return jsonify({
+                    'success': False,
+                    'message': f'{p_mapref} : Job is already running'
+                }), 400
+                
+            # Schedule the job immediately in background
+            success, message = call_schedule_immediate_job_async(p_mapref)
+            return jsonify({
+                'success': success,
+                'message': message  
+            })
+        finally:
+            conn.close()
+    except Exception as e:
+        print(f"Error in schedule_job_immediately: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+    

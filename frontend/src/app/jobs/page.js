@@ -852,12 +852,12 @@ const JobsPage = () => {
   const handleConfirmExecute = async () => {
     try {
       const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/mapper/schedule-job-immediately`,
+        `${process.env.NEXT_PUBLIC_API_URL}/job/schedule-job-immediately`,
         { mapref: executingJob.MAPREF }
       );
 
       if (response.data.success) {
-        setSuccessMessage('Job execution started successfully');
+        setSuccessMessage(response.data.message);
         // Refresh the jobs list
         fetchJobs();
       } else {

@@ -639,44 +639,6 @@ def call_delete_mapping_details(connection, p_mapref, p_trgclnm):
 
 
 
-def call_schedule_immediate_job(connection, p_mapref):
-    cursor = None
-    try:
-        cursor = connection.cursor()
-        
-        # Define the output parameter for error message
-        p_err = cursor.var(oracledb.STRING, 2000)  # Assuming error message can be up to 2000 chars
-        
-        # SQL to execute with named parameters
-        sql = """
 
-        DECLARE
-          v_mapref VARCHAR2(100) := :p_mapref;
-        BEGIN
-          PKGDWPRC.SCHEDULE_JOB_IMMEDIATE(p_mapref => v_mapref);
-        END;
-        """
-        
-        # Execute with named parameters
-        cursor.execute(
-            sql,
-            p_mapref=p_mapref,
-        )
-        connection.commit()
-        
-        # Get the error message (if any)
-        error_message = p_err.getvalue()
-        
-        if error_message:
-            return False, error_message
-        else:
-            return True, f"Job {p_mapref} scheduled for immediate execution"
-    
-    except Exception as e:
-        error_message = f"Exception while deleting mapping detail: {str(e)}"
-        return False, error_message
-    finally:
-        if cursor:
-            cursor.close()
 
 

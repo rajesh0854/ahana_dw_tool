@@ -1180,8 +1180,28 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
         }
       })
 
+      // Sort rows by execSequence to maintain order from the file
+      const sortedRows = cleanedRows.sort((a, b) => {
+        const seqA = parseInt(a.execSequence, 10)
+        const seqB = parseInt(b.execSequence, 10)
+
+        const aIsNum = !isNaN(seqA)
+        const bIsNum = !isNaN(seqB)
+
+        if (aIsNum && bIsNum) {
+          return seqA - seqB
+        }
+        if (aIsNum) {
+          return -1 // a comes first
+        }
+        if (bIsNum) {
+          return 1 // b comes first
+        }
+        return 0 // both are not numbers, keep original order
+      })
+
       setFormData(cleanedFormData)
-      setRows(cleanedRows)
+      setRows(sortedRows)
 
       // Reset all validation and workflow states
       setHasUnsavedChanges(true) // Make save button visible
