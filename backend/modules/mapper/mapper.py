@@ -880,3 +880,6 @@ def delete_mapping_detail():
             'success': False,
             'message': f'An error occurred while deleting the mapping detail: {str(e)}'
         }), 500
+
+
+

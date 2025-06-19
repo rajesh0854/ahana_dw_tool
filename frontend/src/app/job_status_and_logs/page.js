@@ -33,6 +33,7 @@ import ErrorDetailsDialog from './ErrorDetailsDialog';
 const JobStatusAndLogs = () => {
   const { darkMode } = useTheme();
   const [scheduledJobs, setScheduledJobs] = useState([]);
+  const [columnNames, setColumnNames] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -55,8 +56,13 @@ const JobStatusAndLogs = () => {
       
       const data = await response.json();
       
-      if (data.scheduled_jobs) {
+      if (data.scheduled_jobs && data.column_names) {
+        // Use column names from the backend to map data
+        setColumnNames(data.column_names.map(name => name.toLowerCase()));
         setScheduledJobs(data.scheduled_jobs);
+        // Set default sort to lastRunDate in descending order
+        setSortBy('lastRunDate');
+        setSortOrder('desc');
       } else if (data.error) {
         console.error('API Error:', data.error);
       }
@@ -72,13 +78,43 @@ const JobStatusAndLogs = () => {
     fetchScheduledJobs();
   }, []);
 
+  // Process raw job data into an array of objects
+  const processedJobs = useMemo(() => {
+    if (columnNames.length === 0 || scheduledJobs.length === 0) {
+      return [];
+    }
+    const processed = scheduledJobs.map(row => {
+      const jobObject = {};
+      columnNames.forEach((colName, index) => {
+        jobObject[colName] = row[index];
+      });
+      return jobObject;
+    });
+    
+
+    
+    return processed;
+  }, [scheduledJobs, columnNames]);
+
   // Group jobs by job name
   const groupedJobs = useMemo(() => {
     const grouped = {};
     
-    scheduledJobs.forEach((job, index) => {
-      // Backend API structure: [LOG_ID, LOG_DATE, JOB_NAME, STATUS, ACTUAL_START_DATE, RUN_DURATION_SECONDS, SESSION_ID]
-      const [logId, logDate, jobName, status, actualStartDate, runDurationSeconds, sessionId] = job;
+    processedJobs.forEach((job) => {
+      // Destructure using column names from the backend
+      const { 
+        log_id: logId,
+        job_id: jobId, 
+        log_date: logDate, 
+        job_name: jobName, 
+        status, 
+        actual_start_date: actualStartDate, 
+        error_message: errorMessage, 
+        run_duration_seconds: runDurationSeconds, 
+        session_id: sessionId 
+      } = job;
+      
+
       
       // Ensure we have valid data
       if (!jobName || !logId) {
@@ -102,9 +138,11 @@ const JobStatusAndLogs = () => {
       
       grouped[jobName].logs.push({
         logId,
+        jobId,
         logDate,
         status,
         actualStartDate,
+        errorMessage,
         runDurationSeconds,
         sessionId
       });
@@ -117,15 +155,20 @@ const JobStatusAndLogs = () => {
       }
       if (status === 'IP') grouped[jobName].inProgressRuns++;
       
-      // Update latest status if this log is more recent
-      if (new Date(logDate) > new Date(grouped[jobName].lastRunDate)) {
-        grouped[jobName].latestStatus = status;
-        grouped[jobName].lastRunDate = logDate;
-      }
+      // This is now handled after grouping and sorting logs
     });
 
-    // Calculate average duration for each job
+    // Calculate average duration and set latest status for each job
     Object.values(grouped).forEach(job => {
+      // Sort logs by date in descending order (newest first)
+      job.logs.sort((a, b) => new Date(b.logDate) - new Date(a.logDate));
+      
+      // Ensure latestStatus is from the most recent log
+      if (job.logs.length > 0) {
+        job.latestStatus = job.logs[0].status;
+        job.lastRunDate = job.logs[0].logDate;
+      }
+      
       const validDurations = job.logs
         .map(log => log.runDurationSeconds)
         .filter(duration => duration && duration !== null && !isNaN(duration));
@@ -136,7 +179,7 @@ const JobStatusAndLogs = () => {
     });
 
     return Object.values(grouped);
-  }, [scheduledJobs]);
+  }, [processedJobs]);
 
   // Filter and sort jobs
   const filteredJobs = useMemo(() => {
@@ -166,14 +209,14 @@ const JobStatusAndLogs = () => {
     return filtered;
   }, [groupedJobs, searchTerm, statusFilter, sortBy, sortOrder]);
 
-  // Toggle job expansion
+  // Toggle job expansion (auto-close others)
   const toggleJobExpansion = (jobName) => {
-    const newExpanded = new Set(expandedJobs);
-    if (newExpanded.has(jobName)) {
-      newExpanded.delete(jobName);
-    } else {
+    const newExpanded = new Set();
+    if (!expandedJobs.has(jobName)) {
+      // Only add the current job (closes all others)
       newExpanded.add(jobName);
     }
+    // If the job was already expanded, newExpanded remains empty (closes all)
     setExpandedJobs(newExpanded);
   };
 
@@ -246,11 +289,42 @@ const JobStatusAndLogs = () => {
 
   // Handle error dialog for failed jobs
   const handleViewError = (jobName, logId) => {
-    // For now, show empty error dialog as requested
+    const job = groupedJobs.find(j => j.jobName === jobName);
+    if (!job) return;
+    
+    // Find all logs with the matching logId
+    const matchingLogs = job.logs.filter(l => l.logId === logId);
+    
+    // Prioritize logs with meaningful error messages
+    let log = matchingLogs.find(l => l.errorMessage && l.errorMessage.trim() !== '');
+    
+    // If no log with meaningful error message, use the first one
+    if (!log) {
+      log = matchingLogs[0];
+    }
+    
+    if (!log) return;
+    
+    const errorDetails = [];
+    
+    // Check if error message exists and is not just whitespace/newlines
+    const hasValidErrorMessage = log.errorMessage && log.errorMessage.trim() !== '';
+    
+    // Always create an error detail entry for failed jobs, even if no specific error message
+    const errorMessage = hasValidErrorMessage ? log.errorMessage : 'Job failed but no specific error message was recorded.';
+    
+    errorDetails.push({
+      ERROR_ID: logId,
+      ERROR_TYPE: 'Job Execution Error',
+      PROCESS_DATE: log.actualStartDate || log.logDate,
+      KEY_VALUE: jobName,
+      ERROR_MESSAGE: errorMessage,
+    });
+    
     setSelectedError({
       jobName,
       logId,
-      errorDetails: [] // Empty for now as per requirement
+      errorDetails
     });
     setErrorDialogOpen(true);
   };
@@ -279,7 +353,7 @@ const JobStatusAndLogs = () => {
   }
 
   return (
-    <div className={`min-h-screen ${darkMode ? 'bg-gray-900' : 'bg-gray-50'} p-4`}>
+    <div className={`min-h-screen ${darkMode ? 'bg-gray-900' : 'bg-gray-50'} p-2`}>
       <style jsx global>{`
         .custom-scrollbar::-webkit-scrollbar {
           width: 8px;
@@ -304,25 +378,16 @@ const JobStatusAndLogs = () => {
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="mb-4"
+          className="mb-2"
         >
-          {/* Header */}
-          <div className="mb-6">
-            <h1 className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'} mb-2`}>
-              Job Status & Logs
-            </h1>
-            <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-              Monitor and track your scheduled job executions
-            </p>
-          </div>
 
           {/* Filters, Search and Refresh */}
           <div className={`
-            p-4 rounded-xl border mb-6
+            p-2 rounded-lg border mb-2
             ${darkMode ? 'bg-gray-800/70 border-gray-700' : 'bg-white border-gray-200'}
             shadow-sm
           `}>
-            <div className="flex flex-col lg:flex-row gap-4 items-center">
+            <div className="flex flex-col lg:flex-row gap-3 items-center">
               {/* Search */}
               <div className="flex-1 w-full lg:w-auto">
                 <div className="relative">
@@ -333,7 +398,7 @@ const JobStatusAndLogs = () => {
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className={`
-                      w-full pl-10 pr-4 py-2.5 rounded-lg border text-sm
+                      w-full pl-10 pr-4 py-2 rounded-lg border text-sm
                       ${darkMode 
                         ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
                         : 'bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-500'}
@@ -343,14 +408,14 @@ const JobStatusAndLogs = () => {
                 </div>
               </div>
 
-              <div className="flex flex-col md:flex-row gap-3 w-full lg:w-auto">
+              <div className="flex flex-col md:flex-row gap-2 w-full lg:w-auto">
                 {/* Status Filter */}
                 <div className="w-full md:w-48">
                   <select
                     value={statusFilter}
                     onChange={(e) => setStatusFilter(e.target.value)}
                     className={`
-                      w-full px-3 py-2.5 rounded-lg border text-sm
+                      w-full px-3 py-2 rounded-lg border text-sm
                       ${darkMode 
                         ? 'bg-gray-700 border-gray-600 text-white' 
                         : 'bg-gray-50 border-gray-300 text-gray-900'}
@@ -374,7 +439,7 @@ const JobStatusAndLogs = () => {
                       setSortOrder(order);
                     }}
                     className={`
-                      w-full px-3 py-2.5 rounded-lg border text-sm
+                      w-full px-3 py-2 rounded-lg border text-sm
                       ${darkMode 
                         ? 'bg-gray-700 border-gray-600 text-white' 
                         : 'bg-gray-50 border-gray-300 text-gray-900'}
@@ -397,7 +462,7 @@ const JobStatusAndLogs = () => {
                   onClick={fetchScheduledJobs}
                   disabled={refreshing}
                   className={`
-                    flex items-center justify-center space-x-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all shadow-sm w-full md:w-auto
+                    flex items-center justify-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-all shadow-sm w-full md:w-auto
                     ${darkMode 
                       ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-900/20' 
                       : 'bg-blue-500 hover:bg-blue-600 text-white shadow-blue-300/30'}
@@ -412,40 +477,40 @@ const JobStatusAndLogs = () => {
           </div>
 
           {/* Statistics Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-2 mb-2">
             {[
               { 
                 label: 'Total Jobs', 
                 value: stats.totalJobs, 
-                icon: <Database size={20} />, 
+                icon: <Database size={18} />, 
                 color: 'blue',
                 gradient: darkMode ? 'from-blue-900/40 to-indigo-900/30' : 'from-blue-50 to-indigo-100/70'
               },
               { 
                 label: 'In Progress', 
                 value: stats.runningJobs, 
-                icon: <PlayCircle size={20} />, 
+                icon: <PlayCircle size={18} />, 
                 color: 'blue',
                 gradient: darkMode ? 'from-blue-900/40 to-indigo-900/30' : 'from-blue-50 to-indigo-100/70'
               },
               { 
                 label: 'Completed', 
                 value: stats.successfulJobs, 
-                icon: <CheckCircle size={20} />, 
+                icon: <CheckCircle size={18} />, 
                 color: 'green',
                 gradient: darkMode ? 'from-green-900/40 to-emerald-900/30' : 'from-green-50 to-emerald-100/70'
               },
               { 
                 label: 'Failed', 
                 value: stats.failedJobs, 
-                icon: <XCircle size={20} />, 
+                icon: <XCircle size={18} />, 
                 color: 'red',
                 gradient: darkMode ? 'from-red-900/40 to-rose-900/30' : 'from-red-50 to-rose-100/70'
               },
               { 
                 label: 'Total Runs', 
                 value: stats.totalRuns, 
-                icon: <BarChart3 size={20} />, 
+                icon: <BarChart3 size={18} />, 
                 color: 'purple',
                 gradient: darkMode ? 'from-purple-900/40 to-violet-900/30' : 'from-purple-50 to-violet-100/70'
               }
@@ -456,7 +521,7 @@ const JobStatusAndLogs = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
                 className={`
-                  p-4 rounded-xl border bg-gradient-to-br ${stat.gradient}
+                  p-2 rounded-md border bg-gradient-to-br ${stat.gradient}
                   ${darkMode 
                     ? 'border-gray-700' 
                     : 'border-gray-200'}
@@ -465,21 +530,21 @@ const JobStatusAndLogs = () => {
               >
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-500'}`}>
+                    <p className={`text-xs font-medium ${darkMode ? 'text-gray-300' : 'text-gray-500'}`}>
                       {stat.label}
                     </p>
-                    <p className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                    <p className={`text-base font-bold ${darkMode ? 'text-white' : 'text-gray-900'} mt-0.5`}>
                       {stat.value}
                     </p>
                   </div>
                   <div className={`
-                    p-3 rounded-lg
+                    p-1 rounded
                     ${stat.color === 'blue' ? 'bg-blue-100/80 text-blue-600 dark:bg-blue-900/40 dark:text-blue-400' : ''}
                     ${stat.color === 'green' ? 'bg-green-100/80 text-green-600 dark:bg-green-900/40 dark:text-green-400' : ''}
                     ${stat.color === 'red' ? 'bg-red-100/80 text-red-600 dark:bg-red-900/40 dark:text-red-400' : ''}
                     ${stat.color === 'purple' ? 'bg-purple-100/80 text-purple-600 dark:bg-purple-900/40 dark:text-purple-400' : ''}
                   `}>
-                    {stat.icon}
+                    <div className="w-4 h-4">{stat.icon}</div>
                   </div>
                 </div>
               </motion.div>
@@ -502,19 +567,19 @@ const JobStatusAndLogs = () => {
             <table className="w-full">
               <thead className={`${darkMode ? 'bg-gray-700/80' : 'bg-gray-50/90'}`}>
                 <tr>
-                  <th className={`px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider ${darkMode ? 'text-gray-300' : 'text-gray-500'}`}>
+                  <th className={`px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider ${darkMode ? 'text-gray-300' : 'text-gray-500'}`}>
                     Job Details
                   </th>
-                  <th className={`px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider ${darkMode ? 'text-gray-300' : 'text-gray-500'}`}>
+                  <th className={`px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider ${darkMode ? 'text-gray-300' : 'text-gray-500'}`}>
                     Status
                   </th>
-                  <th className={`px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider ${darkMode ? 'text-gray-300' : 'text-gray-500'}`}>
+                  <th className={`px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider ${darkMode ? 'text-gray-300' : 'text-gray-500'}`}>
                     Statistics
                   </th>
-                  <th className={`px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider ${darkMode ? 'text-gray-300' : 'text-gray-500'}`}>
+                  <th className={`px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider ${darkMode ? 'text-gray-300' : 'text-gray-500'}`}>
                     Last Run
                   </th>
-                  <th className={`px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider ${darkMode ? 'text-gray-300' : 'text-gray-500'}`}>
+                  <th className={`px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider ${darkMode ? 'text-gray-300' : 'text-gray-500'}`}>
                     Actions
                   </th>
                 </tr>
@@ -538,7 +603,7 @@ const JobStatusAndLogs = () => {
                           `}
                           onClick={() => toggleJobExpansion(job.jobName)}
                         >
-                          <td className="px-6 py-4">
+                          <td className="px-6 py-3">
                             <div className="flex items-center space-x-3">
                               <motion.div
                                 animate={{ rotate: isExpanded ? 90 : 0 }}
@@ -551,17 +616,17 @@ const JobStatusAndLogs = () => {
                               >
                                 <ChevronRight size={16} />
                               </motion.div>
-                              <div>
+                              <div className="flex items-center">
                                 <div className={`text-sm font-medium ${darkMode ? 'text-white' : 'text-gray-900'}`}>
                                   {job.jobName}
                                 </div>
-                                <div className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                                  {job.totalRuns} total runs
+                                <div className={`text-xs ml-2 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                                  ({job.totalRuns} runs)
                                 </div>
                               </div>
                             </div>
                           </td>
-                          <td className="px-6 py-4">
+                          <td className="px-6 py-3">
                             <span className={`
                               inline-flex items-center space-x-2 px-3 py-1 rounded-full text-xs font-medium
                               ${statusDisplay.bgColor} ${statusDisplay.color}
@@ -570,7 +635,7 @@ const JobStatusAndLogs = () => {
                               <span>{statusDisplay.label}</span>
                             </span>
                           </td>
-                          <td className="px-6 py-4">
+                          <td className="px-6 py-3">
                             <div className="flex items-center space-x-4 text-xs">
                               <div className="flex items-center space-x-1">
                                 <CheckCircle size={14} className="text-green-500" />
@@ -598,24 +663,23 @@ const JobStatusAndLogs = () => {
                               </div>
                             </div>
                           </td>
-                          <td className="px-6 py-4">
+                          <td className="px-6 py-3">
                             <div className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
                               {formatDate(job.lastRunDate)}
                             </div>
                           </td>
-                          <td className="px-6 py-4">
+                          <td className="px-6 py-3">
                             <div className="flex items-center space-x-2">
-                              {job.hasFailedLogs && (
+                              {job.latestStatus === 'FL' && (
                                 <motion.button
                                   whileHover={{ scale: 1.05 }}
                                   whileTap={{ scale: 0.95 }}
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    // Find the most recent failed log
-                                    const failedLog = job.logs
-                                      .filter(log => log.status === 'FL')
+                                    // Find the most recent log (which should be failed)
+                                    const latestLog = job.logs
                                       .sort((a, b) => new Date(b.logDate) - new Date(a.logDate))[0];
-                                    handleViewError(job.jobName, failedLog?.logId);
+                                    handleViewError(job.jobName, latestLog?.logId);
                                   }}
                                   className={`
                                     flex items-center space-x-1 px-3 py-1 rounded-md text-xs font-medium
@@ -628,17 +692,6 @@ const JobStatusAndLogs = () => {
                                   <span>View Error</span>
                                 </motion.button>
                               )}
-                              <motion.button
-                                whileHover={{ scale: 1.1 }}
-                                whileTap={{ scale: 0.9 }}
-                                className={`
-                                  p-2 rounded-md transition-colors
-                                  ${darkMode ? 'hover:bg-gray-700 text-gray-400' : 'hover:bg-gray-100 text-gray-500'}
-                                `}
-                                title="View Details"
-                              >
-                                <Eye size={16} />
-                              </motion.button>
                             </div>
                           </td>
                         </motion.tr>
@@ -654,7 +707,7 @@ const JobStatusAndLogs = () => {
                             >
                               <td colSpan={5} className={`px-6 py-0 ${darkMode ? 'bg-gray-750/50' : 'bg-gray-50/70'}`}>
                                 <div className="py-4">
-                                  <div className="flex items-center justify-between mb-3">
+                                  <div className="flex items-center justify-between mb-2">
                                     <h4 className={`text-sm font-medium ${darkMode ? 'text-white' : 'text-gray-900'}`}>
                                       <span className="flex items-center">
                                         <Activity size={16} className={`mr-2 ${darkMode ? 'text-blue-400' : 'text-blue-600'}`} />
@@ -667,7 +720,7 @@ const JobStatusAndLogs = () => {
                                       </span>
                                     </div>
                                   </div>
-                                  <div className="space-y-3 max-h-96 overflow-y-auto pr-2 custom-scrollbar">
+                                  <div className="space-y-2 max-h-96 overflow-y-auto pr-2 custom-scrollbar">
                                     {job.logs
                                       .sort((a, b) => new Date(b.logDate) - new Date(a.logDate))
                                       .map((log, logIndex) => {
@@ -679,15 +732,15 @@ const JobStatusAndLogs = () => {
                                           animate={{ opacity: 1, x: 0 }}
                                           transition={{ delay: logIndex * 0.05 }}
                                           className={`
-                                            p-4 rounded-lg border
+                                            p-3 rounded-lg border
                                             ${darkMode 
                                               ? 'bg-gray-800/90 border-gray-700 hover:bg-gray-800' 
                                               : 'bg-white border-gray-200 hover:bg-gray-50/80'}
                                             transition-colors
                                           `}
                                         >
-                                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                                            <div className="flex flex-wrap items-center gap-4">
+                                          <div className="flex items-center justify-between gap-3">
+                                            <div className="flex flex-wrap items-center gap-3">
                                               <span className={`
                                                 inline-flex items-center space-x-2 px-3 py-1 rounded-md text-xs font-medium
                                                 ${logStatusDisplay.bgColor} ${logStatusDisplay.color}
@@ -789,7 +842,7 @@ const JobStatusAndLogs = () => {
           open={errorDialogOpen}
           onClose={() => setErrorDialogOpen(false)}
           errorDetails={selectedError?.errorDetails || []}
-          jobId={selectedError?.logId}
+          jobId={selectedError?.logId || selectedError?.jobName}
           loading={false}
           darkMode={darkMode}
         />

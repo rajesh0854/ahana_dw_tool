@@ -12,7 +12,6 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  TablePagination,
   Checkbox,
   Tooltip,
   CircularProgress,
@@ -56,8 +55,6 @@ const ReferenceTable = ({ handleEditReference, handleCreateNewReference }) => {
   // New state variables for the table view
   const [allReferences, setAllReferences] = useState([])
   const [loadingReferences, setLoadingReferences] = useState(false)
-  const [referenceTablePage, setReferenceTablePage] = useState(0)
-  const [referenceRowsPerPage, setReferenceRowsPerPage] = useState(10)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [selectedReference, setSelectedReference] = useState(null)
 
@@ -164,17 +161,6 @@ const ReferenceTable = ({ handleEditReference, handleCreateNewReference }) => {
 
   // Modify the fetchReferenceDetails function to handle navigation
 
-  // Add pagination handler for reference table
-  const handleReferenceTableChangePage = (event, newPage) => {
-    setReferenceTablePage(newPage)
-  }
-
-  // Add rows per page handler for reference table
-  const handleReferenceTableChangeRowsPerPage = (event) => {
-    setReferenceRowsPerPage(parseInt(event.target.value, 10))
-    setReferenceTablePage(0)
-  }
-
   // Format date for display in the reference table
   const formatDate = (dateString) => {
     if (!dateString) return '-'
@@ -192,7 +178,6 @@ const ReferenceTable = ({ handleEditReference, handleCreateNewReference }) => {
   const handleReferenceSearch = (event) => {
     const query = event.target.value
     setSearchQuery(query)
-    setReferenceTablePage(0) // Reset to first page when searching
 
     // Use the query value directly instead of relying on searchQuery state
     applyFiltersWithQuery(query)
@@ -200,8 +185,6 @@ const ReferenceTable = ({ handleEditReference, handleCreateNewReference }) => {
 
   // Add a new function that takes the query as a parameter
   const applyFiltersWithQuery = (currentQuery) => {
-    setReferenceTablePage(0) // Reset to first page when filtering
-
     if (
       currentQuery.trim() === '' &&
       !filters.tableType.length &&
@@ -636,253 +619,226 @@ const ReferenceTable = ({ handleEditReference, handleCreateNewReference }) => {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredReferences
-                    .slice(
-                      referenceTablePage * referenceRowsPerPage,
-                      referenceTablePage * referenceRowsPerPage +
-                        referenceRowsPerPage
-                    )
-                    .map((reference, index) => (
-                      <TableRow
-                        key={reference[0]}
-                        hover
+                  filteredReferences.map((reference, index) => (
+                    <TableRow
+                      key={reference[0]}
+                      hover
+                      sx={{
+                        cursor: 'pointer',
+                        height: { xs: 'auto', md: '32px' }, // Adjusted for better scaling
+                        '&:hover': {
+                          backgroundColor: darkMode
+                            ? alpha(muiTheme.palette.primary.main, 0.1)
+                            : alpha(muiTheme.palette.primary.main, 0.05),
+                        },
+                        borderBottom: darkMode
+                          ? '1px solid rgba(75, 85, 99, 0.1)'
+                          : '1px solid rgba(229, 231, 235, 0.7)',
+                      }}
+                    >
+                      <TableCell
                         sx={{
-                          cursor: 'pointer',
-                          height: { xs: 'auto', md: '48px' }, // Adjusted for better scaling
-                          '&:hover': {
-                            backgroundColor: darkMode
-                              ? alpha(muiTheme.palette.primary.main, 0.1)
-                              : alpha(muiTheme.palette.primary.main, 0.05),
-                          },
-                          borderBottom: darkMode
-                            ? '1px solid rgba(75, 85, 99, 0.1)'
-                            : '1px solid rgba(229, 231, 235, 0.7)',
+                          color: darkMode ? 'white' : 'inherit',
+                          fontSize: 'clamp(0.8rem, 0.875vw, 0.875rem)',
                         }}
                       >
-                        <TableCell
-                          sx={{
-                            color: darkMode ? 'white' : 'inherit',
-                            fontSize: 'clamp(0.8rem, 0.875vw, 0.875rem)',
-                          }}
-                        >
-                          {reference[0]}
-                        </TableCell>
-                        <TableCell
-                          sx={{
-                            color: darkMode ? 'white' : 'inherit',
-                            fontSize: 'clamp(0.8rem, 0.875vw, 0.875rem)',
-                          }}
-                        >
-                          {reference[1] || '-'}
-                        </TableCell>
-                        <TableCell
-                          sx={{
-                            color: darkMode ? 'white' : 'inherit',
-                            fontSize: 'clamp(0.8rem, 0.875vw, 0.875rem)',
-                          }}
-                        >
-                          {reference[2] || '-'}
-                        </TableCell>
-                        <TableCell
-                          sx={{
-                            color: darkMode ? 'white' : 'inherit',
-                            fontSize: 'clamp(0.8rem, 0.875vw, 0.875rem)',
-                          }}
-                        >
-                          {reference[3] || '-'}
-                        </TableCell>
-                        <TableCell
-                          sx={{
-                            color: darkMode ? 'white' : 'inherit',
-                            fontSize: 'clamp(0.8rem, 0.875vw, 0.875rem)',
-                          }}
-                        >
-                          {reference[4] || '-'}
-                        </TableCell>
-                        <TableCell
-                          sx={{
-                            color: darkMode ? 'white' : 'inherit',
-                            fontSize: 'clamp(0.8rem, 0.875vw, 0.875rem)',
-                          }}
-                        >
-                          {reference[5] || '-'}
-                        </TableCell>
-                        <TableCell
-                          sx={{
-                            color: darkMode ? 'white' : 'inherit',
-                            fontSize: 'clamp(0.8rem, 0.875vw, 0.875rem)',
-                          }}
-                        >
-                          {reference[7] === 'A' ? (
-                            <Chip
-                              label="Active"
+                        {reference[0]}
+                      </TableCell>
+                      <TableCell
+                        sx={{
+                          color: darkMode ? 'white' : 'inherit',
+                          fontSize: 'clamp(0.8rem, 0.875vw, 0.875rem)',
+                        }}
+                      >
+                        {reference[1] || '-'}
+                      </TableCell>
+                      <TableCell
+                        sx={{
+                          color: darkMode ? 'white' : 'inherit',
+                          fontSize: 'clamp(0.8rem, 0.875vw, 0.875rem)',
+                        }}
+                      >
+                        {reference[2] || '-'}
+                      </TableCell>
+                      <TableCell
+                        sx={{
+                          color: darkMode ? 'white' : 'inherit',
+                          fontSize: 'clamp(0.8rem, 0.875vw, 0.875rem)',
+                        }}
+                      >
+                        {reference[3] || '-'}
+                      </TableCell>
+                      <TableCell
+                        sx={{
+                          color: darkMode ? 'white' : 'inherit',
+                          fontSize: 'clamp(0.8rem, 0.875vw, 0.875rem)',
+                        }}
+                      >
+                        {reference[4] || '-'}
+                      </TableCell>
+                      <TableCell
+                        sx={{
+                          color: darkMode ? 'white' : 'inherit',
+                          fontSize: 'clamp(0.8rem, 0.875vw, 0.875rem)',
+                        }}
+                      >
+                        {reference[5] || '-'}
+                      </TableCell>
+                      <TableCell
+                        sx={{
+                          color: darkMode ? 'white' : 'inherit',
+                          fontSize: 'clamp(0.8rem, 0.875vw, 0.875rem)',
+                        }}
+                      >
+                        {reference[7] === 'A' ? (
+                          <Chip
+                            label="Active"
+                            size="small"
+                            sx={{
+                              backgroundColor: darkMode
+                                ? 'rgba(16, 185, 129, 0.2)'
+                                : 'rgba(16, 185, 129, 0.1)',
+                              color: darkMode
+                                ? 'rgb(16, 185, 129)'
+                                : 'rgb(5, 150, 105)',
+                              borderRadius: '4px',
+                              fontWeight: '500',
+                            }}
+                          />
+                        ) : (
+                          <Chip
+                            label="Inactive"
+                            size="small"
+                            sx={{
+                              backgroundColor: darkMode
+                                ? 'rgba(239, 68, 68, 0.2)'
+                                : 'rgba(239, 68, 68, 0.1)',
+                              color: darkMode
+                                ? 'rgb(239, 68, 68)'
+                                : 'rgb(220, 38, 38)',
+                              borderRadius: '4px',
+                              fontWeight: '500',
+                            }}
+                          />
+                        )}
+                      </TableCell>
+                      <TableCell
+                        sx={{
+                          color: darkMode ? 'white' : 'inherit',
+                          fontSize: 'clamp(0.8rem, 0.875vw, 0.875rem)',
+                        }}
+                      >
+                        {reference[6] === 'Y' ? (
+                          <Chip
+                            label="Verified"
+                            size="small"
+                            sx={{
+                              backgroundColor: darkMode
+                                ? 'rgba(37, 99, 235, 0.2)'
+                                : 'rgba(37, 99, 235, 0.1)',
+                              color: darkMode
+                                ? 'rgb(96, 165, 250)'
+                                : 'rgb(37, 99, 235)',
+                              borderRadius: '4px',
+                              fontWeight: '500',
+                            }}
+                          />
+                        ) : (
+                          <Chip
+                            label="Unverified"
+                            size="small"
+                            sx={{
+                              backgroundColor: darkMode
+                                ? 'rgba(245, 158, 11, 0.2)'
+                                : 'rgba(245, 158, 11, 0.1)',
+                              color: darkMode
+                                ? 'rgb(251, 191, 36)'
+                                : 'rgb(217, 119, 6)',
+                              borderRadius: '4px',
+                              fontWeight: '500',
+                            }}
+                          />
+                        )}
+                      </TableCell>
+                      <TableCell
+                        sx={{
+                          color: darkMode ? 'white' : 'inherit',
+                          fontSize: 'clamp(0.8rem, 0.875vw, 0.875rem)',
+                        }}
+                      >
+                        {reference[8] || '-'}
+                      </TableCell>
+                      <TableCell>
+                        <Box display="flex" gap={1}>
+                          <Tooltip title="Edit Reference">
+                            <IconButton
                               size="small"
+                              onClick={() =>
+                                handleEditReference(reference[0])
+                              }
                               sx={{
                                 backgroundColor: darkMode
-                                  ? 'rgba(16, 185, 129, 0.2)'
-                                  : 'rgba(16, 185, 129, 0.1)',
-                                color: darkMode
-                                  ? 'rgb(16, 185, 129)'
-                                  : 'rgb(5, 150, 105)',
-                                borderRadius: '4px',
-                                fontWeight: '500',
-                              }}
-                            />
-                          ) : (
-                            <Chip
-                              label="Inactive"
-                              size="small"
-                              sx={{
-                                backgroundColor: darkMode
-                                  ? 'rgba(239, 68, 68, 0.2)'
-                                  : 'rgba(239, 68, 68, 0.1)',
-                                color: darkMode
-                                  ? 'rgb(239, 68, 68)'
-                                  : 'rgb(220, 38, 38)',
-                                borderRadius: '4px',
-                                fontWeight: '500',
-                              }}
-                            />
-                          )}
-                        </TableCell>
-                        <TableCell
-                          sx={{
-                            color: darkMode ? 'white' : 'inherit',
-                            fontSize: 'clamp(0.8rem, 0.875vw, 0.875rem)',
-                          }}
-                        >
-                          {reference[6] === 'Y' ? (
-                            <Chip
-                              label="Verified"
-                              size="small"
-                              sx={{
-                                backgroundColor: darkMode
-                                  ? 'rgba(37, 99, 235, 0.2)'
-                                  : 'rgba(37, 99, 235, 0.1)',
-                                color: darkMode
-                                  ? 'rgb(96, 165, 250)'
-                                  : 'rgb(37, 99, 235)',
-                                borderRadius: '4px',
-                                fontWeight: '500',
-                              }}
-                            />
-                          ) : (
-                            <Chip
-                              label="Unverified"
-                              size="small"
-                              sx={{
-                                backgroundColor: darkMode
-                                  ? 'rgba(245, 158, 11, 0.2)'
-                                  : 'rgba(245, 158, 11, 0.1)',
-                                color: darkMode
-                                  ? 'rgb(251, 191, 36)'
-                                  : 'rgb(217, 119, 6)',
-                                borderRadius: '4px',
-                                fontWeight: '500',
-                              }}
-                            />
-                          )}
-                        </TableCell>
-                        <TableCell
-                          sx={{
-                            color: darkMode ? 'white' : 'inherit',
-                            fontSize: 'clamp(0.8rem, 0.875vw, 0.875rem)',
-                          }}
-                        >
-                          {reference[8] || '-'}
-                        </TableCell>
-                        <TableCell>
-                          <Box display="flex" gap={1}>
-                            <Tooltip title="Edit Reference">
-                              <IconButton
-                                size="small"
-                                onClick={() =>
-                                  handleEditReference(reference[0])
-                                }
-                                sx={{
+                                  ? alpha(muiTheme.palette.primary.main, 0.2)
+                                  : alpha(muiTheme.palette.primary.main, 0.1),
+                                '&:hover': {
                                   backgroundColor: darkMode
-                                    ? alpha(muiTheme.palette.primary.main, 0.2)
-                                    : alpha(muiTheme.palette.primary.main, 0.1),
-                                  '&:hover': {
-                                    backgroundColor: darkMode
-                                      ? alpha(
-                                          muiTheme.palette.primary.main,
-                                          0.3
-                                        )
-                                      : alpha(
-                                          muiTheme.palette.primary.main,
-                                          0.2
-                                        ),
-                                  },
-                                }}
-                              >
-                                <EditIcon
-                                  fontSize="small"
-                                  sx={{
-                                    color: darkMode
-                                      ? muiTheme.palette.primary.light
-                                      : muiTheme.palette.primary.main,
-                                  }}
-                                />
-                              </IconButton>
-                            </Tooltip>
-                            <Tooltip title="Delete Reference">
-                              <IconButton
-                                size="small"
-                                onClick={() =>
-                                  handleShowDeleteDialog(reference[0])
-                                }
+                                    ? alpha(
+                                        muiTheme.palette.primary.main,
+                                        0.3
+                                      )
+                                    : alpha(
+                                        muiTheme.palette.primary.main,
+                                        0.2
+                                      ),
+                                },
+                              }}
+                            >
+                              <EditIcon
+                                fontSize="small"
                                 sx={{
-                                  backgroundColor: darkMode
-                                    ? alpha(muiTheme.palette.error.main, 0.2)
-                                    : alpha(muiTheme.palette.error.main, 0.1),
-                                  '&:hover': {
-                                    backgroundColor: darkMode
-                                      ? alpha(muiTheme.palette.error.main, 0.3)
-                                      : alpha(muiTheme.palette.error.main, 0.2),
-                                  },
+                                  color: darkMode
+                                    ? muiTheme.palette.primary.light
+                                    : muiTheme.palette.primary.main,
                                 }}
-                              >
-                                <DeleteIcon
-                                  fontSize="small"
-                                  sx={{
-                                    color: darkMode
-                                      ? muiTheme.palette.error.light
-                                      : muiTheme.palette.error.main,
-                                  }}
-                                />
-                              </IconButton>
-                            </Tooltip>
-                          </Box>
-                        </TableCell>
-                      </TableRow>
-                    ))
+                              />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="Delete Reference">
+                            <IconButton
+                              size="small"
+                              onClick={() =>
+                                handleShowDeleteDialog(reference[0])
+                              }
+                              sx={{
+                                backgroundColor: darkMode
+                                  ? alpha(muiTheme.palette.error.main, 0.2)
+                                  : alpha(muiTheme.palette.error.main, 0.1),
+                                '&:hover': {
+                                  backgroundColor: darkMode
+                                    ? alpha(muiTheme.palette.error.main, 0.3)
+                                    : alpha(muiTheme.palette.error.main, 0.2),
+                                },
+                              }}
+                            >
+                              <DeleteIcon
+                                fontSize="small"
+                                sx={{
+                                  color: darkMode
+                                    ? muiTheme.palette.error.light
+                                    : muiTheme.palette.error.main,
+                                }}
+                              />
+                            </IconButton>
+                          </Tooltip>
+                        </Box>
+                      </TableCell>
+                    </TableRow>
+                  ))
                 )}
               </TableBody>
             </Table>
           </TableContainer>
         </div>
-
-        <TablePagination
-          rowsPerPageOptions={[5, 10, 25, 50]}
-          component="div"
-          count={filteredReferences.length}
-          rowsPerPage={referenceRowsPerPage}
-          page={referenceTablePage}
-          onPageChange={handleReferenceTableChangePage}
-          onRowsPerPageChange={handleReferenceTableChangeRowsPerPage}
-          sx={{
-            '.MuiTablePagination-toolbar': {
-              minHeight: '48px',
-            },
-            '.MuiInputBase-root': {
-              ml: 1,
-              mr: 1,
-            },
-            color: darkMode ? 'white' : 'inherit',
-            fontSize: 'clamp(0.8rem, 0.875vw, 0.875rem)', // Responsive font sizing
-          }}
-        />
       </div>
 
       {/* Delete Confirmation Dialog */}

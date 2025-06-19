@@ -12,7 +12,6 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  TablePagination,
   Checkbox,
   Tooltip,
   CircularProgress,
@@ -165,7 +164,6 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
         const data = await response.json()
         setDataTypeOptions(data)
       } catch (error) {
-        console.error('Error fetching data type options:', error)
         message.error('Failed to load data type options')
       }
     }
@@ -187,9 +185,7 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
     bulkProcessRows: '',
   })
 
-  // Pagination state
-  const [page, setPage] = useState(0)
-  const [rowsPerPage, setRowsPerPage] = useState(15)
+  // Removed pagination state - using scrollbar instead
 
   // REMOVED: const [isFullscreen, setIsFullscreen] = useState(false)
 
@@ -391,12 +387,7 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
         // Make sure job creation is reset when activating again
         setIsJobCreated(false)
         
-        console.log('Activation successful, states set:', {
-          isActivated: true,
-          isActivationSuccessful: true,
-          showValidateButton: false,
-          isJobCreated: false
-        });
+
       } else {
         setIsActivated(false)
         setIsActivationSuccessful(false) // Reset activation success flag
@@ -772,16 +763,7 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
     checkDuplicateKeySequences(rows)
   }, [])
 
-  // Handle page change
-  const handleChangePage = (event, newPage) => {
-    setPage(newPage)
-  }
-
-  // Handle rows per page change
-  const handleChangeRowsPerPage = (event) => {
-    setRowsPerPage(parseInt(event.target.value, 10))
-    setPage(0)
-  }
+  // Removed pagination handlers - using scrollbar instead
 
   // Function to copy SQL content
   const handleCopySQL = () => {
@@ -843,8 +825,7 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
       }))
     )
 
-    // Reset pagination to first page
-    setPage(0)
+    // Removed pagination reset - using scrollbar instead
 
     // Reset workflow state variables
     setHasUnsavedChanges(false)
@@ -1016,7 +997,7 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
       // setIsActivationSuccessful(false)
 
     } catch (error) {
-      console.error('Error saving mapper:', error)
+
       message.error(
         error.response?.data?.error || 'Failed to save mapper configuration'
       )
@@ -1180,36 +1161,18 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
         }
       })
 
-      // Sort rows by execSequence to maintain order from the file
-      const sortedRows = cleanedRows.sort((a, b) => {
-        const seqA = parseInt(a.execSequence, 10)
-        const seqB = parseInt(b.execSequence, 10)
-
-        const aIsNum = !isNaN(seqA)
-        const bIsNum = !isNaN(seqB)
-
-        if (aIsNum && bIsNum) {
-          return seqA - seqB
-        }
-        if (aIsNum) {
-          return -1 // a comes first
-        }
-        if (bIsNum) {
-          return 1 // b comes first
-        }
-        return 0 // both are not numbers, keep original order
-      })
-
+      // Removed sorting to maintain original order from the uploaded file
       setFormData(cleanedFormData)
-      setRows(sortedRows)
+      setRows(cleanedRows)
 
       // Reset all validation and workflow states
       setHasUnsavedChanges(true) // Make save button visible
-      setShowValidateButton(false)
+      setShowValidateButton(true)
       setHasBeenValidated(false)
       setAllRowsValidated(false)
       setIsActivated(false)
       setIsActivationSuccessful(false)
+      setBulkValidationSuccess(false)
 
       // Reset validation status and errors
       setValidationStatus({})
@@ -1225,6 +1188,11 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
       // Reset original data since this is a new upload
       setOriginalFormData(null)
       setOriginalRows(null)
+
+      // Automatically trigger validation after upload to update states
+      validateAll();
+
+
 
       message.success('File uploaded successfully')
     } catch (error) {
@@ -1654,7 +1622,7 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
         message.success({
           content: 'All rows validated successfully',
           key: 'validateAll',
-        })
+        });
       } else {
         message.error({
           content: (
@@ -1669,8 +1637,10 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
           ),
           key: 'validateAll',
           duration: 5,
-        })
+        });
       }
+
+
     } catch (error) {
       message.error({
         content: 'Error validating rows: ' + (error.message || 'Unknown error'),
@@ -1957,16 +1927,7 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
 
   // Add useEffect to debug button states
   useEffect(() => {
-    console.log('Button state update:', { 
-      isActivated, 
-      isActivationSuccessful, 
-      isJobCreated,
-      hasBeenValidated,
-      allRowsValidated,
-      showValidateButton,
-      hasUnsavedChanges,
-      modifiedRows: modifiedRows.length
-    });
+
   }, [isActivated, isActivationSuccessful, isJobCreated, hasBeenValidated, allRowsValidated, showValidateButton, hasUnsavedChanges, modifiedRows]);
 
   // Add state for row actions menu
@@ -2349,8 +2310,8 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
               {/* Activate Button - Always show but disable when not validated */}
               <Tooltip
                 title={
-                  !hasBeenValidated || !allRowsValidated
-                    ? 'All rows must be validated successfully before activation'
+                  !hasBeenValidated
+                    ? 'Validation must be attempted before activation'
                     : isActivated 
                       ? 'Mapper is already activated'
                       : 'Activate mapper configuration'
@@ -2360,7 +2321,7 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
                   <Button
                     variant="contained"
                     onClick={handleActivate}
-                    disabled={!hasBeenValidated || !allRowsValidated || !bulkValidationSuccess || isActivated}
+                    disabled={!hasBeenValidated || !bulkValidationSuccess || isActivated}
                     sx={{
                       height: '30px',
                       minWidth: '70px',
@@ -2905,9 +2866,27 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
           style={{ minHeight: '400px' }} /* Increase table height to use space efficiently */
         >
           {/* Remove title section and add row button from here */}
-          <TableContainer className="max-h-[calc(100vh-15rem)]">
-            {' '}
-            {/* Increased height even more to utilize space */}
+          <TableContainer 
+            className="overflow-auto"
+            sx={{ 
+              maxHeight: 'calc(100vh - 15rem)',
+              '&::-webkit-scrollbar': {
+                width: '8px',
+                height: '8px',
+              },
+              '&::-webkit-scrollbar-track': {
+                backgroundColor: darkMode ? 'rgba(55, 65, 81, 0.3)' : 'rgba(229, 231, 235, 0.3)',
+                borderRadius: '4px',
+              },
+              '&::-webkit-scrollbar-thumb': {
+                backgroundColor: darkMode ? 'rgba(156, 163, 175, 0.5)' : 'rgba(107, 114, 128, 0.5)',
+                borderRadius: '4px',
+                '&:hover': {
+                  backgroundColor: darkMode ? 'rgba(156, 163, 175, 0.7)' : 'rgba(107, 114, 128, 0.7)',
+                },
+              },
+            }}
+          >
             <Table stickyHeader size="small" sx={{ 
               borderCollapse: 'collapse',
               '& .MuiTableCell-root': {
@@ -3180,25 +3159,25 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
                 </TableRow>
               </TableHead>
               <TableBody>
-                {rows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row, index) => (
+                {rows.map((row, index) => (
                   <TableRow
                     key={index}
-                    onClick={() => handleRowClick(index + page * rowsPerPage)}
+                    onClick={() => handleRowClick(index)}
                     className={`
                           transition-colors duration-150 cursor-pointer
                           ${
-                            modifiedRows.includes(index + page * rowsPerPage)
+                            modifiedRows.includes(index)
                               ? darkMode
                                 ? 'bg-green-900/20 hover:bg-green-900/30'
                                 : 'bg-green-50 hover:bg-green-100/70'
                               : darkMode
                               ? `hover:bg-gray-700/50 ${
-                                  selectedRowIndex === index + page * rowsPerPage
+                                  selectedRowIndex === index
                                     ? 'bg-gray-700/70'
                                     : ''
                                 }`
                               : `hover:bg-blue-50/30 ${
-                                  selectedRowIndex === index + page * rowsPerPage
+                                  selectedRowIndex === index
                                     ? 'bg-blue-50/50'
                                     : ''
                                 }`
@@ -3227,7 +3206,7 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
                         checked={row.primaryKey}
                         onChange={(e) =>
                           handleRowChange(
-                            index + page * rowsPerPage,
+                            index,
                             'primaryKey',
                             e.target.checked
                           )
@@ -3243,14 +3222,14 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
                       <TextField
                         value={row.pkSeq}
                         onChange={(e) =>
-                          handleNumberChange(e, index + page * rowsPerPage, 'pkSeq')
+                          handleNumberChange(e, index, 'pkSeq')
                         }
                         disabled={!row.primaryKey}
                         size="small"
                         fullWidth
                         variant="outlined"
-                        error={!!pkSeqErrors[index + page * rowsPerPage]}
-                        helperText={pkSeqErrors[index + page * rowsPerPage]}
+                        error={!!pkSeqErrors[index]}
+                        helperText={pkSeqErrors[index]}
                         inputProps={{
                           min: 0,
                           max: 999,
@@ -3266,14 +3245,14 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
                             height: '26px',
                             borderRadius: '0',
                             '& fieldset': {
-                              borderColor: pkSeqErrors[index + page * rowsPerPage]
+                              borderColor: pkSeqErrors[index]
                                 ? darkMode
                                   ? 'rgba(239,68,68,0.7)'
                                   : 'rgba(239,68,68,0.7)'
                                 : 'transparent',
                             },
                             '&:hover fieldset': {
-                              borderColor: pkSeqErrors[index + page * rowsPerPage]
+                              borderColor: pkSeqErrors[index]
                                 ? darkMode
                                   ? 'rgba(239,68,68,0.9)'
                                   : 'rgba(239,68,68,0.9)'
@@ -3283,7 +3262,7 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
                             },
                             '&.Mui-focused fieldset': {
                               borderWidth: '1px !important',
-                              borderColor: pkSeqErrors[index + page * rowsPerPage]
+                              borderColor: pkSeqErrors[index]
                                 ? darkMode
                                   ? 'rgba(239,68,68,1)'
                                   : 'rgba(239,68,68,1)'
@@ -3325,7 +3304,7 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
                             .toUpperCase()
                             .slice(0, 30)
                           handleRowChange(
-                            index + page * rowsPerPage,
+                            index,
                             'fieldName',
                             value
                           )
@@ -3389,7 +3368,7 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
                         disabled={!!row.mapdtlid}
                         onChange={(event, newValue) => {
                           handleRowChange(
-                            index + page * rowsPerPage,
+                            index,
                             'dataType',
                             newValue ? newValue.PRCD : ''
                           )
@@ -3477,7 +3456,7 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
                         onChange={(e) => {
                           const value = e.target.value.slice(0, 100)
                           handleRowChange(
-                            index + page * rowsPerPage,
+                            index,
                             'fieldDesc',
                             value
                           )
@@ -3528,7 +3507,7 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
                             value={row.scdType}
                             onChange={(e) =>
                               handleRowChange(
-                                index + page * rowsPerPage,
+                                index,
                                 'scdType',
                                 e.target.value
                               )
@@ -3639,10 +3618,10 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
                         <div className="absolute top-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity">
                           <Tooltip title="Edit SQL Logic">
                             <IconButton
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleOpenSqlEditor(index + page * rowsPerPage);
-                              }}
+                                                          onClick={(e) => {
+                              e.stopPropagation();
+                              handleOpenSqlEditor(index);
+                            }}
                               size="small"
                               sx={{ 
                                 padding: '2px',
@@ -3662,7 +3641,7 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
                         onChange={(e) => {
                           const value = e.target.value.slice(0, 250)
                           handleRowChange(
-                            index + page * rowsPerPage,
+                            index,
                             'keyColumn',
                             value
                           )
@@ -3705,7 +3684,7 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
                         onChange={(e) => {
                           const value = e.target.value.slice(0, 250)
                           handleRowChange(
-                            index + page * rowsPerPage,
+                            index,
                             'valColumn',
                             value
                           )
@@ -3750,7 +3729,7 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
                           const value = e.target.value;
                           if (value === '' || (/^\d+$/.test(value) && parseInt(value) <= 5000)) {
                             handleRowChange(
-                              index + page * rowsPerPage,
+                              index,
                               'execSequence',
                               value
                             )
@@ -3803,7 +3782,7 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
                         onChange={(e) => {
                           const value = e.target.value.slice(0, 30)
                           handleRowChange(
-                            index + page * rowsPerPage,
+                            index,
                             'mapCombineCode',
                             value
                           )
@@ -3847,14 +3826,14 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
                             ? 'Validate this row'
                             : row.LogicVerFlag === 'Y'
                             ? 'Logic is valid'
-                            : errorMessages[index + page * rowsPerPage] ||
+                            : errorMessages[index] ||
                               'Logic is invalid'
                         }
                       >
                         <IconButton
                           onClick={(e) => {
                             e.stopPropagation() // Prevent row selection
-                            handleValidateRow(index + page * rowsPerPage)
+                            handleValidateRow(index)
                           }}
                           size="small"
                           sx={{
@@ -3900,7 +3879,7 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
                     {/* Add Actions cell */}
                     <TableCell className="py-0 px-0" align="center" sx={{ padding: '0px 2px' }}>
                       <IconButton
-                        onClick={(e) => handleRowMenuOpen(e, index + page * rowsPerPage)}
+                        onClick={(e) => handleRowMenuOpen(e, index)}
                         size="small"
                         sx={{
                           padding: '2px',
@@ -3923,49 +3902,74 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
             </Table>
           </TableContainer>
           
-          {/* Position pagination and add button in the same row */}
-          <div className="flex justify-between items-center">
-            <div className="flex items-center">
-              {/* Add Row button moved to left side near pagination */}
-              <Tooltip title="Add Row">
-                <IconButton
-                  color="primary"
-                  size="small"
-                  onClick={addRow}
-                  sx={{
-                    margin: '0 12px',
-                    backgroundColor: darkMode ? 'rgba(59, 130, 246, 0.2)' : 'rgba(59, 130, 246, 0.1)',
-                    '&:hover': {
-                      backgroundColor: darkMode ? 'rgba(59, 130, 246, 0.3)' : 'rgba(59, 130, 246, 0.2)',
-                    },
-                  }}
-                >
-                  <AddIcon fontSize="small" />
-                </IconButton>
-              </Tooltip>
+          {/* Enhanced Add Row section */}
+          <div className={`flex justify-between items-center px-4 py-3 border-t ${
+            darkMode 
+              ? 'border-gray-700 bg-gray-800/30' 
+              : 'border-gray-200 bg-gray-50/50'
+          }`}>
+            <div className="flex items-center gap-3">
+              <Button
+                variant="contained"
+                onClick={addRow}
+                startIcon={<AddIcon />}
+                sx={{
+                  textTransform: 'none',
+                  borderRadius: '8px',
+                  fontSize: '0.875rem',
+                  fontWeight: 500,
+                  padding: '8px 16px',
+                  background: darkMode 
+                    ? 'linear-gradient(135deg, #3B82F6, #1D4ED8)' 
+                    : 'linear-gradient(135deg, #2563EB, #1E40AF)',
+                  boxShadow: darkMode
+                    ? '0 4px 6px -1px rgba(59, 130, 246, 0.3), 0 2px 4px -1px rgba(59, 130, 246, 0.2)'
+                    : '0 4px 6px -1px rgba(37, 99, 235, 0.3), 0 2px 4px -1px rgba(37, 99, 235, 0.2)',
+                  '&:hover': {
+                    background: darkMode
+                      ? 'linear-gradient(135deg, #2563EB, #1E40AF)'
+                      : 'linear-gradient(135deg, #1D4ED8, #1E3A8A)',
+                    boxShadow: darkMode
+                      ? '0 6px 10px -1px rgba(59, 130, 246, 0.4), 0 4px 6px -1px rgba(59, 130, 246, 0.3)'
+                      : '0 6px 10px -1px rgba(37, 99, 235, 0.4), 0 4px 6px -1px rgba(37, 99, 235, 0.3)',
+                    transform: 'translateY(-1px)',
+                  },
+                  '&:active': {
+                    transform: 'translateY(0px)',
+                  },
+                  transition: 'all 0.2s ease-in-out',
+                }}
+              >
+                Add New Row
+              </Button>
+              
+              {/* Row count indicator */}
+              <div className={`flex items-center gap-2 px-3 py-1.5 rounded-md ${
+                darkMode 
+                  ? 'bg-gray-700/50 text-gray-300' 
+                  : 'bg-white/80 text-gray-600'
+              }`}>
+                <TableIcon fontSize="small" className={darkMode ? 'text-gray-400' : 'text-gray-500'} />
+                <span className="text-sm font-medium">
+                  {rows.filter(row => row.fieldName.trim() !== '').length} / {rows.length} rows
+                </span>
+              </div>
             </div>
             
-            {/* Pagination controls */}
-            <TablePagination
-              component="div"
-              count={rows.length}
-              page={page}
-              onPageChange={handleChangePage}
-              rowsPerPage={rowsPerPage}
-              onRowsPerPageChange={handleChangeRowsPerPage}
-              rowsPerPageOptions={[10, 25, 50]}
-              className={darkMode ? 'text-gray-200' : ''}
-              sx={{
-                '.MuiTablePagination-toolbar': {
-                  minHeight: '44px',
-                  paddingLeft: '12px',
-                  paddingRight: '12px',
-                },
-                '.MuiTablePagination-selectRoot': {
-                  marginRight: '8px'
-                }
-              }}
-            />
+            {/* Additional info or actions can go here */}
+            <div className="flex items-center gap-2">
+              <Tooltip title="Scroll to see all rows" placement="top">
+                <div className={`flex items-center gap-1 px-2 py-1 rounded text-xs ${
+                  darkMode 
+                    ? 'text-gray-400 bg-gray-700/30' 
+                    : 'text-gray-500 bg-gray-200/50'
+                }`}>
+                  <KeyboardArrowUpIcon fontSize="small" sx={{ fontSize: '16px' }} />
+                  <KeyboardArrowDownIcon fontSize="small" sx={{ fontSize: '16px' }} />
+                  <span>Scroll</span>
+                </div>
+              </Tooltip>
+            </div>
           </div>
           
           {/* Remove floating Add Row button */}

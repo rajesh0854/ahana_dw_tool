@@ -339,6 +339,13 @@ const JobsPage = () => {
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [viewMode, setViewMode] = useState('list');
   
+  // State for notifications
+  const [notification, setNotification] = useState({ 
+    open: false, 
+    message: '', 
+    severity: 'info' 
+  });
+  
   const muiTheme = useMuiTheme();
 
   // Handle scroll events
@@ -572,6 +579,19 @@ const JobsPage = () => {
   // Handle save schedule
   const handleSaveSchedule = async (jobId) => {
     try {
+      // Find the job to check if it's currently enabled/scheduled
+      const currentJob = jobs.find(job => job.JOBFLWID === jobId);
+      
+      // Check if job is currently enabled (scheduled)
+      if (currentJob && currentJob.JOB_SCHEDULE_STATUS === 'Scheduled') {
+        setNotification({
+          open: true,
+          message: 'Cannot update schedule details while job is enabled. Please disable the job first before updating schedule details.',
+          severity: 'warning'
+        });
+        return;
+      }
+      
       // Set saving state for this specific job
       setScheduleSaving(prev => ({ ...prev, [jobId]: true }));
       
@@ -767,6 +787,14 @@ const JobsPage = () => {
     setSearchTerm('');
     setTableTypeFilter('');
     setScheduleStatusFilter('');
+  };
+
+  // Handle notification close
+  const handleCloseNotification = () => {
+    setNotification(prev => ({
+      ...prev,
+      open: false
+    }));
   };
 
   // Filter apply to jobs
@@ -973,9 +1001,11 @@ const JobsPage = () => {
                 }}
               >
                 <MenuItem value="">All Types</MenuItem>
-                <MenuItem value="FACT">Fact</MenuItem>
-                <MenuItem value="DIM">Dimension</MenuItem>
-                <MenuItem value="STG">Staging</MenuItem>
+                {tableTypes.map((type) => (
+                  <MenuItem key={type} value={type}>
+                    {type}
+                  </MenuItem>
+                ))}
               </Select>
             </StyledFormControl>
             
@@ -1341,6 +1371,38 @@ const JobsPage = () => {
         isEnabling={isEnabling}
         onConfirm={handleConfirmEnableDisable}
       />
+
+      {/* Notification Snackbar */}
+      <Snackbar
+        open={notification.open}
+        autoHideDuration={6000}
+        onClose={handleCloseNotification}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert
+          onClose={handleCloseNotification}
+          severity={notification.severity}
+          sx={{
+            width: '100%',
+            borderRadius: '8px',
+            boxShadow: darkMode ? '0 4px 12px rgba(0, 0, 0, 0.3)' : '0 4px 12px rgba(0, 0, 0, 0.15)',
+            backgroundColor: darkMode ? 
+              (notification.severity === 'warning' ? 'rgba(234, 179, 8, 0.15)' : 'rgba(17, 24, 39, 0.95)') :
+              undefined,
+            border: darkMode ? 
+              (notification.severity === 'warning' ? '1px solid rgba(234, 179, 8, 0.3)' : '1px solid rgba(255, 255, 255, 0.1)') :
+              undefined,
+            '& .MuiAlert-icon': {
+              color: darkMode && notification.severity === 'warning' ? '#FBBF24' : undefined
+            },
+            '& .MuiAlert-message': {
+              color: darkMode ? '#E2E8F0' : undefined
+            }
+          }}
+        >
+          {notification.message}
+        </Alert>
+      </Snackbar>
     </motion.div>
     </LocalizationProvider>
   );
@@ -1475,13 +1537,32 @@ const ExecuteJobDialog = ({ open, onClose, job, onConfirm }) => {
         color: darkMode ? 'white' : '#1A202C',
         borderBottom: darkMode ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(0, 0, 0, 0.1)',
         px: 3,
-        py: 1.5
+        py: 2
       }}>
-        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          <Typography variant="h6" sx={{ fontWeight: 500, fontSize: '1rem' }}>
-            Execute Job: {job?.JOBID}
+        <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+          <PlayArrowIcon sx={{ mr: 1, color: darkMode ? '#60A5FA' : '#3B82F6' }} />
+          <Typography variant="h6" sx={{ fontWeight: 600, fontSize: '1.1rem' }}>
+            Execute Job
           </Typography>
         </Box>
+        {job && (
+          <Box sx={{ ml: 4 }}>
+            <Typography variant="body2" sx={{ 
+              color: darkMode ? '#E2E8F0' : '#4A5568',
+              fontWeight: 500,
+              fontSize: '0.875rem'
+            }}>
+              {job.MAPREF}
+            </Typography>
+            <Typography variant="body2" sx={{ 
+              color: darkMode ? '#A0AEC0' : '#718096',
+              fontSize: '0.8125rem',
+              mt: 0.5
+            }}>
+              Target: {job.TRGSCHM}.{job.TRGTBNM} ({job.TRGTBTYP})
+            </Typography>
+          </Box>
+        )}
         <IconButton
           aria-label="close"
           onClick={onClose}
@@ -1496,43 +1577,58 @@ const ExecuteJobDialog = ({ open, onClose, job, onConfirm }) => {
         </IconButton>
       </DialogTitle>
       <DialogContent sx={{ mt: 2, p: 3, color: darkMode ? 'white' : 'text.primary' }}>
-        <Typography variant="body1" sx={{ mb: 2 }}>
+        <Typography variant="body1" sx={{ mb: 2, fontSize: '0.9375rem' }}>
           Are you sure you want to execute this job immediately?
         </Typography>
-        <Button 
-          onClick={onConfirm} 
-          variant="contained" 
-          color="primary"
-          size="small"
-          sx={{ 
-            borderRadius: 1.5,
-            py: 0.5,
-            px: 2,
-            fontSize: '0.8125rem'
-          }}
-        >
-          Execute Now
-        </Button>
+        <Typography variant="body2" sx={{ 
+          color: darkMode ? '#A0AEC0' : '#718096',
+          fontSize: '0.8125rem',
+          fontStyle: 'italic'
+        }}>
+          This will trigger the job execution outside of its scheduled time.
+        </Typography>
       </DialogContent>
       <DialogActions sx={{ 
         backgroundColor: darkMode ? '#1A202C' : '#F9FAFB',
         borderTop: darkMode ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(0, 0, 0, 0.1)',
         px: 3,
-        py: 1.5
+        py: 2,
+        gap: 1
       }}>
         <Button 
           onClick={onClose} 
-          variant="contained" 
-          color="primary"
+          variant="outlined"
           size="small"
           sx={{ 
             borderRadius: 1.5,
-            py: 0.5,
-            px: 2,
-            fontSize: '0.8125rem'
+            py: 0.75,
+            px: 2.5,
+            fontSize: '0.8125rem',
+            borderColor: darkMode ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.2)',
+            color: darkMode ? '#E2E8F0' : '#4A5568',
+            '&:hover': {
+              borderColor: darkMode ? 'rgba(255, 255, 255, 0.3)' : 'rgba(0, 0, 0, 0.3)',
+              backgroundColor: darkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'
+            }
           }}
         >
           Cancel
+        </Button>
+        <Button 
+          onClick={onConfirm} 
+          variant="contained" 
+          color="primary"
+          size="small"
+          startIcon={<PlayArrowIcon sx={{ fontSize: '1rem' }} />}
+          sx={{ 
+            borderRadius: 1.5,
+            py: 0.75,
+            px: 2.5,
+            fontSize: '0.8125rem',
+            fontWeight: 600
+          }}
+        >
+          Execute Now
         </Button>
       </DialogActions>
     </Dialog>

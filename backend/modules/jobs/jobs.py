@@ -250,6 +250,7 @@ def get_job_schedule_details(job_flow_id):
 
 ####################### Scheduled Jobs and Logs #######################
 
+
 # get list of scheduled jobs
 @jobs_bp.route('/get_scheduled_jobs', methods=['GET'])
 def get_scheduled_jobs():
@@ -263,6 +264,7 @@ def get_scheduled_jobs():
                     jl.mapref AS job_name,
                     pl.status,
                     pl.strtdt AS actual_start_date,
+                    err.errmsg||chr(10)||err.dberrmsg error_message,
                     -- Convert INTERVAL to total seconds, handle NULL end dates
                     CASE 
                         WHEN pl.enddt IS NOT NULL THEN
@@ -273,10 +275,18 @@ def get_scheduled_jobs():
                         ELSE NULL
                     END AS run_duration_seconds,
                     jl.sessionid AS session_id
-                FROM dwjoblog jl, dwprclog pl
+                    
+                FROM dwjoblog jl, dwprclog pl, dwjoberr err
+                
                 WHERE pl.jobid = jl.jobid 
-                    AND TRUNC(pl.strtdt) = TRUNC(jl.prcdt)
-                    AND jl.reccrdt >= SYSDATE - 30
+                
+                      AND   err.sessionid(+) = pl.sessionid
+                	  AND   err.prcid(+)     = pl.prcid
+               		  AND   err.mapref(+)    = pl.mapref
+                	  AND   err.jobid(+)     = pl.jobid
+                	  
+                      AND TRUNC(pl.strtdt) = TRUNC(jl.prcdt)
+                      AND jl.reccrdt >= SYSDATE - 30
                 ORDER BY jl.reccrdt DESC
             """
             cursor = conn.cursor()
@@ -340,24 +350,26 @@ def get_job_and_process_log_details(mapref):
     try:
         conn = create_oracle_connection()
         query = """ 
-        SELECT 
-            DJL.PRCDT as PROCESS_DATE,
-            DJL.MAPREF as MAP_REFERENCE,
-            DJL.JOBID as JOB_ID,
-            DJL.SRCROWS as SOURCE_ROWS,
-            DJL.TRGROWS as TARGET_ROWS,
-            DJL.ERRROWS as ERROR_ROWS,
-            DPL.STRTDT as START_DATE,
-            DPL.ENDDT as END_DATE,
-            DPL.STATUS as STATUS
-        FROM 
-            TRG.DWJOBLOG DJL
-        INNER JOIN 
-            TRG.DWPRCLOG DPL
-        ON 
-            DJL.JOBID = DPL.JOBID
-        WHERE 
-            DJL.MAPREF = :mapref
+                select jbl.prcdt as PROCESS_DATE
+                      ,jbl.mapref as MAP_REFERENCE
+                	  ,jbl.jobid as JOB_ID
+                	  ,jbl.srcrows as SOURCE_ROWS
+                	  ,jbl.trgrows as target_rows
+                	  ,jbl.errrows as ERROR_ROWS
+                	  ,prc.strtdt as START_DATE
+                	  ,prc.enddt as END_DATE
+                	  ,prc.status as STATUS
+                      ,err.errmsg||chr(10)||err.dberrmsg ERROR_MESSAGE
+                from dwjoblog jbl
+                    ,dwprclog prc
+                	,dwjoberr err
+                where jbl.mapref = :mapref
+                and   jbl.jobid        = prc.jobid
+                and   err.sessionid(+) = prc.sessionid
+                and   err.prcid(+)     = prc.prcid
+                and   err.mapref(+)    = prc.mapref
+                and   err.jobid(+)     = prc.jobid
+                order by start_date desc;
         """
         cursor = conn.cursor()
         cursor.execute(query, {'mapref': mapref})
@@ -411,6 +423,11 @@ def save_job_schedule():
         end_date = data.get('ENDDT')
         
         conn = create_oracle_connection()
+
+        # Ensure job is disabled before saving the new schedule details
+
+
+
         try:
             cursor = conn.cursor()
             # Call the Oracle package function
