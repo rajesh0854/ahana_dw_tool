@@ -1,19 +1,14 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { 
-  Container, 
-  Paper, 
-  Typography, 
-  Box, 
-  Avatar, 
-  Grid, 
-  Divider, 
-  Button, 
-  IconButton, 
-  Chip,
-  Card,
-  CardContent,
+import { useState, useEffect, useRef } from 'react';
+import {
+  Container,
+  Paper,
+  Typography,
+  Box,
+  Avatar,
+  Grid,
+  Button,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -22,14 +17,16 @@ import {
   useTheme,
   alpha,
   Stack,
-  Tooltip,
   Alert,
   Snackbar,
-  useMediaQuery
+  useMediaQuery,
+  Link,
+  Fade,
+  Divider
 } from '@mui/material';
-import { 
-  Edit as EditIcon, 
-  Security as SecurityIcon, 
+import {
+  Edit as EditIcon,
+  Security as SecurityIcon,
   Logout as LogoutIcon,
   EmailOutlined as EmailIcon,
   PhoneOutlined as PhoneIcon,
@@ -38,138 +35,90 @@ import {
   AccountCircle as AccountIcon,
   Person as PersonIcon,
   SaveOutlined as SaveIcon,
-  Cancel as CancelIcon
+  Language as LanguageIcon,
+  LinkedIn as LinkedInIcon,
+  Twitter as TwitterIcon,
+  GitHub as GitHubIcon,
+  Business as BusinessIcon,
+  Code as CodeIcon,
+  CheckCircle as CheckCircleIcon
 } from '@mui/icons-material';
-import { styled } from '@mui/material/styles';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import { useRouter } from 'next/navigation';
 import ProtectedRoute from '../components/ProtectedRoute';
 
-const ProfileCard = styled(Card)(({ theme }) => ({
-  borderRadius: theme.spacing(2),
-  boxShadow: '0 8px 24px rgba(0, 0, 0, 0.06)',
-  overflow: 'visible',
-  position: 'relative',
-  border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
-  maxWidth: '100%',
-  transition: 'transform 0.3s ease, box-shadow 0.3s ease',
-  '&:hover': {
-    boxShadow: '0 12px 28px rgba(0, 0, 0, 0.08)',
-  }
-}));
-
-const ProfileAvatar = styled(Avatar)(({ theme }) => ({
-  width: 80,
-  height: 80,
-  border: `4px solid ${theme.palette.background.paper}`,
-  boxShadow: '0 6px 16px rgba(0, 0, 0, 0.08)',
-  fontSize: '2rem',
-  backgroundColor: theme.palette.primary.main,
-  position: 'absolute',
-  top: -24,
-  left: 24,
-  transition: 'transform 0.3s ease',
-  '&:hover': {
-    transform: 'scale(1.05)',
-  },
-  [theme.breakpoints.down('md')]: {
-    left: '50%',
-    transform: 'translateX(-50%)',
-    top: -40,
-    width: 72,
-    height: 72,
-    '&:hover': {
-      transform: 'translateX(-50%) scale(1.05)',
-    },
-  },
-}));
-
-const InfoItemCard = styled(Card)(({ theme }) => ({
-  borderRadius: theme.spacing(2),
-  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.04)',
-  height: '100%',
-  border: `1px solid ${alpha(theme.palette.divider, 0.5)}`,
-  transition: 'all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)',
-  '&:hover': {
-    borderColor: alpha(theme.palette.primary.main, 0.3),
-    transform: 'translateY(-4px)',
-    boxShadow: '0 8px 20px rgba(0, 0, 0, 0.08), 0 4px 10px rgba(0, 0, 0, 0.06)',
-  }
-}));
-
-const ProfileField = ({ label, value, icon }) => (
-  <Box 
-    sx={{ 
-      display: 'flex', 
-      alignItems: 'center', 
-      mb: 1.5,
-      transition: 'transform 0.2s ease',
-      '&:hover': {
-        transform: 'translateX(4px)'
-      }
-    }}
-  >
-    <Box 
-      sx={{ 
-        mr: 1.5, 
-        color: 'primary.main',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.1),
-        borderRadius: '50%',
-        p: 0.75,
-        width: 32,
-        height: 32
-      }}
-    >
-      {icon}
-    </Box>
-    <Box>
-      <Typography variant="caption" color="textSecondary" fontWeight="500">
-        {label}
-      </Typography>
-      <Typography variant="body2" fontWeight="medium">
-        {value || 'Not specified'}
-      </Typography>
-    </Box>
-  </Box>
-);
-
 const ProfilePage = () => {
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const isTablet = useMediaQuery(theme.breakpoints.down('md'));
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const isSmall = useMediaQuery(theme.breakpoints.down('sm'));
   const { user, logout, updateUserProfile } = useAuth();
   const router = useRouter();
   const [profileData, setProfileData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
   const [openPasswordDialog, setOpenPasswordDialog] = useState(false);
   const [openEditDialog, setOpenEditDialog] = useState(false);
   const [notification, setNotification] = useState({ open: false, message: '', severity: 'success' });
   const [editedData, setEditedData] = useState({
-    first_name: '',
-    last_name: '',
-    email: '',
-    phone: '',
-    department: ''
+    first_name: '', last_name: '', email: '', phone: '', department: ''
   });
   const [passwordData, setPasswordData] = useState({
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: ''
+    currentPassword: '', newPassword: '', confirmPassword: ''
   });
+
+  // Animation states
+  const [displayText, setDisplayText] = useState('');
+  const [isTypingComplete, setIsTypingComplete] = useState(false);
+  const typingIndex = useRef(0);
+  const animationStarted = useRef(false);
+
+  const developerName = "Ahana Dev Team";
+  const appVersion = "v2.0.0";
+
+  // Typing animation
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && !animationStarted.current) {
+          animationStarted.current = true;
+          setIsTypingComplete(false);
+          typingIndex.current = 0;
+          setDisplayText('');
+        }
+      },
+      { threshold: 0.5 }
+    );
+
+    const signatureElement = document.getElementById('developer-signature');
+    if (signatureElement) {
+      observer.observe(signatureElement);
+    }
+
+    return () => {
+      if (signatureElement) {
+        observer.unobserve(signatureElement);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!animationStarted.current || isTypingComplete) return;
+    
+    if (typingIndex.current < developerName.length) {
+      const timer = setTimeout(() => {
+        setDisplayText(prev => prev + developerName[typingIndex.current]);
+        typingIndex.current += 1;
+      }, 100);
+      
+      return () => clearTimeout(timer);
+    } else {
+      setIsTypingComplete(true);
+    }
+  }, [displayText, isTypingComplete]);
 
   useEffect(() => {
     if (!user) return;
-
-    // Initialize with user data from context
-    setProfileData({
-      ...user,
-      is_active: true
-    });
+    setProfileData({ ...user, is_active: true });
     setEditedData({
       first_name: user.first_name || '',
       last_name: user.last_name || '',
@@ -185,395 +134,520 @@ const ProfilePage = () => {
     router.push('/auth/login');
   };
 
-  const handleEditDialogOpen = () => {
-    setOpenEditDialog(true);
-  };
-
-  const handleEditDialogClose = () => {
-    setOpenEditDialog(false);
-  };
-
-  const handlePasswordDialogOpen = () => {
-    setOpenPasswordDialog(true);
-  };
-
+  const handleEditDialogOpen = () => setOpenEditDialog(true);
+  const handleEditDialogClose = () => setOpenEditDialog(false);
+  const handlePasswordDialogOpen = () => setOpenPasswordDialog(true);
   const handlePasswordDialogClose = () => {
     setOpenPasswordDialog(false);
-    setPasswordData({
-      currentPassword: '',
-      newPassword: '',
-      confirmPassword: ''
-    });
+    setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
   };
 
-  const handleEditChange = (e) => {
-    const { name, value } = e.target;
-    setEditedData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
-  const handlePasswordChange = (e) => {
-    const { name, value } = e.target;
-    setPasswordData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
+  const handleEditChange = (e) => setEditedData(prev => ({ ...prev, [e.target.name]: e.target.value }));
+  const handlePasswordChange = (e) => setPasswordData(prev => ({ ...prev, [e.target.name]: e.target.value }));
 
   const handleSaveProfile = async () => {
     try {
-      // TODO: Implement API call to save profile
-      // For now, just update local state
-      setProfileData(prev => ({
-        ...prev,
-        ...editedData
-      }));
-      
       updateUserProfile(editedData);
-      
-      setNotification({
-        open: true,
-        message: 'Profile updated successfully!',
-        severity: 'success'
-      });
+      setProfileData(prev => ({ ...prev, ...editedData }));
+      setNotification({ open: true, message: 'Profile updated successfully!', severity: 'success' });
       handleEditDialogClose();
     } catch (error) {
-      setNotification({
-        open: true,
-        message: 'Failed to update profile.',
-        severity: 'error'
-      });
+      setNotification({ open: true, message: 'Failed to update profile.', severity: 'error' });
     }
   };
 
   const handleChangePassword = async () => {
-    // Password validation
     if (passwordData.newPassword !== passwordData.confirmPassword) {
-      setNotification({
-        open: true,
-        message: 'New passwords do not match.',
-        severity: 'error'
-      });
+      setNotification({ open: true, message: 'New passwords do not match.', severity: 'error' });
       return;
     }
-
-    if (passwordData.newPassword.length < 8) {
-      setNotification({
-        open: true,
-        message: 'Password must be at least 8 characters.',
-        severity: 'error'
-      });
-      return;
-    }
-
     try {
-      // Implement API call to change password
-      setNotification({
-        open: true,
-        message: 'Password changed successfully!',
-        severity: 'success'
-      });
+      setNotification({ open: true, message: 'Password changed successfully!', severity: 'success' });
       handlePasswordDialogClose();
     } catch (error) {
-      setNotification({
-        open: true,
-        message: 'Failed to change password.',
-        severity: 'error'
-      });
+      setNotification({ open: true, message: 'Failed to change password.', severity: 'error' });
     }
   };
 
-  const handleCloseNotification = () => {
-    setNotification(prev => ({
-      ...prev,
-      open: false
-    }));
-  };
+  const handleCloseNotification = () => setNotification(prev => ({ ...prev, open: false }));
 
   if (loading) {
     return (
-      <Container sx={{ py: 4 }}>
-        <Box display="flex" justifyContent="center" alignItems="center" minHeight="60vh">
-          <Typography>Loading profile...</Typography>
-        </Box>
-      </Container>
+      <Box sx={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        minHeight: '100vh', 
+        bgcolor: 'background.default' 
+      }}>
+        <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }}>
+          <Avatar sx={{ width: 60, height: 60, bgcolor: 'primary.main' }}>
+            <PersonIcon sx={{ fontSize: 30 }} />
+          </Avatar>
+        </motion.div>
+      </Box>
     );
   }
 
   return (
     <ProtectedRoute>
-      <AnimatePresence>
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.5 }}
+      <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
+        {/* Header */}
+        <Paper 
+          elevation={0} 
+          sx={{ 
+            bgcolor: 'background.paper', 
+            borderBottom: 1, 
+            borderColor: 'divider', 
+            py: { xs: 1.5, md: 2 } 
+          }}
         >
-          <Container maxWidth="md" sx={{ py: { xs: 3, md: 4 } }}>
-            <motion.div
-              initial={{ y: 16 }}
-              animate={{ y: 0 }}
-              transition={{ 
-                type: "spring", 
-                stiffness: 300, 
-                damping: 20 
-              }}
+          <Container maxWidth="lg">
+            <Stack 
+              direction={{ xs: 'column', sm: 'row' }} 
+              justifyContent="space-between" 
+              alignItems={{ xs: 'stretch', sm: 'center' }}
+              spacing={{ xs: 2, sm: 0 }}
             >
-              <Box sx={{ position: 'relative', mt: { xs: 6, md: 3 }, mx: 'auto' }}>
-                {/* Profile header */}
-                <ProfileCard>
-                  <Box
-                    sx={{
-                      height: { xs: 64, md: 90 },
-                      background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
-                      borderTopLeftRadius: theme.spacing(2),
-                      borderTopRightRadius: theme.spacing(2),
-                      position: 'relative',
-                      overflow: 'hidden',
-                      '&::after': {
-                        content: '""',
-                        position: 'absolute',
-                        bottom: 0,
-                        right: 0,
-                        width: '40%',
-                        height: '100%',
-                        background: 'rgba(255, 255, 255, 0.1)',
-                        transform: 'skewX(-25deg) translateX(30%)',
-                      }
-                    }}
-                  />
-                  
-                  <ProfileAvatar>
-                    {profileData?.first_name?.charAt(0) || profileData?.username?.charAt(0) || 'U'}
-                  </ProfileAvatar>
+              <Typography variant="h5" fontWeight={600} color="text.primary">
+                My Profile
+              </Typography>
+              <Stack direction="row" spacing={1} sx={{ width: { xs: '100%', sm: 'auto' } }}>
+                <Button 
+                  variant="outlined" 
+                  size="small" 
+                  startIcon={<SecurityIcon />}
+                  onClick={handlePasswordDialogOpen}
+                  sx={{ 
+                    borderRadius: 2, 
+                    textTransform: 'none', 
+                    flex: { xs: 1, sm: 'none' },
+                    borderColor: 'divider',
+                    color: 'text.secondary',
+                    '&:hover': {
+                      borderColor: 'primary.main',
+                      color: 'primary.main'
+                    }
+                  }}
+                >
+                  Security
+                </Button>
+                <Button 
+                  variant="contained" 
+                  size="small" 
+                  startIcon={<LogoutIcon />}
+                  onClick={handleLogout}
+                  color="error"
+                  sx={{ 
+                    borderRadius: 2, 
+                    textTransform: 'none',
+                    flex: { xs: 1, sm: 'none' }
+                  }}
+                >
+                  Logout
+                </Button>
+              </Stack>
+            </Stack>
+          </Container>
+        </Paper>
 
-                  <Box sx={{ 
-                    pt: { xs: 4, md: 1.5 }, 
-                    pb: 2, 
-                    px: { xs: 2, md: 3 }, 
-                    mt: { xs: 1.5, md: 0 },
-                    display: 'flex',
-                    flexDirection: { xs: 'column', md: 'row' },
-                    alignItems: { xs: 'center', md: 'flex-end' },
-                    justifyContent: 'space-between'
-                  }}>
-                    <Box sx={{ 
-                      textAlign: { xs: 'center', md: 'left' },
-                      ml: { md: 10 }
+        <Container maxWidth="xl" sx={{ py: 1, height: 'calc(100vh - 100px)', overflow: 'hidden' }}>
+          <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+            {/* Top Row - Profile and Details */}
+            <Box sx={{ flex: '0 0 36%', mb: 2 }}>
+              <Grid container spacing={2} sx={{ height: '100%' }}>
+                {/* Profile Card */}
+                <Grid item xs={12} lg={3} md={3} sx={{ height: '100%' }}>
+                  <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} style={{ height: '100%' }}>
+                    <Paper sx={{ 
+                      p: 1.5, 
+                      borderRadius: 2, 
+                      border: 1, 
+                      borderColor: 'divider',
+                      bgcolor: 'background.paper',
+                      height: '100%',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      boxShadow: 'none'
                     }}>
-                      <Typography variant={isTablet ? "subtitle1" : "h6"} fontWeight="bold" gutterBottom>
-                        {`${profileData?.first_name || ''} ${profileData?.last_name || ''}`}
-                        {!profileData?.first_name && !profileData?.last_name && profileData?.username}
+                      <Box sx={{ textAlign: 'center', mb: 1.5, flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                        <Avatar sx={{ 
+                          width: 48, 
+                          height: 48, 
+                          mx: 'auto', 
+                          mb: 1,
+                          bgcolor: 'primary.main',
+                          fontSize: '1.2rem',
+                          fontWeight: 600
+                        }}>
+                          {profileData?.first_name?.charAt(0) || profileData?.username?.charAt(0) || 'U'}
+                        </Avatar>
+                        <Typography variant="subtitle1" fontWeight={600} color="text.primary" gutterBottom sx={{ fontSize: '0.9rem', lineHeight: 1.2 }}>
+                          {`${profileData?.first_name || ''} ${profileData?.last_name || ''}`.trim() || profileData?.username}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary" sx={{ mb: 1, fontSize: '0.75rem' }}>
+                          {profileData?.role || 'User'}
+                        </Typography>
+                        <Box sx={{ 
+                          display: 'inline-flex', 
+                          alignItems: 'center', 
+                          px: 1, 
+                          py: 0.25, 
+                          bgcolor: profileData?.is_active ? alpha(theme.palette.success.main, 0.1) : alpha(theme.palette.error.main, 0.1),
+                          color: profileData?.is_active ? 'success.main' : 'error.main',
+                          borderRadius: 1,
+                          fontSize: '0.65rem',
+                          fontWeight: 500,
+                          gap: 0.25,
+                          mx: 'auto'
+                        }}>
+                          <CheckCircleIcon sx={{ fontSize: '0.65rem' }} />
+                          {profileData?.is_active ? 'Active' : 'Inactive'}
+                        </Box>
+                      </Box>
+                      
+                      <Button 
+                        variant="contained" 
+                        fullWidth 
+                        startIcon={<EditIcon sx={{ fontSize: '1rem' }} />}
+                        onClick={handleEditDialogOpen}
+                        sx={{ 
+                          borderRadius: 1.5, 
+                          textTransform: 'none',
+                          py: 0.75,
+                          fontSize: '0.8rem',
+                          fontWeight: 500
+                        }}
+                      >
+                        Edit Profile
+                      </Button>
+                    </Paper>
+                  </motion.div>
+                </Grid>
+
+                {/* Details Section */}
+                <Grid item xs={12} lg={9} md={9} sx={{ height: '100%' }}>
+                  <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1 }} style={{ height: '100%' }}>
+                    <Paper sx={{ 
+                      p: 1.5, 
+                      borderRadius: 2, 
+                      border: 1, 
+                      borderColor: 'divider', 
+                      bgcolor: 'background.paper',
+                      height: '100%',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      boxShadow: 'none'
+                    }}>
+                      <Typography variant="h6" fontWeight={600} color="text.primary" sx={{ mb: 1.5, fontSize: '0.9rem' }}>
+                        Account Information
                       </Typography>
                       
-                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: { xs: 'center', md: 'flex-start' }, flexWrap: 'wrap', gap: 0.75 }}>
-                        <Chip 
-                          label={profileData?.role || 'User'} 
-                          color="primary" 
-                          size="small"
-                          sx={{ 
-                            fontWeight: 500, 
-                            height: 24,
-                            fontSize: '0.75rem',
-                            px: 0.75,
-                            borderRadius: '20px',
-                          }}
-                        />
-                        <Chip 
-                          label={profileData?.is_active ? 'Active' : 'Inactive'} 
-                          color={profileData?.is_active ? 'success' : 'error'} 
-                          size="small"
-                          variant="outlined"
-                          sx={{ 
-                            fontWeight: 500, 
-                            height: 24,
-                            fontSize: '0.75rem',
-                            px: 0.75,
-                            borderRadius: '20px', 
-                          }}
-                        />
+                      <Box sx={{ flex: 1, overflow: 'hidden' }}>
+                        <Grid container spacing={1.5} sx={{ height: '100%' }}>
+                          {[
+                            { label: 'Username', value: profileData?.username, icon: <AccountIcon color="primary" sx={{ fontSize: '1.1rem' }} /> },
+                            { label: 'Email', value: profileData?.email, icon: <EmailIcon color="primary" sx={{ fontSize: '1.1rem' }} /> },
+                            { label: 'Phone', value: profileData?.phone || 'Not provided', icon: <PhoneIcon color="primary" sx={{ fontSize: '1.1rem' }} /> },
+                            { label: 'Department', value: profileData?.department || 'Not specified', icon: <WorkIcon color="primary" sx={{ fontSize: '1.1rem' }} /> },
+                            { label: 'First Name', value: profileData?.first_name || 'Not provided', icon: <PersonIcon color="primary" sx={{ fontSize: '1.1rem' }} /> },
+                            { label: 'Last Name', value: profileData?.last_name || 'Not provided', icon: <PersonIcon color="primary" sx={{ fontSize: '1.1rem' }} /> }
+                          ].map((item, index) => (
+                            <Grid item xs={12} sm={6} lg={4} key={index} sx={{ height: '33.33%' }}>
+                              <Box sx={{ 
+                                p: 1, 
+                                bgcolor: alpha(theme.palette.primary.main, 0.03), 
+                                borderRadius: 1.5,
+                                border: 1,
+                                borderColor: alpha(theme.palette.primary.main, 0.08),
+                                transition: 'all 0.2s ease',
+                                height: '100%',
+                                display: 'flex',
+                                alignItems: 'center',
+                                '&:hover': {
+                                  borderColor: alpha(theme.palette.primary.main, 0.3),
+                                  bgcolor: alpha(theme.palette.primary.main, 0.06)
+                                }
+                              }}>
+                                <Stack direction="row" spacing={1} alignItems="center" sx={{ width: '100%' }}>
+                                  {item.icon}
+                                  <Box sx={{ minWidth: 0, flex: 1 }}>
+                                    <Typography variant="caption" color="text.secondary" fontWeight={500} sx={{ fontSize: '0.65rem' }}>
+                                      {item.label}
+                                    </Typography>
+                                    <Typography 
+                                      variant="body2" 
+                                      fontWeight={600} 
+                                      color="text.primary"
+                                      sx={{ 
+                                        wordBreak: 'break-word',
+                                        overflow: 'hidden',
+                                        textOverflow: 'ellipsis',
+                                        fontSize: '0.75rem',
+                                        lineHeight: 1.1
+                                      }}
+                                    >
+                                      {item.value}
+                                    </Typography>
+                                  </Box>
+                                </Stack>
+                              </Box>
+                            </Grid>
+                          ))}
+                        </Grid>
                       </Box>
-                    </Box>
-                    
-                    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{ mt: { xs: 2, md: 0 }, width: { xs: '100%', sm: 'auto' } }}>
-                      <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
-                        <Button 
-                          variant="outlined" 
-                          startIcon={<SecurityIcon sx={{ fontSize: isMobile ? 16 : 18 }} />}
-                          onClick={handlePasswordDialogOpen}
-                          fullWidth={isMobile}
-                          size={isMobile ? "small" : "medium"}
-                          sx={{ 
-                            borderRadius: 4,
-                            borderWidth: 1.5,
-                            fontSize: isMobile ? 12 : 13,
-                            py: isMobile ? 0.5 : 0.75,
-                            '&:hover': {
-                              borderWidth: 1.5,
-                              boxShadow: '0 3px 6px rgba(0, 0, 0, 0.07)',
-                            }
-                          }}
-                        >
-                          Change Password
-                        </Button>
-                      </motion.div>
-                      <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
-                        <Button 
-                          variant="contained" 
-                          color="primary"
-                          startIcon={<LogoutIcon sx={{ fontSize: isMobile ? 16 : 18 }} />}
-                          onClick={handleLogout}
-                          fullWidth={isMobile}
-                          size={isMobile ? "small" : "medium"}
-                          sx={{ 
-                            borderRadius: 4,
-                            fontSize: isMobile ? 12 : 13,
-                            py: isMobile ? 0.5 : 0.75,
-                            boxShadow: '0 3px 8px rgba(0, 0, 0, 0.12)',
-                            '&:hover': {
-                              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.16)',
-                            }
-                          }}
-                        >
-                          Logout
-                        </Button>
-                      </motion.div>
-                    </Stack>
-                  </Box>
-                </ProfileCard>
-
-                {/* Profile details */}
-                <Grid container spacing={2.5} sx={{ mt: 2.5 }}>
-                  <Grid item xs={12} md={6}>
-                    <motion.div 
-                      initial={{ opacity: 0, x: -16 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.2, duration: 0.4 }}
-                    >
-                      <InfoItemCard>
-                        <CardContent sx={{ p: { xs: 2, md: 2.5 } }}>
-                          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
-                            <Typography variant="subtitle1" fontWeight="bold" color="primary">
-                              Account Information
-                            </Typography>
-                            <motion.div whileHover={{ rotate: 180 }} transition={{ duration: 0.3 }}>
-                              <Tooltip title="Edit Profile">
-                                <IconButton onClick={handleEditDialogOpen} color="primary" size="small" sx={{ 
-                                  backgroundColor: alpha(theme.palette.primary.main, 0.1),
-                                  width: 32,
-                                  height: 32,
-                                  '&:hover': { backgroundColor: alpha(theme.palette.primary.main, 0.2) }
-                                }}>
-                                  <EditIcon fontSize="small" sx={{ fontSize: 18 }} />
-                                </IconButton>
-                              </Tooltip>
-                            </motion.div>
-                          </Box>
-                          <Divider sx={{ mb: 2 }} />
-                          
-                          <ProfileField 
-                            label="Username" 
-                            value={profileData?.username} 
-                            icon={<AccountIcon fontSize="small" sx={{ fontSize: 18 }} />}
-                          />
-                          <ProfileField 
-                            label="Email" 
-                            value={profileData?.email} 
-                            icon={<EmailIcon fontSize="small" sx={{ fontSize: 18 }} />}
-                          />
-                          <ProfileField 
-                            label="Account Status" 
-                            value={profileData?.is_active ? 'Active' : 'Inactive'} 
-                            icon={<SecurityIcon fontSize="small" sx={{ fontSize: 18 }} />}
-                          />
-                          <ProfileField 
-                            label="Member Since" 
-                            value={
-                              profileData?.created_at 
-                                ? new Date(profileData.created_at).toLocaleDateString('en-US', {
-                                    year: 'numeric',
-                                    month: 'long',
-                                    day: 'numeric'
-                                  })
-                                : undefined
-                            } 
-                            icon={<CalendarIcon fontSize="small" sx={{ fontSize: 18 }} />}
-                          />
-                        </CardContent>
-                      </InfoItemCard>
-                    </motion.div>
-                  </Grid>
-                  
-                  <Grid item xs={12} md={6}>
-                    <motion.div 
-                      initial={{ opacity: 0, x: 16 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.3, duration: 0.4 }}
-                    >
-                      <InfoItemCard>
-                        <CardContent sx={{ p: { xs: 2, md: 2.5 } }}>
-                          <Typography variant="subtitle1" fontWeight="bold" color="primary" gutterBottom>
-                            Personal Information
-                          </Typography>
-                          <Divider sx={{ mb: 2 }} />
-                          
-                          <ProfileField 
-                            label="First Name" 
-                            value={profileData?.first_name} 
-                            icon={<PersonIcon fontSize="small" sx={{ fontSize: 18 }} />}
-                          />
-                          <ProfileField 
-                            label="Last Name" 
-                            value={profileData?.last_name} 
-                            icon={<PersonIcon fontSize="small" sx={{ fontSize: 18 }} />}
-                          />
-                          <ProfileField 
-                            label="Phone" 
-                            value={profileData?.phone} 
-                            icon={<PhoneIcon fontSize="small" sx={{ fontSize: 18 }} />}
-                          />
-                          <ProfileField 
-                            label="Department" 
-                            value={profileData?.department} 
-                            icon={<WorkIcon fontSize="small" sx={{ fontSize: 18 }} />}
-                          />
-                        </CardContent>
-                      </InfoItemCard>
-                    </motion.div>
-                  </Grid>
+                    </Paper>
+                  </motion.div>
                 </Grid>
-              </Box>
-            </motion.div>
-          </Container>
-        </motion.div>
-      </AnimatePresence>
+              </Grid>
+            </Box>
 
-      {/* Edit Profile Dialog */}
+            {/* Bottom Row - Company and App Info */}
+            <Box sx={{ flex: '0 0 52%', mb: 1 }}>
+              <Grid container spacing={2} sx={{ height: '100%' }}>
+                {/* Company Info */}
+                <Grid item xs={12} md={6} sx={{ height: '100%' }}>
+                  <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }} style={{ height: '100%' }}>
+                    <Paper sx={{ 
+                      p: 2, 
+                      borderRadius: 2, 
+                      border: 1, 
+                      borderColor: 'divider',
+                      bgcolor: 'background.paper',
+                      height: '100%',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      boxShadow: 'none'
+                    }}>
+                      <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 2 }}>
+                        <Avatar sx={{ 
+                          bgcolor: alpha(theme.palette.primary.main, 0.1), 
+                          color: 'primary.main', 
+                          width: 36, 
+                          height: 36 
+                        }}>
+                          <BusinessIcon sx={{ fontSize: '1.1rem' }} />
+                        </Avatar>
+                        <Typography variant="h6" fontWeight={600} color="text.primary" sx={{ fontSize: '1.1rem' }}>
+                          About Company
+                        </Typography>
+                      </Stack>
+                      
+                      <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+                        <Typography variant="h6" fontWeight={700} color="text.primary" sx={{ fontSize: '1rem', mb: 1 }}>
+                          Ahana Systems & Solutions Pvt Ltd
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary" sx={{ mb: 2, fontStyle: 'italic', fontSize: '0.85rem' }}>
+                          "Creating Possibilities"
+                        </Typography>
+                        
+                        <Divider sx={{ my: 1.5 }} />
+                        
+                        <Stack spacing={1.5} sx={{ mt: 'auto' }}>
+                          <Stack direction="row" spacing={1.5} alignItems="center">
+                            <LanguageIcon sx={{ color: 'text.secondary', fontSize: 18 }} />
+                            <Link 
+                              href="https://www.ahanait.com" 
+                              target="_blank" 
+                              sx={{ 
+                                color: 'primary.main', 
+                                textDecoration: 'none', 
+                                fontSize: '0.85rem',
+                                fontWeight: 500,
+                                '&:hover': { textDecoration: 'underline' }
+                              }}
+                            >
+                              www.ahanait.com
+                            </Link>
+                          </Stack>
+                          <Stack direction="row" spacing={1.5} alignItems="center">
+                            <EmailIcon sx={{ color: 'text.secondary', fontSize: 18 }} />
+                            <Link 
+                              href="mailto:info@ahanait.co.in" 
+                              sx={{ 
+                                color: 'primary.main', 
+                                textDecoration: 'none', 
+                                fontSize: '0.85rem',
+                                fontWeight: 500,
+                                '&:hover': { textDecoration: 'underline' }
+                              }}
+                            >
+                              info@ahanait.co.in
+                            </Link>
+                          </Stack>
+                        </Stack>
+
+                        <Divider sx={{ my: 1.5 }} />
+
+                        <Box sx={{ mt: 'auto' }}>
+                          <Box sx={{ textAlign: 'center', mb: 1.5 }}>
+                            <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.85rem', fontWeight: 500 }}>
+                              Connect with us:
+                            </Typography>
+                          </Box>
+                          
+                          <Box sx={{ 
+                            display: 'flex', 
+                            gap: 1.5, 
+                            flexWrap: 'wrap',
+                            justifyContent: 'center',
+                            mb: 1.5
+                          }}>
+                            {[
+                              { icon: <LanguageIcon />, href: "https://www.ahanait.com", color: 'text.secondary' },
+                              { icon: <EmailIcon />, href: "mailto:info@ahanait.co.in", color: 'error.main' },
+                              { icon: <LinkedInIcon />, href: "https://www.linkedin.com/company/ahana-systems-solutions/", color: '#0077b5' },
+                              { icon: <TwitterIcon />, href: "https://twitter.com/ahana_it", color: '#1da1f2' },
+                              { icon: <GitHubIcon />, href: "https://github.com/ahana-systems", color: 'text.primary' }
+                            ].map((social, index) => (
+                              <Box
+                                key={index}
+                                component={Link}
+                                href={social.href}
+                                target="_blank"
+                                sx={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  width: 36,
+                                  height: 36,
+                                  borderRadius: 2,
+                                  bgcolor: alpha(theme.palette.primary.main, 0.05),
+                                  color: social.color,
+                                  textDecoration: 'none',
+                                  border: 1,
+                                  borderColor: alpha(theme.palette.primary.main, 0.1),
+                                  transition: 'all 0.2s ease',
+                                  '&:hover': { 
+                                    bgcolor: alpha(theme.palette.primary.main, 0.1),
+                                    borderColor: alpha(theme.palette.primary.main, 0.3),
+                                    transform: 'translateY(-2px)',
+                                    boxShadow: theme.shadows[3]
+                                  },
+                                  '& svg': {
+                                    fontSize: '1.1rem'
+                                  }
+                                }}
+                              >
+                                {social.icon}
+                              </Box>
+                            ))}
+                          </Box>
+                          
+                        </Box>
+                      </Box>
+                    </Paper>
+                  </motion.div>
+                </Grid>
+
+                {/* App Info */}
+                <Grid item xs={12} md={6} sx={{ height: '100%' }}>
+                  <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.3 }} style={{ height: '100%' }}>
+                    <Paper sx={{ 
+                      p: 2, 
+                      borderRadius: 2, 
+                      border: 1, 
+                      borderColor: 'divider',
+                      bgcolor: 'background.paper',
+                      height: '100%',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      boxShadow: 'none'
+                    }}>
+                      <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 2 }}>
+                        <Avatar sx={{ 
+                          bgcolor: alpha(theme.palette.secondary.main, 0.1), 
+                          color: 'secondary.main', 
+                          width: 36, 
+                          height: 36 
+                        }}>
+                          <CodeIcon sx={{ fontSize: '1.1rem' }} />
+                        </Avatar>
+                        <Typography variant="h6" fontWeight={600} color="text.primary" sx={{ fontSize: '1.1rem' }}>
+                          Application
+                        </Typography>
+                      </Stack>
+                      
+                      <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+                        <Grid container spacing={1.5} sx={{ mb: 2 }}>
+                          <Grid item xs={6}>
+                            <Box sx={{ 
+                              textAlign: 'center', 
+                              p: 1.5, 
+                              bgcolor: alpha(theme.palette.primary.main, 0.05), 
+                              borderRadius: 1.5,
+                              border: 1,
+                              borderColor: alpha(theme.palette.primary.main, 0.15)
+                            }}>
+                              <Typography variant="h5" fontWeight={700} color="primary.main" sx={{ fontSize: '1.1rem' }}>
+                                {appVersion}
+                              </Typography>
+                              <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
+                                Version
+                              </Typography>
+                            </Box>
+                          </Grid>
+                          <Grid item xs={6}>
+                            <Box sx={{ 
+                              textAlign: 'center', 
+                              p: 1.5, 
+                              bgcolor: alpha(theme.palette.success.main, 0.05), 
+                              borderRadius: 1.5,
+                              border: 1,
+                              borderColor: alpha(theme.palette.success.main, 0.15)
+                            }}>
+                              <Typography variant="h5" fontWeight={700} color="success.main" sx={{ fontSize: '1.1rem' }}>
+                                Active
+                              </Typography>
+                              <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
+                                Status
+                              </Typography>
+                            </Box>
+                          </Grid>
+                        </Grid>
+
+                        <Box sx={{ mt: 'auto', textAlign: 'center' }}>
+                          <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.75rem', fontStyle: 'italic', mb: 1 }}>
+                            Developed with ❤️
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.8rem' }}>
+                            © {new Date().getFullYear()} Ahana Systems & Solutions
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem', display: 'block', mt: 0.5 }}>
+                            Data Warehouse Management System
+                          </Typography>
+                        </Box>
+                      </Box>
+                    </Paper>
+                  </motion.div>
+                </Grid>
+              </Grid>
+            </Box>
+
+
+          </Box>
+        </Container>
+      </Box>
+
+      {/* Edit Dialog */}
       <Dialog 
         open={openEditDialog} 
-        onClose={handleEditDialogClose}
-        maxWidth="sm"
+        onClose={handleEditDialogClose} 
+        maxWidth="sm" 
         fullWidth
         PaperProps={{
-          elevation: 0,
           sx: {
-            borderRadius: 2,
-            border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
+            borderRadius: 3,
+            bgcolor: 'background.paper'
           }
         }}
-        TransitionComponent={motion.div}
       >
-        <DialogTitle sx={{ 
-          fontWeight: 600,
-          borderBottom: `1px solid ${theme.palette.divider}`,
-          pb: 1,
-          fontSize: '1.1rem'
-        }}>
-          Edit Profile
+        <DialogTitle sx={{ borderBottom: 1, borderColor: 'divider' }}>
+          <Typography variant="h6" fontWeight={600} color="text.primary">
+            Edit Profile
+          </Typography>
         </DialogTitle>
-        <DialogContent sx={{ pt: 2.5 }}>
+        <DialogContent sx={{ pt: 3 }}>
           <Grid container spacing={2}>
             <Grid item xs={12} sm={6}>
               <TextField
@@ -582,11 +656,8 @@ const ProfilePage = () => {
                 value={editedData.first_name}
                 onChange={handleEditChange}
                 fullWidth
-                variant="outlined"
                 size="small"
-                InputProps={{ 
-                  sx: { borderRadius: 1.5 } 
-                }}
+                sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
               />
             </Grid>
             <Grid item xs={12} sm={6}>
@@ -596,11 +667,8 @@ const ProfilePage = () => {
                 value={editedData.last_name}
                 onChange={handleEditChange}
                 fullWidth
-                variant="outlined"
                 size="small"
-                InputProps={{ 
-                  sx: { borderRadius: 1.5 } 
-                }}
+                sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
               />
             </Grid>
             <Grid item xs={12}>
@@ -610,11 +678,8 @@ const ProfilePage = () => {
                 value={editedData.email}
                 onChange={handleEditChange}
                 fullWidth
-                variant="outlined"
                 size="small"
-                InputProps={{ 
-                  sx: { borderRadius: 1.5 } 
-                }}
+                sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
               />
             </Grid>
             <Grid item xs={12} sm={6}>
@@ -624,11 +689,8 @@ const ProfilePage = () => {
                 value={editedData.phone}
                 onChange={handleEditChange}
                 fullWidth
-                variant="outlined"
                 size="small"
-                InputProps={{ 
-                  sx: { borderRadius: 1.5 } 
-                }}
+                sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
               />
             </Grid>
             <Grid item xs={12} sm={6}>
@@ -638,80 +700,49 @@ const ProfilePage = () => {
                 value={editedData.department}
                 onChange={handleEditChange}
                 fullWidth
-                variant="outlined"
                 size="small"
-                InputProps={{ 
-                  sx: { borderRadius: 1.5 } 
-                }}
+                sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
               />
             </Grid>
           </Grid>
         </DialogContent>
-        <DialogActions sx={{ px: 3, py: 1.5, borderTop: `1px solid ${theme.palette.divider}` }}>
-          <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
-            <Button 
-              onClick={handleEditDialogClose}
-              startIcon={<CancelIcon sx={{ fontSize: 18 }} />}
-              variant="outlined"
-              size="small"
-              sx={{ 
-                borderRadius: 4,
-                borderWidth: 1.5,
-                fontSize: 13,
-                '&:hover': {
-                  borderWidth: 1.5,
-                }
-              }}
-            >
-              Cancel
-            </Button>
-          </motion.div>
-          <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
-            <Button 
-              onClick={handleSaveProfile} 
-              color="primary" 
-              variant="contained"
-              startIcon={<SaveIcon sx={{ fontSize: 18 }} />}
-              size="small"
-              sx={{ 
-                borderRadius: 4,
-                fontSize: 13,
-                boxShadow: theme.shadows[1],
-                '&:hover': {
-                  boxShadow: theme.shadows[3],
-                }
-              }}
-            >
-              Save Changes
-            </Button>
-          </motion.div>
+        <DialogActions sx={{ p: 3, borderTop: 1, borderColor: 'divider' }}>
+          <Button 
+            onClick={handleEditDialogClose} 
+            sx={{ textTransform: 'none', color: 'text.secondary' }}
+          >
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleSaveProfile} 
+            variant="contained" 
+            startIcon={<SaveIcon />}
+            sx={{ textTransform: 'none' }}
+          >
+            Save Changes
+          </Button>
         </DialogActions>
       </Dialog>
 
-      {/* Change Password Dialog */}
+      {/* Password Dialog */}
       <Dialog 
         open={openPasswordDialog} 
-        onClose={handlePasswordDialogClose}
-        maxWidth="sm"
+        onClose={handlePasswordDialogClose} 
+        maxWidth="sm" 
         fullWidth
         PaperProps={{
-          elevation: 0,
           sx: {
-            borderRadius: 2,
-            border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
+            borderRadius: 3,
+            bgcolor: 'background.paper'
           }
         }}
-        TransitionComponent={motion.div}
       >
-        <DialogTitle sx={{ 
-          fontWeight: 600,
-          borderBottom: `1px solid ${theme.palette.divider}`,
-          pb: 1,
-          fontSize: '1.1rem'
-        }}>
-          Change Password
+        <DialogTitle sx={{ borderBottom: 1, borderColor: 'divider' }}>
+          <Typography variant="h6" fontWeight={600} color="text.primary">
+            Change Password
+          </Typography>
         </DialogTitle>
-        <DialogContent sx={{ pt: 2.5 }}>
+        <DialogContent sx={{ pt: 3 }}>
           <Grid container spacing={2}>
             <Grid item xs={12}>
               <TextField
@@ -721,11 +752,8 @@ const ProfilePage = () => {
                 value={passwordData.currentPassword}
                 onChange={handlePasswordChange}
                 fullWidth
-                variant="outlined"
                 size="small"
-                InputProps={{ 
-                  sx: { borderRadius: 1.5 } 
-                }}
+                sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
               />
             </Grid>
             <Grid item xs={12}>
@@ -736,11 +764,8 @@ const ProfilePage = () => {
                 value={passwordData.newPassword}
                 onChange={handlePasswordChange}
                 fullWidth
-                variant="outlined"
                 size="small"
-                InputProps={{ 
-                  sx: { borderRadius: 1.5 } 
-                }}
+                sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
               />
             </Grid>
             <Grid item xs={12}>
@@ -751,57 +776,30 @@ const ProfilePage = () => {
                 value={passwordData.confirmPassword}
                 onChange={handlePasswordChange}
                 fullWidth
-                variant="outlined"
                 size="small"
-                InputProps={{ 
-                  sx: { borderRadius: 1.5 } 
-                }}
+                sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
               />
             </Grid>
           </Grid>
         </DialogContent>
-        <DialogActions sx={{ px: 3, py: 1.5, borderTop: `1px solid ${theme.palette.divider}` }}>
-          <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
-            <Button 
-              onClick={handlePasswordDialogClose}
-              startIcon={<CancelIcon sx={{ fontSize: 18 }} />}
-              variant="outlined"
-              size="small"
-              sx={{ 
-                borderRadius: 4,
-                borderWidth: 1.5,
-                fontSize: 13,
-                '&:hover': {
-                  borderWidth: 1.5,
-                }
-              }}
-            >
-              Cancel
-            </Button>
-          </motion.div>
-          <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
-            <Button 
-              onClick={handleChangePassword} 
-              color="primary" 
-              variant="contained"
-              startIcon={<SecurityIcon sx={{ fontSize: 18 }} />}
-              size="small"
-              sx={{ 
-                borderRadius: 4,
-                fontSize: 13,
-                boxShadow: theme.shadows[1],
-                '&:hover': {
-                  boxShadow: theme.shadows[3],
-                }
-              }}
-            >
-              Update Password
-            </Button>
-          </motion.div>
+        <DialogActions sx={{ p: 3, borderTop: 1, borderColor: 'divider' }}>
+          <Button 
+            onClick={handlePasswordDialogClose} 
+            sx={{ textTransform: 'none', color: 'text.secondary' }}
+          >
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleChangePassword} 
+            variant="contained" 
+            startIcon={<SecurityIcon />}
+            sx={{ textTransform: 'none' }}
+          >
+            Update Password
+          </Button>
         </DialogActions>
       </Dialog>
-
-      {/* Notifications */}
+      
       <Snackbar 
         open={notification.open} 
         autoHideDuration={6000} 
@@ -812,11 +810,7 @@ const ProfilePage = () => {
           onClose={handleCloseNotification} 
           severity={notification.severity} 
           variant="filled"
-          sx={{ 
-            width: '100%',
-            borderRadius: 1.5,
-            boxShadow: '0 4px 16px rgba(0,0,0,0.12)'
-          }}
+          sx={{ borderRadius: 2 }}
         >
           {notification.message}
         </Alert>
