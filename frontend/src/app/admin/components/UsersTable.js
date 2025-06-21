@@ -7,7 +7,6 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  TablePagination,
   Typography,
   Paper,
   IconButton,
@@ -19,7 +18,12 @@ import {
   Avatar,
   useTheme,
   alpha,
-  Badge
+  Badge,
+  Menu,
+  MenuItem,
+  Checkbox,
+  ListItemText,
+  Divider
 } from '@mui/material';
 import { motion } from 'framer-motion';
 import SearchIcon from '@mui/icons-material/Search';
@@ -30,29 +34,28 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import CheckIcon from '@mui/icons-material/Check';
 import BlockIcon from '@mui/icons-material/Block';
-
-// Animation variants
-const tableRowVariants = {
-  hidden: { opacity: 0, x: -5 },
-  visible: i => ({
-    opacity: 1,
-    x: 0,
-    transition: {
-      delay: i * 0.03, // stagger effect
-      duration: 0.2,
-      ease: 'easeInOut'
-    }
-  }),
-  hover: { 
-    backgroundColor: 'rgba(0, 0, 0, 0.04)',
-    scale: 1.002,
-    transition: { duration: 0.1 }
-  },
-  tap: { scale: 0.99 }
-};
+import CloseIcon from '@mui/icons-material/Close';
 
 const UserTableRow = ({ user, index, onEdit, onDelete, onResetPassword, onApprove, onReject }) => {
   const theme = useTheme();
+  
+  const tableRowVariants = {
+    hidden: { opacity: 0, x: -5 },
+    visible: i => ({
+      opacity: 1,
+      x: 0,
+      transition: {
+        delay: i * 0.03, // stagger effect
+        duration: 0.2,
+        ease: 'easeInOut'
+      }
+    }),
+    hover: { 
+      backgroundColor: theme.palette.action.hover,
+      transition: { duration: 0.1 }
+    },
+    tap: { scale: 0.99 }
+  };
   
   const isPending = user.account_status === 'PENDING';
 
@@ -65,16 +68,16 @@ const UserTableRow = ({ user, index, onEdit, onDelete, onResetPassword, onApprov
       custom={index}
       whileHover="hover"
       sx={{ 
-        height: '45px',
+        height: '40px',
         '&:last-child td, &:last-child th': { border: 0 },
         borderRadius: '8px',
-        '& td': { borderBottom: `1px solid ${alpha(theme.palette.divider, 0.1)}`, py: 1 },
+        '& td': { borderBottom: `1px solid ${alpha(theme.palette.divider, 0.1)}`, py: 0.5 },
         '&:nth-of-type(odd)': {
           backgroundColor: alpha(theme.palette.action.hover, 0.04),
         },
       }}
     >
-      <TableCell component="th" scope="row" sx={{ py: 0.8 }}>
+      <TableCell component="th" scope="row" sx={{ py: 0.5 }}>
         <Box display="flex" alignItems="center" gap={1.2}>
           {isPending ? (
             <Badge
@@ -147,13 +150,13 @@ const UserTableRow = ({ user, index, onEdit, onDelete, onResetPassword, onApprov
         </Box>
       </TableCell>
       
-      <TableCell sx={{ py: 0.8 }}>
+      <TableCell sx={{ py: 0.5 }}>
         <Typography variant="body2" noWrap sx={{ fontSize: '0.8rem' }}>
           {user.email}
         </Typography>
       </TableCell>
       
-      <TableCell sx={{ py: 0.8 }}>
+      <TableCell sx={{ py: 0.5 }}>
         <Chip
           label={user.role_name || 'No role'}
           size="small"
@@ -168,7 +171,7 @@ const UserTableRow = ({ user, index, onEdit, onDelete, onResetPassword, onApprov
         />
       </TableCell>
       
-      <TableCell sx={{ py: 0.8 }}>
+      <TableCell sx={{ py: 0.5 }}>
         {isPending ? (
           <Chip
             label="Pending"
@@ -196,7 +199,7 @@ const UserTableRow = ({ user, index, onEdit, onDelete, onResetPassword, onApprov
         )}
       </TableCell>
       
-      <TableCell align="right" sx={{ py: 0.8 }}>
+      <TableCell align="right" sx={{ py: 0.5 }}>
         <Stack direction="row" spacing={0.5} justifyContent="flex-end">
           {isPending ? (
             <>
@@ -317,31 +320,61 @@ const UsersTable = ({
   onReject
 }) => {
   const theme = useTheme();
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
   const [searchTerm, setSearchTerm] = useState('');
+  const [filterAnchorEl, setFilterAnchorEl] = useState(null);
+  const [selectedRoles, setSelectedRoles] = useState([]);
+  const [selectedStatuses, setSelectedStatuses] = useState([]);
+
+  const handleFilterMenuOpen = (event) => {
+    setFilterAnchorEl(event.currentTarget);
+  };
+
+  const handleFilterMenuClose = () => {
+    setFilterAnchorEl(null);
+  };
+
+  const handleRoleToggle = (role) => {
+    setSelectedRoles((prev) =>
+      prev.includes(role) ? prev.filter((r) => r !== role) : [...prev, role]
+    );
+  };
+
+  const handleStatusToggle = (status) => {
+    setSelectedStatuses((prev) =>
+      prev.includes(status) ? prev.filter((s) => s !== status) : [...prev, status]
+    );
+  };
   
+  const clearFilters = () => {
+    setSelectedRoles([]);
+    setSelectedStatuses([]);
+    handleFilterMenuClose();
+  };
+
   // Combine users and pending approvals
   const allUsers = [...users, ...pendingApprovals];
   
+  const uniqueRoles = [...new Set(allUsers.map((u) => u.role_name).filter(Boolean))];
+  const allStatuses = ['Active', 'Inactive', 'Pending'];
+
   // Filter users based on search term
-  const filteredUsers = searchTerm 
-    ? allUsers.filter(user => 
-        user.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  const filteredUsers = allUsers.filter(user => {
+    const searchMatch = searchTerm 
+      ? user.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         user.first_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         user.last_name?.toLowerCase().includes(searchTerm.toLowerCase())
-      )
-    : allUsers;
-  
-  const handleChangePage = (event, newPage) => {
-    setPage(newPage);
-  };
-  
-  const handleChangeRowsPerPage = (event) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
-  };
+      : true;
+
+    const userStatus = user.account_status === 'PENDING' ? 'Pending' : (user.is_active ? 'Active' : 'Inactive');
+    
+    const statusMatch = selectedStatuses.length > 0 ? selectedStatuses.includes(userStatus) : true;
+    const roleMatch = selectedRoles.length > 0 ? selectedRoles.includes(user.role_name) : true;
+
+    return searchMatch && statusMatch && roleMatch;
+  });
+
+  const isFiltered = selectedRoles.length > 0 || selectedStatuses.length > 0;
   
   return (
     <Box sx={{ width: '100%' }}>
@@ -382,25 +415,28 @@ const UsersTable = ({
           
           <Stack direction="row" spacing={1} sx={{ ml: { xs: 0, sm: 'auto' } }}>
             <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-              <Button
-                variant="outlined"
-                startIcon={<FilterListIcon />}
-                sx={{
-                  borderRadius: 2,
-                  px: 1.5,
-                  py: 0.6,
-                  backgroundColor: alpha(theme.palette.background.paper, 0.6),
-                  borderColor: alpha(theme.palette.divider, 0.4),
-                  color: theme.palette.text.primary,
-                  fontSize: '0.8rem',
-                  '&:hover': {
-                    backgroundColor: alpha(theme.palette.background.paper, 0.8),
-                    borderColor: alpha(theme.palette.primary.main, 0.6),
-                  },
-                }}
-              >
-                Filters
-              </Button>
+              <Badge color="primary" variant="dot" invisible={!isFiltered}>
+                <Button
+                  variant="outlined"
+                  startIcon={<FilterListIcon />}
+                  onClick={handleFilterMenuOpen}
+                  sx={{
+                    borderRadius: 2,
+                    px: 1.5,
+                    py: 0.6,
+                    backgroundColor: alpha(theme.palette.background.paper, 0.6),
+                    borderColor: isFiltered ? theme.palette.primary.main : alpha(theme.palette.divider, 0.4),
+                    color: theme.palette.text.primary,
+                    fontSize: '0.8rem',
+                    '&:hover': {
+                      backgroundColor: alpha(theme.palette.background.paper, 0.8),
+                      borderColor: alpha(theme.palette.primary.main, 0.6),
+                    },
+                  }}
+                >
+                  Filters
+                </Button>
+              </Badge>
             </motion.div>
             
             <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
@@ -428,6 +464,84 @@ const UsersTable = ({
         </Paper>
       </Box>
       
+      <Menu
+        anchorEl={filterAnchorEl}
+        open={Boolean(filterAnchorEl)}
+        onClose={handleFilterMenuClose}
+        PaperProps={{
+          elevation: 0,
+          sx: {
+            overflow: 'visible',
+            filter: 'drop-shadow(0px 2px 8px rgba(0,0,0,0.1))',
+            mt: 1.5,
+            borderRadius: 2.5,
+            '& .MuiAvatar-root': {
+              width: 32,
+              height: 32,
+              ml: -0.5,
+              mr: 1,
+            },
+            '&:before': {
+              content: '""',
+              display: 'block',
+              position: 'absolute',
+              top: 0,
+              right: 14,
+              width: 10,
+              height: 10,
+              bgcolor: 'background.paper',
+              transform: 'translateY(-50%) rotate(45deg)',
+              zIndex: 0,
+            },
+          },
+        }}
+        transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+        anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+      >
+        <Box sx={{ pt:0, width: 240, display: 'flex', flexDirection: 'column' }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', p:1, pt: 1.5, pb: 0.5 }}>
+                <Typography variant="subtitle1" fontWeight={600} sx={{px: 1}}>Filter Users</Typography>
+                <IconButton size="small" onClick={handleFilterMenuClose}>
+                    <CloseIcon fontSize="small" />
+                </IconButton>
+            </Box>
+            <Divider sx={{ mb: 1 }} />
+
+            <Typography variant="caption" fontWeight={600} sx={{ px: 2, py: 0.5, color: 'text.secondary', textTransform: 'uppercase' }}>Status</Typography>
+            {allStatuses.map((status) => (
+              <MenuItem key={status} onClick={() => handleStatusToggle(status)} sx={{ borderRadius: 1, mx: 1, py: 0.3 }}>
+                <Checkbox checked={selectedStatuses.includes(status)} size="small" sx={{ p: 0.5, mr: 1 }} />
+                <ListItemText primary={status} primaryTypographyProps={{ fontSize: '0.875rem' }} />
+              </MenuItem>
+            ))}
+            
+            <Divider sx={{ my: 1 }} />
+            
+            <Typography variant="caption" fontWeight={600} sx={{ px: 2, py: 0.5, color: 'text.secondary', textTransform: 'uppercase' }}>Role</Typography>
+            {uniqueRoles.map((role) => (
+              <MenuItem key={role} onClick={() => handleRoleToggle(role)} sx={{ borderRadius: 1, mx: 1, py: 0.3 }}>
+                <Checkbox checked={selectedRoles.includes(role)} size="small" sx={{ p: 0.5, mr: 1 }} />
+                <ListItemText primary={role} primaryTypographyProps={{ fontSize: '0.875rem', noWrap:true }} />
+              </MenuItem>
+            ))}
+
+            {isFiltered && (
+            <Box sx={{p:1.5, pt: 0.5}}>
+                <Button
+                    fullWidth
+                    variant="outlined"
+                    size="small"
+                    onClick={clearFilters}
+                    startIcon={<RestartAltIcon />}
+                    sx={{ textTransform: 'none', fontSize: '0.8rem' }}
+                >
+                Clear Filters
+                </Button>
+            </Box>
+            )}
+        </Box>
+      </Menu>
+
       <TableContainer
         component={motion.div}
         initial={{ opacity: 0, y: 15 }}
@@ -438,10 +552,11 @@ const UsersTable = ({
           boxShadow: `0 6px 16px 0 ${alpha(theme.palette.common.black, 0.08)}`,
           backgroundColor: alpha(theme.palette.background.paper, 0.95),
           backdropFilter: 'blur(10px)',
-          overflow: 'hidden',
+          overflow: 'auto',
+          maxHeight: '498px',
         }}
       >
-        <Table size="small" sx={{ minWidth: 650 }}>
+        <Table stickyHeader size="small" sx={{ minWidth: 650 }}>
           <TableHead>
             <TableRow
               sx={{
@@ -466,7 +581,6 @@ const UsersTable = ({
           </TableHead>
           <TableBody>
             {filteredUsers
-              .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
               .map((user, index) => (
                 <UserTableRow
                   key={user.user_id}
@@ -496,39 +610,6 @@ const UsersTable = ({
             )}
           </TableBody>
         </Table>
-        
-        <Box
-          sx={{
-            display: 'flex',
-            justifyContent: 'flex-end',
-            alignItems: 'center',
-            p: 1,
-            borderTop: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-          }}
-        >
-          <TablePagination
-            component="div"
-            count={filteredUsers.length}
-            page={page}
-            onPageChange={handleChangePage}
-            rowsPerPage={rowsPerPage}
-            onRowsPerPageChange={handleChangeRowsPerPage}
-            rowsPerPageOptions={[5, 10, 25, 50]}
-            labelRowsPerPage=""
-            sx={{
-              '& .MuiTablePagination-toolbar': {
-                minHeight: 40,
-              },
-              '& .MuiTablePagination-selectIcon': {
-                width: 16,
-                height: 16,
-              },
-              '& .MuiTablePagination-select': {
-                paddingY: 0.5,
-              }
-            }}
-          />
-        </Box>
       </TableContainer>
     </Box>
   );

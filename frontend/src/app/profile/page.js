@@ -192,7 +192,7 @@ const ProfilePage = () => {
   return (
     <ProtectedRoute>
       <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
-        <Container maxWidth="lg" sx={{ py: 2 }}>
+        <Container maxWidth="xl" sx={{ py: 2 }}>
           {/* Header */}
           <Paper
             elevation={0}

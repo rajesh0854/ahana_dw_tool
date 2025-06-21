@@ -68,16 +68,10 @@ const ModernAdminDashboard = ({ initialActiveTab = 0 }) => {  const theme = useT
     getUserRoles 
   } = useAccessControl('admin_module');
   
-  // For roles table pagination
-  const [rolesPage, setRolesPage] = useState(0);
-  const [rolesPerPage, setRolesPerPage] = useState(10);
-  
-  // For audit logs table pagination
-  const [logsPage, setLogsPage] = useState(0);
-  const [logsPerPage, setLogsPerPage] = useState(10);
-
   const [roleSearchTerm, setRoleSearchTerm] = useState('');
   const [logSearchTerm, setLogSearchTerm] = useState('');
+  const [startDate, setStartDate] = useState(null);
+  const [endDate, setEndDate] = useState(null);
 
   const handleTabChange = useCallback((event, newValue) => {
     setActiveTab(newValue);
@@ -356,24 +350,6 @@ const ModernAdminDashboard = ({ initialActiveTab = 0 }) => {  const theme = useT
     }
   }, [loading, user, activeTab, refreshData, accessLoading, hasAccess]);
 
-  const handleRolesPageChange = (event, newPage) => {
-    setRolesPage(newPage);
-  };
-
-  const handleRolesPerPageChange = (event) => {
-    setRolesPerPage(parseInt(event.target.value, 10));
-    setRolesPage(0);
-  };
-
-  const handleLogsPageChange = (event, newPage) => {
-    setLogsPage(newPage);
-  };
-
-  const handleLogsPerPageChange = (event) => {
-    setLogsPerPage(parseInt(event.target.value, 10));
-    setLogsPage(0);
-  };
-
   // Filter roles based on search term
   const filteredRoles = roleSearchTerm
     ? roles.filter(role =>
@@ -382,26 +358,38 @@ const ModernAdminDashboard = ({ initialActiveTab = 0 }) => {  const theme = useT
       )
     : roles;
 
-  // Filter audit logs based on search term
-  const filteredLogs = logSearchTerm
-    ? auditLogs.filter(log =>
+  // Filter audit logs based on search term and date range
+  const filteredLogs = auditLogs.filter(log => {
+    const logDate = new Date(log.timestamp);
+    
+    // Check if the log date is after the start date
+    const isAfterStartDate = !startDate || logDate >= new Date(startDate);
+    
+    // Check if the log date is before the end date (end of day)
+    const isBeforeEndDate = !endDate || logDate <= new Date(new Date(endDate).setHours(23, 59, 59, 999));
+
+    // Check if the log matches the search term
+    const matchesSearch = !logSearchTerm || (
         log.username?.toLowerCase().includes(logSearchTerm.toLowerCase()) ||
         log.login_type?.toLowerCase().includes(logSearchTerm.toLowerCase()) ||
         log.ip_address?.toLowerCase().includes(logSearchTerm.toLowerCase()) ||
         log.status?.toLowerCase().includes(logSearchTerm.toLowerCase())
-      )
-    : auditLogs;
+    );
+    
+    return isAfterStartDate && isBeforeEndDate && matchesSearch;
+  });
 
   const renderRolesTable = () => {
     return (
-      <>
+      <Box sx={{ display: 'flex', flexDirection: 'column', flexGrow: 1, overflow: 'hidden' }}>
         <Box sx={{
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
           mb: 2,
           pb: 2,
-          borderBottom: `1px solid ${alpha(theme.palette.divider, 0.1)}`
+          borderBottom: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+          flexShrink: 0,
         }}>
           <Typography variant="h6" sx={{ fontWeight: 600 }}>
             Role Management
@@ -490,7 +478,8 @@ const ModernAdminDashboard = ({ initialActiveTab = 0 }) => {  const theme = useT
             boxShadow: `0 8px 32px 0 ${alpha(theme.palette.common.black, 0.1)}`,
             backgroundColor: alpha(theme.palette.background.paper, 0.95),
             backdropFilter: 'blur(10px)',
-            overflow: 'hidden',
+            overflow: 'auto',
+            flexGrow: 1,
           }}
         >
           {isLoadingRoles ? (
@@ -525,29 +514,28 @@ const ModernAdminDashboard = ({ initialActiveTab = 0 }) => {  const theme = useT
                 <TableBody>
                   {filteredRoles.length > 0 ? (
                     filteredRoles
-                      .slice(rolesPage * rolesPerPage, rolesPage * rolesPerPage + rolesPerPage)
                       .map((role) => (
                       <TableRow
                         key={role.role_id}
                         sx={{
-                          height: '48px',
+                          height: '40px',
                           '&:hover': {
                             backgroundColor: alpha(theme.palette.primary.main, 0.04),
                           },
-                          '& td': { borderBottom: `1px solid ${alpha(theme.palette.divider, 0.1)}` },
+                          '& td': { borderBottom: `1px solid ${alpha(theme.palette.divider, 0.1)}`, py: 0.5 },
                         }}
                       >
-                        <TableCell>
+                        <TableCell sx={{ py: 0.5 }}>
                           <Typography variant="body2" fontWeight={600}>
                             {role.role_name}
                           </Typography>
                         </TableCell>
-                        <TableCell>
+                        <TableCell sx={{ py: 0.5 }}>
                           <Typography variant="body2" color="text.secondary" noWrap>
                             {role.description || 'No description provided'}
                           </Typography>
                         </TableCell>
-                        <TableCell>
+                        <TableCell sx={{ py: 0.5 }}>
                           <Chip
                             label={role.is_system_role ? 'Yes' : 'No'}
                             size="small"
@@ -559,7 +547,7 @@ const ModernAdminDashboard = ({ initialActiveTab = 0 }) => {  const theme = useT
                             }}
                           />
                         </TableCell>
-                        <TableCell>
+                        <TableCell sx={{ py: 0.5 }}>
                           <Stack direction="row" spacing={0.5} flexWrap="wrap">
                             {Object.keys(role.permissions || {}).map((module) => {
                               const permissions = role.permissions[module];
@@ -598,7 +586,7 @@ const ModernAdminDashboard = ({ initialActiveTab = 0 }) => {  const theme = useT
                             })}
                           </Stack>
                         </TableCell>
-                        <TableCell align="right">
+                        <TableCell align="right" sx={{ py: 0.5 }}>
                           <Stack direction="row" spacing={1} justifyContent="flex-end">
                             <Tooltip title="Edit Role">
                               <IconButton
@@ -649,29 +637,10 @@ const ModernAdminDashboard = ({ initialActiveTab = 0 }) => {  const theme = useT
                   )}
                 </TableBody>
               </Table>
-              <Box
-                sx={{
-                  display: 'flex',
-                  justifyContent: 'flex-end',
-                  alignItems: 'center',
-                  p: 1,
-                  borderTop: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-                }}
-              >
-                <TablePagination
-                  component="div"
-                  count={filteredRoles.length}
-                  page={rolesPage}
-                  onPageChange={handleRolesPageChange}
-                  rowsPerPage={rolesPerPage}
-                  onRowsPerPageChange={handleRolesPerPageChange}
-                  rowsPerPageOptions={[5, 10, 25]}
-                />
-              </Box>
             </>
           )}
         </TableContainer>
-      </>
+      </Box>
     );
   };
 
@@ -687,7 +656,8 @@ const ModernAdminDashboard = ({ initialActiveTab = 0 }) => {  const theme = useT
           boxShadow: `0 8px 32px 0 ${alpha(theme.palette.common.black, 0.1)}`,
           backgroundColor: alpha(theme.palette.background.paper, 0.95),
           backdropFilter: 'blur(10px)',
-          overflow: 'hidden',
+          overflow: 'auto',
+          flexGrow: 1,
         }}
       >
         <Table size="small">
@@ -716,24 +686,23 @@ const ModernAdminDashboard = ({ initialActiveTab = 0 }) => {  const theme = useT
           <TableBody>
             {filteredLogs.length > 0 ? (
               filteredLogs
-                .slice(logsPage * logsPerPage, logsPage * logsPerPage + logsPerPage)
                 .map((log) => (
                 <TableRow
                   key={log.log_id}
                   sx={{
-                    height: '48px',
+                    height: '40px',
                     '&:hover': {
                       backgroundColor: alpha(theme.palette.primary.main, 0.04),
                     },
-                    '& td': { borderBottom: `1px solid ${alpha(theme.palette.divider, 0.1)}` },
+                    '& td': { borderBottom: `1px solid ${alpha(theme.palette.divider, 0.1)}`, py: 0.5 },
                   }}
                 >
-                  <TableCell>
+                  <TableCell sx={{ py: 0.5 }}>
                     <Typography variant="body2">
                       {new Date(log.timestamp).toLocaleString()}
                     </Typography>
                   </TableCell>
-                  <TableCell>
+                  <TableCell sx={{ py: 0.5 }}>
                     <Box display="flex" alignItems="center" gap={1}>
                       <Avatar
                         sx={{
@@ -748,15 +717,15 @@ const ModernAdminDashboard = ({ initialActiveTab = 0 }) => {  const theme = useT
                       <Typography variant="body2">{log.username}</Typography>
                     </Box>
                   </TableCell>
-                  <TableCell>
+                  <TableCell sx={{ py: 0.5 }}>
                     <Typography variant="body2">{log.login_type}</Typography>
                   </TableCell>
-                  <TableCell>
+                  <TableCell sx={{ py: 0.5 }}>
                     <Typography variant="body2" sx={{ fontFamily: 'monospace' }}>
                       {log.ip_address}
                     </Typography>
                   </TableCell>
-                  <TableCell>
+                  <TableCell sx={{ py: 0.5 }}>
                     <Chip
                       label={log.status.toUpperCase()}
                       size="small"
@@ -781,25 +750,6 @@ const ModernAdminDashboard = ({ initialActiveTab = 0 }) => {  const theme = useT
             )}
           </TableBody>
         </Table>
-        <Box
-          sx={{
-            display: 'flex',
-            justifyContent: 'flex-end',
-            alignItems: 'center',
-            p: 1,
-            borderTop: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-          }}
-        >
-          <TablePagination
-            component="div"
-            count={filteredLogs.length}
-            page={logsPage}
-            onPageChange={handleLogsPageChange}
-            rowsPerPage={logsPerPage}
-            onRowsPerPageChange={handleLogsPerPageChange}
-            rowsPerPageOptions={[5, 10, 25]}
-          />
-        </Box>
       </TableContainer>
     );
   };
@@ -815,6 +765,7 @@ const ModernAdminDashboard = ({ initialActiveTab = 0 }) => {  const theme = useT
             animate="animate"
             exit="exit"
             transition={{ duration: 0.3 }}
+            style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 160px)' }}
           >
             <MetricsSection 
               users={users} 
@@ -848,6 +799,7 @@ const ModernAdminDashboard = ({ initialActiveTab = 0 }) => {  const theme = useT
             animate="animate"
             exit="exit"
             transition={{ duration: 0.3 }}
+            style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 160px)' }}
           >
             {renderRolesTable()}
           </motion.div>
@@ -862,26 +814,9 @@ const ModernAdminDashboard = ({ initialActiveTab = 0 }) => {  const theme = useT
             animate="animate"
             exit="exit"
             transition={{ duration: 0.3 }}
+            style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 160px)' }}
           >
-            <Box sx={{ mb: 2 }}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                <Typography variant="h6" sx={{ fontWeight: 600 }}>Audit Logs</Typography>
-                <Tooltip title="Refresh">
-                  <IconButton
-                    onClick={loadAuditLogs}
-                    size="small"
-                    sx={{
-                      backgroundColor: alpha(theme.palette.primary.main, 0.1),
-                      '&:hover': {
-                        backgroundColor: alpha(theme.palette.primary.main, 0.2),
-                      }
-                    }}
-                  >
-                    <RefreshIcon fontSize="small" />
-                  </IconButton>
-                </Tooltip>
-              </Box>
-              
+            <Box sx={{ mb: 2, flexShrink: 0 }}>
               <Paper
                 elevation={0}
                 sx={{
@@ -918,30 +853,52 @@ const ModernAdminDashboard = ({ initialActiveTab = 0 }) => {  const theme = useT
                 />
                 
                 <TextField
-                  placeholder="Date range"
-                  variant="outlined"
+                  label="Start Date"
+                  type="date"
                   size="small"
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <CalendarTodayIcon sx={{ color: 'text.secondary', fontSize: '1.1rem' }} />
-                      </InputAdornment>
-                    ),
-                    sx: {
+                  value={startDate || ''}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  InputLabelProps={{ shrink: true }}
+                  sx={{
+                    width: { xs: 'calc(50% - 4px)', sm: 160 },
+                    '& .MuiInputBase-root': {
                       borderRadius: 2,
                       height: 36,
                       backgroundColor: theme.palette.background.paper,
-                      '& .MuiOutlinedInput-notchedOutline': {
-                        borderColor: alpha(theme.palette.divider, 0.4),
-                      }
+                    },
+                    '& .MuiOutlinedInput-notchedOutline': {
+                      borderColor: alpha(theme.palette.divider, 0.4),
                     }
                   }}
-                  sx={{ width: { xs: '100%', sm: 160 } }}
+                />
+                
+                <TextField
+                  label="End Date"
+                  type="date"
+                  size="small"
+                  value={endDate || ''}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  InputLabelProps={{ shrink: true }}
+                  sx={{
+                    width: { xs: 'calc(50% - 4px)', sm: 160 },
+                    '& .MuiInputBase-root': {
+                      borderRadius: 2,
+                      height: 36,
+                      backgroundColor: theme.palette.background.paper,
+                    },
+                    '& .MuiOutlinedInput-notchedOutline': {
+                      borderColor: alpha(theme.palette.divider, 0.4),
+                    }
+                  }}
                 />
                 
                 <Button
                   variant="outlined"
-                  startIcon={<FilterListIcon />}
+                  onClick={() => {
+                    setLogSearchTerm('');
+                    setStartDate(null);
+                    setEndDate(null);
+                  }}
                   sx={{
                     borderRadius: 2,
                     px: 1.5,
@@ -957,8 +914,22 @@ const ModernAdminDashboard = ({ initialActiveTab = 0 }) => {  const theme = useT
                     },
                   }}
                 >
-                  Filters
+                  Clear Filters
                 </Button>
+                <Tooltip title="Refresh">
+                  <IconButton
+                    onClick={loadAuditLogs}
+                    size="small"
+                    sx={{
+                      backgroundColor: alpha(theme.palette.primary.main, 0.1),
+                      '&:hover': {
+                        backgroundColor: alpha(theme.palette.primary.main, 0.2),
+                      }
+                    }}
+                  >
+                    <RefreshIcon fontSize="small" />
+                  </IconButton>
+                </Tooltip>
               </Paper>
             </Box>
             
