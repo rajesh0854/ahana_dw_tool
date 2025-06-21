@@ -184,9 +184,10 @@ const LogDetailsDialog = ({
         if (!log) return false;
         
         return (
-          (log.MAP_REFERENCE?.toString() || '').toLowerCase().includes(lowerSearchTerm) ||
-          (log.JOB_ID?.toString() || '').toLowerCase().includes(lowerSearchTerm) ||
-          (log.STATUS?.toString() || '').toLowerCase().includes(lowerSearchTerm)
+          (log.jobName?.toString() || '').toLowerCase().includes(lowerSearchTerm) ||
+          (log.logId?.toString() || '').toLowerCase().includes(lowerSearchTerm) ||
+          (log.status?.toString() || '').toLowerCase().includes(lowerSearchTerm) ||
+          (log.sessionId?.toString() || '').toLowerCase().includes(lowerSearchTerm)
         );
       });
     }
@@ -197,13 +198,13 @@ const LogDetailsDialog = ({
       startDateObj.setHours(0, 0, 0, 0); // Start of day
       
       filtered = filtered.filter(log => {
-        if (!log || !log.PROCESS_DATE) return false;
+        if (!log || !log.logDate) return false;
         
         try {
-          const processDate = new Date(log.PROCESS_DATE);
-          return processDate >= startDateObj;
+          const logDateObj = new Date(log.logDate);
+          return logDateObj >= startDateObj;
         } catch (error) {
-          console.error('Error parsing process date', error);
+          console.error('Error parsing log date', error);
           return false;
         }
       });
@@ -215,13 +216,13 @@ const LogDetailsDialog = ({
       endDateObj.setHours(23, 59, 59, 999);
       
       filtered = filtered.filter(log => {
-        if (!log || !log.PROCESS_DATE) return false;
+        if (!log || !log.logDate) return false;
         
         try {
-          const processDate = new Date(log.PROCESS_DATE);
-          return processDate <= endDateObj;
+          const logDateObj = new Date(log.logDate);
+          return logDateObj <= endDateObj;
         } catch (error) {
-          console.error('Error parsing process date', error);
+          console.error('Error parsing log date', error);
           return false;
         }
       });

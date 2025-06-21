@@ -65,14 +65,14 @@ const StyledTableRow = styled(TableRow)(({ theme, darkMode, status }) => {
   let bgColor = 'transparent';
   let hoverColor = darkMode ? alpha('#FFFFFF', 0.05) : alpha('#000000', 0.03);
   
-  // Status-based coloring
+  // Status-based coloring - Updated for new status codes
   if (status === 'FL') {
     bgColor = darkMode ? alpha(theme.palette.error.dark, 0.1) : alpha(theme.palette.error.light, 0.05);
     hoverColor = darkMode ? alpha(theme.palette.error.dark, 0.15) : alpha(theme.palette.error.light, 0.1);
-  } else if (status === 'SC') {
+  } else if (status === 'PC' || status === 'SC') {
     bgColor = darkMode ? alpha(theme.palette.success.dark, 0.05) : alpha(theme.palette.success.light, 0.03);
     hoverColor = darkMode ? alpha(theme.palette.success.dark, 0.1) : alpha(theme.palette.success.light, 0.07);
-  } else if (status === 'RN') {
+  } else if (status === 'IP' || status === 'RN') {
     bgColor = darkMode ? alpha(theme.palette.info.dark, 0.05) : alpha(theme.palette.info.light, 0.03);
     hoverColor = darkMode ? alpha(theme.palette.info.dark, 0.1) : alpha(theme.palette.info.light, 0.07);
   }
@@ -107,7 +107,7 @@ const LogStatusChip = styled(Chip)(({ theme, status, darkMode }) => {
   let backgroundColor;
   let borderColor;
   
-  if (status === 'SC') {
+  if (status === 'PC' || status === 'SC') {
     color = darkMode ? theme.palette.success.light : theme.palette.success.dark;
     backgroundColor = darkMode ? alpha(theme.palette.success.main, 0.2) : alpha(theme.palette.success.main, 0.1);
     borderColor = darkMode ? alpha(theme.palette.success.main, 0.3) : alpha(theme.palette.success.main, 0.2);
@@ -115,7 +115,7 @@ const LogStatusChip = styled(Chip)(({ theme, status, darkMode }) => {
     color = darkMode ? theme.palette.error.light : theme.palette.error.dark;
     backgroundColor = darkMode ? alpha(theme.palette.error.main, 0.2) : alpha(theme.palette.error.main, 0.1);
     borderColor = darkMode ? alpha(theme.palette.error.main, 0.3) : alpha(theme.palette.error.main, 0.2);
-  } else if (status === 'RN') {
+  } else if (status === 'IP' || status === 'RN') {
     color = darkMode ? theme.palette.info.light : theme.palette.info.dark;
     backgroundColor = darkMode ? alpha(theme.palette.info.main, 0.2) : alpha(theme.palette.info.main, 0.1);
     borderColor = darkMode ? alpha(theme.palette.info.main, 0.3) : alpha(theme.palette.info.main, 0.2);
@@ -176,8 +176,11 @@ const ErrorBadge = styled(Badge)(({ theme }) => ({
 // Function to get log status label
 const getLogStatusLabel = (status) => {
   if (!status) return 'Unknown';
-  if (status === 'SC') return 'Success';
+  if (status === 'PC') return 'Process Complete';
   if (status === 'FL') return 'Failed';
+  if (status === 'IP') return 'In Progress';
+  // Legacy status support
+  if (status === 'SC') return 'Success';
   if (status === 'RN') return 'Running';
   return status;
 };
@@ -185,9 +188,9 @@ const getLogStatusLabel = (status) => {
 // Function to get status icon
 const getStatusIcon = (status) => {
   if (!status) return <InfoIcon fontSize="small" />;
-  if (status === 'SC') return <CheckCircleIcon fontSize="small" />;
+  if (status === 'PC' || status === 'SC') return <CheckCircleIcon fontSize="small" />;
   if (status === 'FL') return <ErrorIcon fontSize="small" />;
-  if (status === 'RN') return <InfoIcon fontSize="small" />;
+  if (status === 'IP' || status === 'RN') return <InfoIcon fontSize="small" />;
   return null;
 };
 
@@ -217,105 +220,70 @@ const LogDetailsTable = ({ logDetails, darkMode, onViewErrors }) => {
       <StyledTable stickyHeader darkMode={darkMode} size={isMobile ? "small" : "medium"}>
         <TableHead>
           <TableRow>
-            <TableCell>Process Date</TableCell>
-            <TableCell>Job ID</TableCell>
-            <TableCell align="right">Source Rows</TableCell>
-            <TableCell align="right">Target Rows</TableCell>
-            <TableCell align="right">Error Rows</TableCell>
+            <TableCell>Log Date</TableCell>
+            <TableCell>Log ID</TableCell>
+            <TableCell>Session ID</TableCell>
             <TableCell>Start Time</TableCell>
-            <TableCell>End Time</TableCell>
+            <TableCell>Duration</TableCell>
             <TableCell>Status</TableCell>
             <TableCell align="center">Actions</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
           {validLogs.map((log, index) => {
-            // Find previous log for comparison if available
-            const prevLog = index < validLogs.length - 1 ? validLogs[index + 1] : null;
+            // Format duration from seconds
+            const formatDuration = (seconds) => {
+              if (!seconds || isNaN(seconds)) return 'N/A';
+              const totalSeconds = parseInt(seconds);
+              const hours = Math.floor(totalSeconds / 3600);
+              const minutes = Math.floor((totalSeconds % 3600) / 60);
+              const secs = totalSeconds % 60;
+              
+              if (hours > 0) {
+                return `${hours}h ${minutes}m ${secs}s`;
+              } else if (minutes > 0) {
+                return `${minutes}m ${secs}s`;
+              } else {
+                return `${secs}s`;
+              }
+            };
             
             return (
               <StyledTableRow 
-                key={index}
+                key={log.logId || index}
                 component={motion.tr}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, delay: index * 0.05 }}
                 darkMode={darkMode}
-                status={log.STATUS}
+                status={log.status}
               >
                 <TableCell>
-                  {formatDate(log.PROCESS_DATE, 'yyyy-MM-dd')}
+                  {formatDate(log.logDate, 'yyyy-MM-dd HH:mm:ss')}
                 </TableCell>
-                <TableCell>{log.JOB_ID || '-'}</TableCell>
-                <TableCell align="right">
-                  <ValueWithTrend 
-                    darkMode={darkMode} 
-                    value={isNaN(log.SOURCE_ROWS) ? 0 : log.SOURCE_ROWS || 0}
-                    comparison={prevLog ? (isNaN(prevLog.SOURCE_ROWS) ? 0 : prevLog.SOURCE_ROWS || 0) : 0}
-                  >
-                    {isNaN(log.SOURCE_ROWS) ? 0 : log.SOURCE_ROWS || 0}
-                    {prevLog && log.SOURCE_ROWS > prevLog.SOURCE_ROWS && (
-                      <TrendingUpIcon fontSize="small" />
-                    )}
-                    {prevLog && log.SOURCE_ROWS < prevLog.SOURCE_ROWS && (
-                      <TrendingDownIcon fontSize="small" />
-                    )}
-                  </ValueWithTrend>
-                </TableCell>
-                <TableCell align="right">
-                  <ValueWithTrend 
-                    darkMode={darkMode} 
-                    value={isNaN(log.TARGET_ROWS) ? 0 : log.TARGET_ROWS || 0}
-                    comparison={prevLog ? (isNaN(prevLog.TARGET_ROWS) ? 0 : prevLog.TARGET_ROWS || 0) : 0}
-                  >
-                    {isNaN(log.TARGET_ROWS) ? 0 : log.TARGET_ROWS || 0}
-                    {prevLog && log.TARGET_ROWS > prevLog.TARGET_ROWS && (
-                      <TrendingUpIcon fontSize="small" />
-                    )}
-                    {prevLog && log.TARGET_ROWS < prevLog.TARGET_ROWS && (
-                      <TrendingDownIcon fontSize="small" />
-                    )}
-                  </ValueWithTrend>
-                </TableCell>
-                <TableCell align="right">
-                  {(log.ERROR_ROWS && log.ERROR_ROWS > 0) ? (
-                    <ErrorBadge badgeContent={isNaN(log.ERROR_ROWS) ? 0 : log.ERROR_ROWS || 0} color="error" overlap="rectangular">
-                      <Typography 
-                        variant="body2" 
-                        color="error.main"
-                        fontWeight={600}
-                        component="span"
-                      >
-                        {isNaN(log.ERROR_ROWS) ? 0 : log.ERROR_ROWS || 0}
-                      </Typography>
-                    </ErrorBadge>
-                  ) : (
-                    <Typography variant="body2" component="span">
-                      0
-                    </Typography>
-                  )}
+                <TableCell>{log.logId || 'N/A'}</TableCell>
+                <TableCell>{log.sessionId || '-'}</TableCell>
+                <TableCell>
+                  {formatDate(log.actualStartDate, 'yyyy-MM-dd HH:mm:ss')}
                 </TableCell>
                 <TableCell>
-                  {formatDate(log.START_DATE, 'yyyy-MM-dd HH:mm:ss')}
-                </TableCell>
-                <TableCell>
-                  {formatDate(log.END_DATE, 'yyyy-MM-dd HH:mm:ss')}
+                  {formatDuration(log.runDurationSeconds)}
                 </TableCell>
                 <TableCell>
                   <LogStatusChip
-                    status={log.STATUS}
+                    status={log.status}
                     darkMode={darkMode}
-                    label={getLogStatusLabel(log.STATUS)}
+                    label={getLogStatusLabel(log.status)}
                     size="small"
-                    icon={getStatusIcon(log.STATUS)}
+                    icon={getStatusIcon(log.status)}
                   />
                 </TableCell>
                 <TableCell align="center">
-                  {log.STATUS === 'FL' && log.JOB_ID && (
-                    <Tooltip title="View Errors">
+                  {log.status === 'FL' && (
+                    <Tooltip title="View Error Details">
                       <ActionButton
                         darkMode={darkMode}
-                        onClick={() => onViewErrors(log.JOB_ID)}
+                        onClick={() => onViewErrors(log.logId || log.sessionId, log.errorMessage)}
                         size="small"
                       >
                         <ErrorIcon fontSize="small" />

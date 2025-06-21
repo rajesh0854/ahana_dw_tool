@@ -192,20 +192,22 @@ const ProfilePage = () => {
   return (
     <ProtectedRoute>
       <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
-        {/* Header */}
-        <Paper 
-          elevation={0} 
-          sx={{ 
-            bgcolor: 'background.paper', 
-            borderBottom: 1, 
-            borderColor: 'divider', 
-            py: { xs: 1.5, md: 2 } 
-          }}
-        >
-          <Container maxWidth="lg">
-            <Stack 
-              direction={{ xs: 'column', sm: 'row' }} 
-              justifyContent="space-between" 
+        <Container maxWidth="lg" sx={{ py: 2 }}>
+          {/* Header */}
+          <Paper
+            elevation={0}
+            sx={{
+              bgcolor: 'background.paper',
+              border: 1,
+              borderColor: 'divider',
+              borderRadius: 2,
+              p: { xs: 1.5, md: 2 },
+              mb: 2,
+            }}
+          >
+            <Stack
+              direction={{ xs: 'column', sm: 'row' }}
+              justifyContent="space-between"
               alignItems={{ xs: 'stretch', sm: 'center' }}
               spacing={{ xs: 2, sm: 0 }}
             >
@@ -213,46 +215,44 @@ const ProfilePage = () => {
                 My Profile
               </Typography>
               <Stack direction="row" spacing={1} sx={{ width: { xs: '100%', sm: 'auto' } }}>
-                <Button 
-                  variant="outlined" 
-                  size="small" 
+                <Button
+                  variant="outlined"
+                  size="small"
                   startIcon={<SecurityIcon />}
                   onClick={handlePasswordDialogOpen}
-                  sx={{ 
-                    borderRadius: 2, 
-                    textTransform: 'none', 
+                  sx={{
+                    borderRadius: 2,
+                    textTransform: 'none',
                     flex: { xs: 1, sm: 'none' },
                     borderColor: 'divider',
                     color: 'text.secondary',
                     '&:hover': {
                       borderColor: 'primary.main',
-                      color: 'primary.main'
-                    }
+                      color: 'primary.main',
+                    },
                   }}
                 >
                   Security
                 </Button>
-                <Button 
-                  variant="contained" 
-                  size="small" 
+                <Button
+                  variant="contained"
+                  size="small"
                   startIcon={<LogoutIcon />}
                   onClick={handleLogout}
                   color="error"
-                  sx={{ 
-                    borderRadius: 2, 
+                  sx={{
+                    borderRadius: 2,
                     textTransform: 'none',
-                    flex: { xs: 1, sm: 'none' }
+                    flex: { xs: 1, sm: 'none' },
                   }}
                 >
                   Logout
                 </Button>
               </Stack>
             </Stack>
-          </Container>
-        </Paper>
+          </Paper>
 
-        <Container maxWidth="xl" sx={{ py: 1, height: 'calc(100vh - 100px)', overflow: 'hidden' }}>
-          <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+          <Box sx={{ height: 'calc(100vh - 160px)', display: 'flex', flexDirection: 'column' }}>
             {/* Top Row - Profile and Details */}
             <Box sx={{ flex: '0 0 36%', mb: 2 }}>
               <Grid container spacing={2} sx={{ height: '100%' }}>
@@ -437,7 +437,34 @@ const ProfilePage = () => {
                         <Typography variant="h6" fontWeight={700} color="text.primary" sx={{ fontSize: '1rem', mb: 1 }}>
                           Ahana Systems & Solutions Pvt Ltd
                         </Typography>
-                        <Typography variant="body2" color="text.secondary" sx={{ mb: 2, fontStyle: 'italic', fontSize: '0.85rem' }}>
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            mb: 2,
+                            fontSize: '0.9rem',
+                            fontWeight: 'medium',
+                            fontStyle: 'italic',
+                            color: 'primary.main',
+                            letterSpacing: '0.05em',
+                            animation: 'shine 3s infinite ease-in-out',
+                            '@keyframes shine': {
+                              '0%, 100%': {
+                                textShadow: `
+                                  0 0 5px ${alpha(theme.palette.primary.main, 0.5)},
+                                  0 0 10px ${alpha(theme.palette.primary.main, 0.3)},
+                                  0 0 15px ${alpha(theme.palette.primary.main, 0.2)}
+                                `,
+                              },
+                              '50%': {
+                                textShadow: `
+                                  0 0 10px ${alpha(theme.palette.primary.main, 0.7)},
+                                  0 0 20px ${alpha(theme.palette.primary.main, 0.5)},
+                                  0 0 25px ${alpha(theme.palette.primary.main, 0.3)}
+                                `,
+                              },
+                            },
+                          }}
+                        >
                           "Creating Possibilities"
                         </Typography>
                         
@@ -623,8 +650,6 @@ const ProfilePage = () => {
                 </Grid>
               </Grid>
             </Box>
-
-
           </Box>
         </Container>
       </Box>

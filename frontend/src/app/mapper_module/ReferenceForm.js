@@ -255,6 +255,7 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
   ]
 
   const FREQ_CODES = [
+    { value: '', label: 'None' },
     { value: 'ID', label: 'Intraday' },
     { value: 'DL', label: 'Daily' },
     { value: 'WK', label: 'Weekly' },
@@ -844,7 +845,7 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
         reference: z
           .string()
           .min(1, 'Reference is required')
-          .max(30, 'Reference cannot exceed 30 characters')
+          .max(100, 'Reference cannot exceed 100 characters')
           .regex(/^[a-zA-Z0-9_]*$/, {
             message: 'Reference can only contain letters, numbers, and underscores',
           }),
@@ -861,7 +862,7 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
           .min(1, 'Table Name is required')
           .max(30, 'Table Name cannot exceed 30 characters'),
         tableType: z.string().min(1, 'Table Type is required'),
-        freqCode: z.string().min(1, 'Frequency Code is required'),
+        freqCode: z.string().optional(),
         sourceSystem: z
           .string()
           .min(1, 'Source System is required')
@@ -1236,7 +1237,10 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
       )
       const data = response.data
 
-      setFormData(data.formData)
+      setFormData({
+        ...data.formData,
+        freqCode: data.formData.freqCode || '',
+      })
       setRows(
         data.rows.length > 0
           ? data.rows.map((row) => ({
@@ -1498,7 +1502,7 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
     )
 
     if (filledRows.length === 0) {
-      message.warning('No rows to validate')
+      console.log('No rows to validate')
       return
     }
 

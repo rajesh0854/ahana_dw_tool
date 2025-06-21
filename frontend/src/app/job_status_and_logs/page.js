@@ -56,10 +56,13 @@ const JobStatusAndLogs = () => {
       
       const data = await response.json();
       
-      if (data.scheduled_jobs && data.column_names) {
-        // Use column names from the backend to map data
-        setColumnNames(data.column_names.map(name => name.toLowerCase()));
-        setScheduledJobs(data.scheduled_jobs);
+      if (data.jobs && Array.isArray(data.jobs)) {
+        // Store the grouped jobs directly from the API
+        setScheduledJobs(data.jobs);
+        // Set column names from summary if available
+        if (data.summary && data.summary.column_names) {
+          setColumnNames(data.summary.column_names.map(name => name.toLowerCase()));
+        }
         // Set default sort to lastRunDate in descending order
         setSortBy('lastRunDate');
         setSortOrder('desc');
@@ -78,108 +81,61 @@ const JobStatusAndLogs = () => {
     fetchScheduledJobs();
   }, []);
 
-  // Process raw job data into an array of objects
-  const processedJobs = useMemo(() => {
-    if (columnNames.length === 0 || scheduledJobs.length === 0) {
+  // Process grouped jobs from API into the expected format
+  const groupedJobs = useMemo(() => {
+    if (!scheduledJobs || !Array.isArray(scheduledJobs)) {
       return [];
     }
-    const processed = scheduledJobs.map(row => {
-      const jobObject = {};
-      columnNames.forEach((colName, index) => {
-        jobObject[colName] = row[index];
-      });
-      return jobObject;
-    });
-    
 
-    
-    return processed;
-  }, [scheduledJobs, columnNames]);
+    return scheduledJobs.map(jobGroup => {
+      const { job_name: jobName, logs } = jobGroup;
+      
+      // Process logs and calculate statistics
+      const processedLogs = logs.map(log => ({
+        logId: log.LOG_ID,
+        logDate: log.LOG_DATE,
+        jobName: log.JOB_NAME,
+        status: log.STATUS,
+        actualStartDate: log.ACTUAL_START_DATE,
+        errorMessage: log.ERROR_MESSAGE,
+        runDurationSeconds: log.RUN_DURATION_SECONDS,
+        sessionId: log.SESSION_ID
+      }));
 
-  // Group jobs by job name
-  const groupedJobs = useMemo(() => {
-    const grouped = {};
-    
-    processedJobs.forEach((job) => {
-      // Destructure using column names from the backend
-      const { 
-        log_id: logId,
-        job_id: jobId, 
-        log_date: logDate, 
-        job_name: jobName, 
-        status, 
-        actual_start_date: actualStartDate, 
-        error_message: errorMessage, 
-        run_duration_seconds: runDurationSeconds, 
-        session_id: sessionId 
-      } = job;
-      
+      // Calculate job statistics
+      const totalRuns = processedLogs.length;
+      const successfulRuns = processedLogs.filter(log => log.status === 'PC').length;
+      const failedRuns = processedLogs.filter(log => log.status === 'FL').length;
+      const inProgressRuns = processedLogs.filter(log => log.status === 'IP').length;
+      const hasFailedLogs = failedRuns > 0;
 
-      
-      // Ensure we have valid data
-      if (!jobName || !logId) {
-        return;
-      }
-      
-      if (!grouped[jobName]) {
-        grouped[jobName] = {
-          jobName,
-          logs: [],
-          latestStatus: status,
-          totalRuns: 0,
-          successfulRuns: 0,
-          failedRuns: 0,
-          inProgressRuns: 0,
-          lastRunDate: logDate,
-          avgDuration: 0,
-          hasFailedLogs: false
-        };
-      }
-      
-      grouped[jobName].logs.push({
-        logId,
-        jobId,
-        logDate,
-        status,
-        actualStartDate,
-        errorMessage,
-        runDurationSeconds,
-        sessionId
-      });
-      
-      grouped[jobName].totalRuns++;
-      if (status === 'PC') grouped[jobName].successfulRuns++;
-      if (status === 'FL') {
-        grouped[jobName].failedRuns++;
-        grouped[jobName].hasFailedLogs = true;
-      }
-      if (status === 'IP') grouped[jobName].inProgressRuns++;
-      
-      // This is now handled after grouping and sorting logs
-    });
+      // Get latest status and last run date (logs are already sorted by date desc from backend)
+      const latestStatus = processedLogs.length > 0 ? processedLogs[0].status : 'Unknown';
+      const lastRunDate = processedLogs.length > 0 ? processedLogs[0].logDate : null;
 
-    // Calculate average duration and set latest status for each job
-    Object.values(grouped).forEach(job => {
-      // Sort logs by date in descending order (newest first)
-      job.logs.sort((a, b) => new Date(b.logDate) - new Date(a.logDate));
-      
-      // Ensure latestStatus is from the most recent log
-      if (job.logs.length > 0) {
-        job.latestStatus = job.logs[0].status;
-        job.lastRunDate = job.logs[0].logDate;
-      }
-      
-      const validDurations = job.logs
+      // Calculate average duration
+      const validDurations = processedLogs
         .map(log => log.runDurationSeconds)
         .filter(duration => duration && duration !== null && !isNaN(duration));
       
-      if (validDurations.length > 0) {
-        job.avgDuration = validDurations.reduce((sum, duration) => sum + parseFloat(duration), 0) / validDurations.length;
-      }
-    });
+      const avgDuration = validDurations.length > 0 
+        ? validDurations.reduce((sum, duration) => sum + parseFloat(duration), 0) / validDurations.length 
+        : 0;
 
-    return Object.values(grouped);
-  }, [processedJobs]);
+      return {
+        jobName,
+        logs: processedLogs,
+        latestStatus,
+        totalRuns,
+        successfulRuns,
+        failedRuns,
+        inProgressRuns,
+        lastRunDate,
+        avgDuration,
+        hasFailedLogs
+      };
+    });
+  }, [scheduledJobs]);
 
   // Filter and sort jobs
   const filteredJobs = useMemo(() => {
@@ -292,15 +248,13 @@ const JobStatusAndLogs = () => {
     const job = groupedJobs.find(j => j.jobName === jobName);
     if (!job) return;
     
-    // Find all logs with the matching logId
-    const matchingLogs = job.logs.filter(l => l.logId === logId);
-    
-    // Prioritize logs with meaningful error messages
-    let log = matchingLogs.find(l => l.errorMessage && l.errorMessage.trim() !== '');
-    
-    // If no log with meaningful error message, use the first one
-    if (!log) {
-      log = matchingLogs[0];
+    // Find the specific log entry
+    let log;
+    if (logId) {
+      log = job.logs.find(l => l.logId === logId);
+    } else {
+      // If no logId provided, find the first failed log
+      log = job.logs.find(l => l.status === 'FL');
     }
     
     if (!log) return;
@@ -308,22 +262,23 @@ const JobStatusAndLogs = () => {
     const errorDetails = [];
     
     // Check if error message exists and is not just whitespace/newlines
-    const hasValidErrorMessage = log.errorMessage && log.errorMessage.trim() !== '';
+    const hasValidErrorMessage = log.errorMessage && log.errorMessage.trim() !== '' && log.errorMessage.trim() !== '\n';
     
     // Always create an error detail entry for failed jobs, even if no specific error message
     const errorMessage = hasValidErrorMessage ? log.errorMessage : 'Job failed but no specific error message was recorded.';
     
     errorDetails.push({
-      ERROR_ID: logId,
+      ERROR_ID: log.logId || 'N/A',
       ERROR_TYPE: 'Job Execution Error',
       PROCESS_DATE: log.actualStartDate || log.logDate,
       KEY_VALUE: jobName,
       ERROR_MESSAGE: errorMessage,
+      SESSION_ID: log.sessionId
     });
     
     setSelectedError({
       jobName,
-      logId,
+      logId: log.logId,
       errorDetails
     });
     setErrorDialogOpen(true);
@@ -353,7 +308,7 @@ const JobStatusAndLogs = () => {
   }
 
   return (
-    <div className={`min-h-screen ${darkMode ? 'bg-gray-900' : 'bg-gray-50'} p-2`}>
+    <div className={`h-screen flex flex-col ${darkMode ? 'bg-gray-900' : 'bg-gray-50'} p-2`}>
       <style jsx global>{`
         .custom-scrollbar::-webkit-scrollbar {
           width: 8px;
@@ -374,7 +329,7 @@ const JobStatusAndLogs = () => {
           background: ${darkMode ? 'rgba(107, 114, 128, 0.8)' : 'rgba(156, 163, 175, 0.8)'};
         }
       `}</style>
-      <div className="max-w-full mx-auto">
+      <div className="w-full flex flex-col h-full">
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -558,33 +513,43 @@ const JobStatusAndLogs = () => {
           animate={{ opacity: 1 }}
           transition={{ delay: 0.2 }}
           className={`
-            rounded-xl border overflow-hidden
+            flex-1 rounded-xl border overflow-hidden flex flex-col
             ${darkMode ? 'bg-gray-800/80 border-gray-700' : 'bg-white border-gray-200'}
             shadow-sm
           `}
         >
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className={`${darkMode ? 'bg-gray-700/80' : 'bg-gray-50/90'}`}>
-                <tr>
-                  <th className={`px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider ${darkMode ? 'text-gray-300' : 'text-gray-500'}`}>
-                    Job Details
-                  </th>
-                  <th className={`px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider ${darkMode ? 'text-gray-300' : 'text-gray-500'}`}>
-                    Status
-                  </th>
-                  <th className={`px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider ${darkMode ? 'text-gray-300' : 'text-gray-500'}`}>
-                    Statistics
-                  </th>
-                  <th className={`px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider ${darkMode ? 'text-gray-300' : 'text-gray-500'}`}>
-                    Last Run
-                  </th>
-                  <th className={`px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider ${darkMode ? 'text-gray-300' : 'text-gray-500'}`}>
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className={`divide-y ${darkMode ? 'divide-gray-700' : 'divide-gray-200'}`}>
+          {/* Table Header - Static */}
+          <div className={`${darkMode ? 'bg-gray-700/80' : 'bg-gray-50/90'} border-b ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr>
+                    <th className={`px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider ${darkMode ? 'text-gray-300' : 'text-gray-500'}`}>
+                      Job Details
+                    </th>
+                    <th className={`px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider ${darkMode ? 'text-gray-300' : 'text-gray-500'}`}>
+                      Status
+                    </th>
+                    <th className={`px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider ${darkMode ? 'text-gray-300' : 'text-gray-500'}`}>
+                      Statistics
+                    </th>
+                    <th className={`px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider ${darkMode ? 'text-gray-300' : 'text-gray-500'}`}>
+                      Last Run
+                    </th>
+                    <th className={`px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider ${darkMode ? 'text-gray-300' : 'text-gray-500'}`}>
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+              </table>
+            </div>
+          </div>
+          
+          {/* Table Body - Scrollable */}
+          <div className="flex-1 overflow-y-auto custom-scrollbar">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <tbody className={`divide-y ${darkMode ? 'divide-gray-700' : 'divide-gray-200'}`}>
                 <AnimatePresence>
                   {filteredJobs.map((job, index) => {
                     const statusDisplay = getStatusDisplay(job.latestStatus);
@@ -821,18 +786,21 @@ const JobStatusAndLogs = () => {
                   })}
                 </AnimatePresence>
               </tbody>
-            </table>
+              </table>
+            </div>
           </div>
           
           {filteredJobs.length === 0 && (
-            <div className="text-center py-16">
-              <Database size={64} className={`mx-auto mb-4 ${darkMode ? 'text-gray-600' : 'text-gray-400'} opacity-70`} />
-              <h3 className={`text-xl font-medium mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                No jobs found
-              </h3>
-              <p className={`text-sm ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>
-                Try adjusting your search or filter criteria
-              </p>
+            <div className="flex-1 flex items-center justify-center">
+              <div className="text-center py-16">
+                <Database size={64} className={`mx-auto mb-4 ${darkMode ? 'text-gray-600' : 'text-gray-400'} opacity-70`} />
+                <h3 className={`text-xl font-medium mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                  No jobs found
+                </h3>
+                <p className={`text-sm ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>
+                  Try adjusting your search or filter criteria
+                </p>
+              </div>
             </div>
           )}
         </motion.div>

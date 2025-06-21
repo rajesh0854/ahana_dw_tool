@@ -258,79 +258,103 @@ def get_scheduled_jobs():
         conn = create_oracle_connection()
         try:
             query = """ 
-                SELECT DISTINCT 
-                    jl.joblogid AS log_id,
-                    jl.reccrdt AS log_date,
-                    jl.mapref AS job_name,
-                    pl.status,
-                    pl.strtdt AS actual_start_date,
-                    err.errmsg||chr(10)||err.dberrmsg error_message,
-                    -- Convert INTERVAL to total seconds, handle NULL end dates
-                    CASE 
-                        WHEN pl.enddt IS NOT NULL THEN
-                            EXTRACT(DAY FROM (pl.enddt - pl.strtdt)) * 86400 + 
-                            EXTRACT(HOUR FROM (pl.enddt - pl.strtdt)) * 3600 + 
-                            EXTRACT(MINUTE FROM (pl.enddt - pl.strtdt)) * 60 + 
-                            EXTRACT(SECOND FROM (pl.enddt - pl.strtdt))
-                        ELSE NULL
-                    END AS run_duration_seconds,
-                    jl.sessionid AS session_id
-                    
-                FROM dwjoblog jl, dwprclog pl, dwjoberr err
-                
-                WHERE pl.jobid = jl.jobid 
-                
-                      AND   err.sessionid(+) = pl.sessionid
-                	  AND   err.prcid(+)     = pl.prcid
-               		  AND   err.mapref(+)    = pl.mapref
-                	  AND   err.jobid(+)     = pl.jobid
-                	  
-                      AND TRUNC(pl.strtdt) = TRUNC(jl.prcdt)
-                      AND jl.reccrdt >= SYSDATE - 30
-                ORDER BY jl.reccrdt DESC
+                    select 
+                    		jl.joblogid AS log_id,
+                    		pl.reccrdt AS log_date,
+                    		pl.mapref AS job_name,
+                    		pl.status,
+                    		pl.strtdt AS actual_start_date,
+                    		err.errmsg||chr(10)||err.dberrmsg error_message,
+                    		pl.sessionid AS session_id,
+                           case 
+                           when pl.enddt IS NOT NULL THEN
+                                EXTRACT(DAY FROM (pl.enddt - pl.strtdt)) * 86400 + 
+                                EXTRACT(HOUR FROM (pl.enddt - pl.strtdt)) * 3600 + 
+                                EXTRACT(MINUTE FROM (pl.enddt - pl.strtdt)) * 60 + 
+                                EXTRACT(SECOND FROM (pl.enddt - pl.strtdt))
+                           else null
+                           end as run_duration_seconds
+                    from dwprclog pl, dwjoblog jl, dwjoberr err
+                    where jl.jobid(+)      = pl.jobid 
+                    and   jl.sessionid(+)  = pl.sessionid
+                    and   jl.prcid(+)      = pl.prcid
+                    and   jl.mapref(+)     = pl.mapref
+                    and   err.sessionid(+) = pl.sessionid
+                    and   err.prcid(+)     = pl.prcid
+                    and   err.mapref(+)    = pl.mapref
+                    and   err.jobid(+)     = pl.jobid
+                    and   pl.reccrdt >= SYSDATE - 30
+                    order by pl.mapref, jl.reccrdt desc
+ 
             """
             cursor = conn.cursor()
             cursor.execute(query)
             column_names = [desc[0] for desc in cursor.description]
             raw_jobs = cursor.fetchall()
             
-            # Convert data to JSON-serializable format
-            scheduled_jobs = []
+            # Convert data to JSON-serializable format and group by job
+            jobs_dict = {}
+            
             for row in raw_jobs:
-                job_data = []
+                # Convert row data to proper format
+                log_entry = {}
                 for i, value in enumerate(row):
+                    column_name = column_names[i]
+                    
                     if value is None:
-                        job_data.append(None)
+                        log_entry[column_name] = None
                     elif hasattr(value, 'total_seconds'):  # timedelta object
                         # Convert timedelta to total seconds as number
-                        job_data.append(int(value.total_seconds()))
+                        log_entry[column_name] = int(value.total_seconds())
                     elif hasattr(value, 'isoformat'):  # datetime object
-                        job_data.append(value.isoformat())
+                        log_entry[column_name] = value.isoformat()
                     elif hasattr(value, 'read'):  # LOB object
                         try:
                             lob_data = value.read()
                             if isinstance(lob_data, bytes):
-                                job_data.append(lob_data.decode('utf-8'))
+                                log_entry[column_name] = lob_data.decode('utf-8')
                             else:
-                                job_data.append(str(lob_data))
+                                log_entry[column_name] = str(lob_data)
                         except Exception as e:
-                            job_data.append(f"Error reading LOB: {str(e)}")
+                            log_entry[column_name] = f"Error reading LOB: {str(e)}"
                     elif isinstance(value, (int, float)):  # Numeric values (including duration seconds)
-                        job_data.append(value)
+                        log_entry[column_name] = value
                     else:
-                        job_data.append(str(value) if value is not None else None)
+                        log_entry[column_name] = str(value) if value is not None else None
                 
-                scheduled_jobs.append(job_data)
+                # Group by job_name (which is the JOB_NAME column)
+                job_name = log_entry.get('JOB_NAME')
+                if job_name:
+                    if job_name not in jobs_dict:
+                        jobs_dict[job_name] = {
+                            'job_name': job_name,
+                            'logs': []
+                        }
+                    jobs_dict[job_name]['logs'].append(log_entry)
+            
+            # Convert dictionary to array for easier frontend consumption
+            grouped_jobs = list(jobs_dict.values())
+            
+            # Sort jobs by job name and logs by log date (most recent first)
+            grouped_jobs.sort(key=lambda x: x['job_name'])
+            for job in grouped_jobs:
+                job['logs'].sort(key=lambda x: x.get('LOG_DATE', ''), reverse=True)
             
             # Debug information
             print(f"Column names: {column_names}")
-            print(f"Number of jobs found: {len(scheduled_jobs)}")
-            if len(scheduled_jobs) > 0:
-                print(f"Sample job data: {scheduled_jobs[0]}")
+            print(f"Number of unique jobs found: {len(grouped_jobs)}")
+            total_logs = sum(len(job['logs']) for job in grouped_jobs)
+            print(f"Total log entries: {total_logs}")
+            if len(grouped_jobs) > 0:
+                print(f"Sample job: {grouped_jobs[0]['job_name']} with {len(grouped_jobs[0]['logs'])} logs")
                 
             return jsonify({
-                'column_names': column_names,
-                'scheduled_jobs': scheduled_jobs
+                'jobs': grouped_jobs,
+                'summary': {
+                    'total_jobs': len(grouped_jobs),
+                    'total_log_entries': total_logs,
+                    'column_names': column_names
+                }
             })
         finally:
             conn.close()
