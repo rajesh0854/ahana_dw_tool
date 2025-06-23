@@ -7,7 +7,6 @@ import { format } from 'date-fns'
 import {
   Box,
   Typography,
-  Container,
   Paper,
   Button,
   TextField,
@@ -23,14 +22,15 @@ import {
   IconButton,
   CircularProgress,
   Chip,
-  Divider,
-  TablePagination,
   useTheme,
-  Card,
-  CardContent,
   Tooltip,
   Fade,
   alpha,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  InputAdornment,
 } from '@mui/material'
 import {
   Add as AddIcon,
@@ -40,7 +40,7 @@ import {
   Save as SaveIcon,
   Info as InfoIcon,
   Refresh as RefreshIcon,
-  Settings as SettingsIcon,
+  Search as SearchIcon,
 } from '@mui/icons-material'
 
 export default function ParameterPage() {
@@ -50,11 +50,8 @@ export default function ParameterPage() {
   const [error, setError] = useState(null)
   const [showAddForm, setShowAddForm] = useState(false)
   const [filterType, setFilterType] = useState('')
+  const [searchQuery, setSearchQuery] = useState('')
   const [types, setTypes] = useState([])
-
-  // Pagination state
-  const [page, setPage] = useState(0)
-  const [rowsPerPage, setRowsPerPage] = useState(10)
 
   // Form state
   const [newParameter, setNewParameter] = useState({
@@ -74,11 +71,13 @@ export default function ParameterPage() {
       const response = await axios.get(
         `${process.env.NEXT_PUBLIC_API_URL}/mapping/parameter_mapping`
       )
-      setParameters(response.data)
+      const sortedData = response.data.sort(
+        (a, b) => new Date(b.PRRECCRDT) - new Date(a.PRRECCRDT)
+      )
+      setParameters(sortedData)
 
-      // Extract unique parameter types for filtering
       const uniqueTypes = [
-        ...new Set(response.data.map((param) => param.PRTYP)),
+        ...new Set(sortedData.map((param) => param.PRTYP)),
       ]
       setTypes(uniqueTypes)
 
@@ -91,7 +90,7 @@ export default function ParameterPage() {
 
   const handleAddParameter = async (e) => {
     e.preventDefault()
-
+    if (loading) return
     try {
       setLoading(true)
       await axios.post(
@@ -99,18 +98,13 @@ export default function ParameterPage() {
         newParameter
       )
 
-      // Reset form and refresh data
-      setNewParameter({
-        PRTYP: '',
-        PRCD: '',
-        PRDESC: '',
-        PRVAL: '',
-      })
+      setNewParameter({ PRTYP: '', PRCD: '', PRDESC: '', PRVAL: '' })
       setShowAddForm(false)
+      // Refresh data and handle loading state
       fetchParameters()
     } catch (err) {
       setError('Failed to add parameter. Please try again.')
-      setLoading(false)
+      setLoading(false) // Keep loading false on error
     }
   }
 
@@ -125,741 +119,316 @@ export default function ParameterPage() {
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A'
     try {
-      const date = new Date(dateString)
-      return format(date, 'MMM dd, yyyy HH:mm')
+      return format(new Date(dateString), 'MMM dd, yyyy HH:mm')
     } catch (err) {
-      return dateString.toString()
+      return String(dateString)
     }
   }
 
-  // Handle pagination changes
-  const handleChangePage = (event, newPage) => {
-    setPage(newPage)
-  }
+  const filteredParameters = parameters.filter((param) => {
+    const lowercasedQuery = searchQuery.toLowerCase()
 
-  const handleChangeRowsPerPage = (event) => {
-    setRowsPerPage(parseInt(event.target.value, 10))
-    setPage(0)
-  }
+    const typeMatch = !filterType || param.PRTYP === filterType
 
-  const filteredParameters = filterType
-    ? parameters.filter((param) => param.PRTYP === filterType)
-    : parameters
+    const searchMatch =
+      !searchQuery ||
+      param.PRTYP.toLowerCase().includes(lowercasedQuery) ||
+      param.PRCD.toLowerCase().includes(lowercasedQuery) ||
+      param.PRDESC.toLowerCase().includes(lowercasedQuery) ||
+      param.PRVAL.toLowerCase().includes(lowercasedQuery)
 
-  // Create paginated parameters
-  const paginatedParameters = filteredParameters.slice(
-    page * rowsPerPage,
-    page * rowsPerPage + rowsPerPage
-  )
+    return typeMatch && searchMatch
+  })
 
   return (
     <Box
       sx={{
-        minHeight: '100vh',
-        background:
+        height: 'calc(100vh - 64px)', // Adjust based on your nav/header height
+        display: 'flex',
+        flexDirection: 'column',
+        p: 2.5,
+        backgroundColor:
           theme.palette.mode === 'dark'
-            ? `linear-gradient(${alpha(
-                theme.palette.primary.dark,
-                0.05
-              )}, ${alpha(theme.palette.background.default, 1)})`
-            : `linear-gradient(${alpha(
-                theme.palette.primary.light,
-                0.05
-              )}, ${alpha(theme.palette.background.default, 1)})`,
-        py: 2,
-        px: 1.5,
+            ? alpha(theme.palette.background.default, 0.5)
+            : theme.palette.grey[50],
+        gap: 2,
       }}
     >
-      <Box maxWidth="100%" sx={{ mx: 'auto' }}>
-        <Card
-          elevation={0}
-          sx={{
-            mb: 3,
-            borderRadius: 2,
-            backgroundColor:
-              theme.palette.mode === 'dark'
-                ? alpha(theme.palette.background.paper, 0.8)
-                : 'white',
-            border: `1px solid ${alpha(
-              theme.palette.divider,
-              theme.palette.mode === 'dark' ? 0.2 : 0.1
-            )}`,
-            boxShadow: `0 4px 15px ${alpha(
-              theme.palette.common.black,
-              theme.palette.mode === 'dark' ? 0.3 : 0.05
-            )}`,
-          }}
-        >
-          <CardContent sx={{ p: { xs: 1.5, sm: 2.5 } }}>
-            <Box
-              sx={{
-                display: 'flex',
-                flexDirection: { xs: 'column', md: 'row' },
-                justifyContent: 'space-between',
-                alignItems: { xs: 'flex-start', md: 'center' },
-                mb: 2,
-                gap: 1.5,
-              }}
-            >
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
-                <SettingsIcon
-                  sx={{ fontSize: 24, color: theme.palette.primary.main }}
-                />
-                <Box>
-                  <Typography
-                    variant="h5"
-                    component="h1"
-                    sx={{
-                      fontWeight: 700,
-                      background: `linear-gradient(120deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
-                      WebkitBackgroundClip: 'text',
-                      WebkitTextFillColor: 'transparent',
-                      letterSpacing: '-0.5px',
-                    }}
-                  >
-                    System Parameters
-                  </Typography>
-                  <Typography
-                    variant="body2"
-                    sx={{ 
-                      color: theme.palette.text.secondary,
-                      fontSize: '0.75rem'
-                    }}
-                  >
-                    Manage global configuration settings that control
-                    application behavior
-                  </Typography>
-                </Box>
-              </Box>
-
-              <Box
-                sx={{
-                  display: 'flex',
-                  gap: 1.5,
-                  alignItems: 'center',
-                  flexWrap: { xs: 'wrap', sm: 'nowrap' },
-                  width: { xs: '100%', md: 'auto' },
-                }}
+      {/* --- Top Controls --- */}
+      <Box
+        sx={{
+          flexShrink: 0,
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: 1.5,
+        }}
+      >
+        <Typography variant="h5" fontWeight={700}>
+          System Parameters
+        </Typography>
+        <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center' }}>
+          <TextField
+            size="small"
+            variant="outlined"
+            label="Search"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search..."
+            sx={{
+              width: 250,
+              backgroundColor: theme.palette.background.paper,
+            }}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon fontSize="small" />
+                </InputAdornment>
+              ),
+            }}
+          />
+          <TextField
+            select
+            size="small"
+            label="Filter by Type"
+            value={filterType}
+            onChange={(e) => setFilterType(e.target.value)}
+            sx={{
+              minWidth: 180,
+              backgroundColor: theme.palette.background.paper,
+            }}
+          >
+            <MenuItem value="">
+              <em>All Types</em>
+            </MenuItem>
+            {types.map((type) => (
+              <MenuItem key={type} value={type}>
+                {type}
+              </MenuItem>
+            ))}
+          </TextField>
+          <Tooltip title={loading ? 'Refreshing...' : 'Refresh Data'} arrow>
+            <span>
+              <IconButton
+                color="primary"
+                onClick={fetchParameters}
+                disabled={loading}
               >
-                <TextField
-                  select
-                  size="small"
-                  label="Filter by Type"
-                  value={filterType}
-                  onChange={(e) => setFilterType(e.target.value)}
-                  sx={{
-                    minWidth: { xs: '100%', sm: 180 },
-                    backgroundColor: theme.palette.background.paper,
-                    '& .MuiOutlinedInput-root': {
-                      borderRadius: 1.5,
-                    },
-                  }}
-                  InputProps={{
-                    startAdornment: (
-                      <FilterListIcon
-                        fontSize="small"
-                        sx={{ mr: 1, color: 'text.secondary' }}
-                      />
-                    ),
-                  }}
-                >
-                  <MenuItem value="">All Types</MenuItem>
-                  {types.map((type) => (
-                    <MenuItem key={type} value={type}>
-                      {type}
-                    </MenuItem>
-                  ))}
-                </TextField>
-
-                <Tooltip
-                  title={loading ? 'Loading...' : 'Refresh Parameters'}
-                  arrow
-                >
-                  <IconButton
-                    color="primary"
-                    onClick={fetchParameters}
-                    disabled={loading}
-                    size="small"
-                    sx={{
-                      backgroundColor: alpha(theme.palette.primary.main, 0.1),
-                      '&:hover': {
-                        backgroundColor: alpha(theme.palette.primary.main, 0.2),
-                      },
-                    }}
-                  >
-                    <RefreshIcon fontSize="small" />
-                  </IconButton>
-                </Tooltip>
-
-                <Button
-                  variant={showAddForm ? 'outlined' : 'contained'}
-                  startIcon={showAddForm ? <CancelIcon /> : <AddIcon />}
-                  onClick={() => setShowAddForm(!showAddForm)}
-                  color={showAddForm ? 'error' : 'primary'}
-                  size="small"
-                  sx={{
-                    borderRadius: 1.5,
-                    boxShadow: showAddForm
-                      ? 'none'
-                      : '0 3px 8px rgba(0,0,0,0.1)',
-                    px: 2,
-                  }}
-                >
-                  {showAddForm ? 'Cancel' : 'Add Parameter'}
-                </Button>
-              </Box>
-            </Box>
-
-            <Divider sx={{ mb: 2, opacity: 0.7 }} />
-
-            {error && (
-              <Alert
-                severity="error"
-                sx={{
-                  mb: 2,
-                  borderRadius: 1.5,
-                  boxShadow: `0 3px 8px ${alpha(
-                    theme.palette.error.main,
-                    0.2
-                  )}`,
-                  py: 0.5,
-                }}
-                action={
-                  <IconButton
-                    aria-label="close"
-                    color="inherit"
-                    size="small"
-                    onClick={() => setError(null)}
-                  >
-                    <CloseIcon fontSize="small" />
-                  </IconButton>
-                }
-              >
-                {error}
-              </Alert>
-            )}
-
-            {showAddForm && (
-              <Fade in={showAddForm}>
-                <Card
-                  elevation={2}
-                  sx={{
-                    p: { xs: 1.5, sm: 2 },
-                    mb: 2.5,
-                    backgroundColor: alpha(theme.palette.primary.light, 0.04),
-                    borderRadius: 2,
-                    border: `1px solid ${alpha(
-                      theme.palette.primary.main,
-                      0.15
-                    )}`,
-                  }}
-                >
-                  <Box
-                    sx={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 0.75,
-                      mb: 1.5,
-                    }}
-                  >
-                    <AddIcon 
-                      sx={{ 
-                        color: theme.palette.primary.main,
-                        fontSize: '1.2rem'
-                      }} 
-                    />
-                    <Typography
-                      variant="subtitle1"
-                      sx={{
-                        fontWeight: 600,
-                        color: theme.palette.primary.dark,
-                      }}
-                    >
-                      Add New Parameter
-                    </Typography>
-                  </Box>
-                  <form onSubmit={handleAddParameter}>
-                    <Grid container spacing={2}>
-                      <Grid item xs={12} md={6}>
-                        <TextField
-                          fullWidth
-                          label="Type"
-                          name="PRTYP"
-                          value={newParameter.PRTYP}
-                          onChange={handleChange}
-                          required
-                          placeholder="DB, Datatype, etc."
-                          variant="outlined"
-                          size="small"
-                          sx={{
-                            '& .MuiOutlinedInput-root': {
-                              borderRadius: 1.5,
-                              backgroundColor: theme.palette.background.paper,
-                            },
-                          }}
-                        />
-                      </Grid>
-                      <Grid item xs={12} md={6}>
-                        <TextField
-                          fullWidth
-                          label="Code"
-                          name="PRCD"
-                          value={newParameter.PRCD}
-                          onChange={handleChange}
-                          required
-                          placeholder="Parameter code"
-                          variant="outlined"
-                          size="small"
-                          sx={{
-                            '& .MuiOutlinedInput-root': {
-                              borderRadius: 1.5,
-                              backgroundColor: theme.palette.background.paper,
-                            },
-                          }}
-                        />
-                      </Grid>
-                      <Grid item xs={12} md={6}>
-                        <TextField
-                          fullWidth
-                          label="Description"
-                          name="PRDESC"
-                          value={newParameter.PRDESC}
-                          onChange={handleChange}
-                          required
-                          placeholder="Parameter description"
-                          variant="outlined"
-                          size="small"
-                          sx={{
-                            '& .MuiOutlinedInput-root': {
-                              borderRadius: 1.5,
-                              backgroundColor: theme.palette.background.paper,
-                            },
-                          }}
-                        />
-                      </Grid>
-                      <Grid item xs={12} md={6}>
-                        <TextField
-                          fullWidth
-                          label="Value"
-                          name="PRVAL"
-                          value={newParameter.PRVAL}
-                          onChange={handleChange}
-                          required
-                          placeholder="Parameter value"
-                          variant="outlined"
-                          size="small"
-                          sx={{
-                            '& .MuiOutlinedInput-root': {
-                              borderRadius: 1.5,
-                              backgroundColor: theme.palette.background.paper,
-                            },
-                          }}
-                        />
-                      </Grid>
-                    </Grid>
-                    <Box
-                      sx={{
-                        mt: 2,
-                        display: 'flex',
-                        justifyContent: 'flex-end',
-                      }}
-                    >
-                      <Button
-                        type="submit"
-                        variant="contained"
-                        color="success"
-                        disabled={loading}
-                        size="small"
-                        startIcon={
-                          loading ? (
-                            <CircularProgress size={16} />
-                          ) : (
-                            <SaveIcon fontSize="small" />
-                          )
-                        }
-                        sx={{
-                          borderRadius: 1.5,
-                          px: 2,
-                          boxShadow: '0 3px 8px rgba(0,0,0,0.15)',
-                        }}
-                      >
-                        {loading ? 'Saving...' : 'Save Parameter'}
-                      </Button>
-                    </Box>
-                  </form>
-                </Card>
-              </Fade>
-            )}
-
-            {loading && !showAddForm ? (
-              <Box
-                sx={{
-                  display: 'flex',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  p: 5,
-                }}
-              >
-                <CircularProgress size={40} thickness={4} />
-              </Box>
-            ) : (
-              <Box sx={{ borderRadius: 2, overflow: 'hidden' }}>
-                <TableContainer
-                  component={Paper}
-                  elevation={0}
-                  sx={{
-                    borderRadius: '12px 12px 0 0',
-                    border: '1px solid',
-                    borderColor: alpha(
-                      theme.palette.divider,
-                      theme.palette.mode === 'dark' ? 0.3 : 0.2
-                    ),
-                    borderBottom: 'none',
-                    backgroundColor:
-                      theme.palette.mode === 'dark'
-                        ? alpha(theme.palette.background.paper, 0.4)
-                        : theme.palette.background.paper,
-                    overflow: 'auto',
-                    '&::-webkit-scrollbar': {
-                      height: '6px',
-                      backgroundColor: alpha(theme.palette.divider, 0.05),
-                    },
-                    '&::-webkit-scrollbar-thumb': {
-                      backgroundColor: alpha(theme.palette.primary.main, 0.2),
-                      borderRadius: '3px',
-                      '&:hover': {
-                        backgroundColor: alpha(theme.palette.primary.main, 0.3),
-                      },
-                    },
-                  }}
-                >
-                  <Table sx={{ minWidth: 800 }} size="small">
-                    <TableHead
-                      sx={{
-                        backgroundColor:
-                          theme.palette.mode === 'dark'
-                            ? alpha(theme.palette.primary.dark, 0.2)
-                            : alpha(theme.palette.primary.main, 0.05),
-                      }}
-                    >
-                      <TableRow>
-                        <TableCell sx={{ py: 1, px: 1.5 }}>
-                          <Typography
-                            variant="subtitle2"
-                            sx={{
-                              fontWeight: 700,
-                              color: theme.palette.primary.dark,
-                              fontSize: '0.7rem',
-                            }}
-                          >
-                            Type
-                          </Typography>
-                        </TableCell>
-                        <TableCell sx={{ py: 1, px: 1.5 }}>
-                          <Typography
-                            variant="subtitle2"
-                            sx={{
-                              fontWeight: 700,
-                              color: theme.palette.primary.dark,
-                              fontSize: '0.7rem',
-                            }}
-                          >
-                            Code
-                          </Typography>
-                        </TableCell>
-                        <TableCell sx={{ py: 1, px: 1.5 }}>
-                          <Typography
-                            variant="subtitle2"
-                            sx={{
-                              fontWeight: 700,
-                              color: theme.palette.primary.dark,
-                              fontSize: '0.7rem',
-                            }}
-                          >
-                            Description
-                          </Typography>
-                        </TableCell>
-                        <TableCell sx={{ py: 1, px: 1.5 }}>
-                          <Typography
-                            variant="subtitle2"
-                            sx={{
-                              fontWeight: 700,
-                              color: theme.palette.primary.dark,
-                              fontSize: '0.7rem',
-                            }}
-                          >
-                            Value
-                          </Typography>
-                        </TableCell>
-                        <TableCell sx={{ py: 1, px: 1.5 }}>
-                          <Typography
-                            variant="subtitle2"
-                            sx={{
-                              fontWeight: 700,
-                              color: theme.palette.primary.dark,
-                              fontSize: '0.7rem',
-                            }}
-                          >
-                            Created
-                          </Typography>
-                        </TableCell>
-                        <TableCell sx={{ py: 1, px: 1.5 }}>
-                          <Typography
-                            variant="subtitle2"
-                            sx={{
-                              fontWeight: 700,
-                              color: theme.palette.primary.dark,
-                              fontSize: '0.7rem',
-                            }}
-                          >
-                            Updated
-                          </Typography>
-                        </TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {paginatedParameters.length === 0 ? (
-                        <TableRow>
-                          <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
-                            <Box
-                              sx={{
-                                display: 'flex',
-                                flexDirection: 'column',
-                                alignItems: 'center',
-                                gap: 1.5,
-                              }}
-                            >
-                              <InfoIcon
-                                sx={{
-                                  fontSize: 36,
-                                  color: alpha(
-                                    theme.palette.text.secondary,
-                                    0.5
-                                  ),
-                                }}
-                              />
-                              <Typography
-                                color="text.secondary"
-                                sx={{ fontSize: '0.9rem' }}
-                              >
-                                {parameters.length === 0
-                                  ? 'No parameters found'
-                                  : 'No parameters match the selected filter'}
-                              </Typography>
-                              {filterType && (
-                                <Button
-                                  variant="outlined"
-                                  size="small"
-                                  onClick={() => setFilterType('')}
-                                  sx={{ mt: 0.5 }}
-                                >
-                                  Clear Filter
-                                </Button>
-                              )}
-                            </Box>
-                          </TableCell>
-                        </TableRow>
-                      ) : (
-                        paginatedParameters.map((param, index) => (
-                          <TableRow
-                            key={index}
-                            hover
-                            sx={{
-                              '&:last-child td, &:last-child th': { border: 0 },
-                              transition: 'all 0.2s ease',
-                              cursor: 'pointer',
-                              '&:hover': {
-                                backgroundColor:
-                                  theme.palette.mode === 'dark'
-                                    ? alpha(theme.palette.primary.main, 0.1)
-                                    : alpha(theme.palette.primary.main, 0.02),
-                                transform: 'translateY(-1px)',
-                                boxShadow: `0 2px 4px ${alpha(
-                                  theme.palette.common.black,
-                                  theme.palette.mode === 'dark' ? 0.2 : 0.05
-                                )}`,
-                              },
-                            }}
-                          >
-                            <TableCell sx={{ py: 1, px: 1.5 }}>
-                              <Chip
-                                label={param.PRTYP}
-                                size="small"
-                                sx={{
-                                  backgroundColor: alpha(
-                                    theme.palette.primary.main,
-                                    0.1
-                                  ),
-                                  color: theme.palette.primary.dark,
-                                  fontWeight: 600,
-                                  borderRadius: '8px',
-                                  height: '20px',
-                                  '& .MuiChip-label': {
-                                    px: 1,
-                                    py: 0,
-                                    fontSize: '0.7rem',
-                                  },
-                                }}
-                              />
-                            </TableCell>
-                            <TableCell sx={{ py: 1, px: 1.5 }}>
-                              <Typography
-                                variant="body2"
-                                sx={{ fontWeight: 600, fontSize: '0.8rem' }}
-                              >
-                                {param.PRCD}
-                              </Typography>
-                            </TableCell>
-                            <TableCell sx={{ py: 1, px: 1.5 }}>
-                              <Typography
-                                variant="body2"
-                                sx={{ lineHeight: 1.3, fontSize: '0.8rem' }}
-                              >
-                                {param.PRDESC}
-                              </Typography>
-                            </TableCell>
-                            <TableCell sx={{ py: 1, px: 1.5 }}>
-                              <Typography
-                                variant="body2"
-                                sx={{
-                                  fontFamily: '"Roboto Mono", monospace',
-                                  backgroundColor:
-                                    theme.palette.mode === 'dark'
-                                      ? alpha(theme.palette.grey[900], 0.5)
-                                      : alpha(theme.palette.grey[100], 0.7),
-                                  p: 0.3,
-                                  px: 0.8,
-                                  borderRadius: 1,
-                                  display: 'inline-block',
-                                  border: '1px solid',
-                                  borderColor:
-                                    theme.palette.mode === 'dark'
-                                      ? alpha(theme.palette.grey[700], 0.5)
-                                      : alpha(theme.palette.grey[300], 0.5),
-                                  fontSize: '0.75rem',
-                                  letterSpacing: '0.25px',
-                                }}
-                              >
-                                {param.PRVAL}
-                              </Typography>
-                            </TableCell>
-                            <TableCell sx={{ py: 1, px: 1.5 }}>
-                              <Typography
-                                variant="body2"
-                                color="text.secondary"
-                                sx={{
-                                  whiteSpace: 'nowrap',
-                                  fontSize: '0.75rem',
-                                }}
-                              >
-                                {formatDate(param.PRRECCRDT)}
-                              </Typography>
-                            </TableCell>
-                            <TableCell sx={{ py: 1, px: 1.5 }}>
-                              <Typography
-                                variant="body2"
-                                color="text.secondary"
-                                sx={{
-                                  whiteSpace: 'nowrap',
-                                  fontSize: '0.75rem',
-                                }}
-                              >
-                                {formatDate(param.PRRECUPDT)}
-                              </Typography>
-                            </TableCell>
-                          </TableRow>
-                        ))
-                      )}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-
-                {/* Pagination component */}
-                <TablePagination
-                  component="div"
-                  count={filteredParameters.length}
-                  page={page}
-                  onPageChange={handleChangePage}
-                  rowsPerPage={rowsPerPage}
-                  onRowsPerPageChange={handleChangeRowsPerPage}
-                  rowsPerPageOptions={[5, 10, 25, 50, 100]}
-                  sx={{
-                    borderRadius: '0 0 12px 12px',
-                    backgroundColor:
-                      theme.palette.mode === 'dark'
-                        ? alpha(theme.palette.background.paper, 0.4)
-                        : theme.palette.background.paper,
-                    borderLeft: '1px solid',
-                    borderRight: '1px solid',
-                    borderBottom: '1px solid',
-                    borderColor: alpha(
-                      theme.palette.divider,
-                      theme.palette.mode === 'dark' ? 0.3 : 0.2
-                    ),
-                    '.MuiTablePagination-selectLabel, .MuiTablePagination-displayedRows':
-                      {
-                        fontSize: '0.8rem',
-                        color: theme.palette.text.secondary,
-                      },
-                    '.MuiTablePagination-actions': {
-                      marginLeft: 1.5,
-                    },
-                  }}
-                />
-              </Box>
-            )}
-
-            {filteredParameters.length > 0 && (
-              <Box
-                sx={{
-                  mt: 2,
-                  display: 'flex',
-                  flexDirection: { xs: 'column', sm: 'row' },
-                  justifyContent: 'space-between',
-                  alignItems: { xs: 'flex-start', sm: 'center' },
-                  gap: 0.75,
-                }}
-              >
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
-                  <InfoIcon
-                    fontSize="small"
-                    sx={{ 
-                      color: alpha(theme.palette.primary.main, 0.6),
-                      fontSize: '0.9rem'
-                    }}
-                  />
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      fontStyle: 'italic',
-                      color: theme.palette.text.secondary,
-                      fontSize: '0.75rem'
-                    }}
-                  >
-                    Parameter values control core application behavior and
-                    system configurations
-                  </Typography>
-                </Box>
-                <Typography
-                  variant="body2"
-                  sx={{
-                    color: theme.palette.primary.main,
-                    backgroundColor: alpha(theme.palette.primary.main, 0.05),
-                    py: 0.25,
-                    px: 1.5,
-                    borderRadius: 10,
-                    fontWeight: 500,
-                    fontSize: '0.75rem'
-                  }}
-                >
-                  Showing {Math.min(rowsPerPage, filteredParameters.length)} of{' '}
-                  {filteredParameters.length} parameters
-                </Typography>
-              </Box>
-            )}
-          </CardContent>
-        </Card>
+                <RefreshIcon />
+              </IconButton>
+            </span>
+          </Tooltip>
+          <Button
+            variant={showAddForm ? 'outlined' : 'contained'}
+            startIcon={showAddForm ? <CancelIcon /> : <AddIcon />}
+            onClick={() => setShowAddForm(!showAddForm)}
+            color={'primary'}
+          >
+            {'Add Parameter'}
+          </Button>
+        </Box>
       </Box>
+
+      {/* --- Add Parameter Dialog --- */}
+      <Dialog
+        open={showAddForm}
+        onClose={() => setShowAddForm(false)}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{ component: 'form', onSubmit: handleAddParameter }}
+      >
+        <DialogTitle sx={{ fontWeight: 'bold' }}>
+          Add New System Parameter
+        </DialogTitle>
+        <DialogContent>
+          <Grid container spacing={2} sx={{ pt: 1 }}>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                autoFocus
+                margin="dense"
+                name="PRTYP"
+                label="Type"
+                type="text"
+                fullWidth
+                variant="outlined"
+                value={newParameter.PRTYP}
+                onChange={handleChange}
+                required
+                size="small"
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                margin="dense"
+                name="PRCD"
+                label="Code"
+                type="text"
+                fullWidth
+                variant="outlined"
+                value={newParameter.PRCD}
+                onChange={handleChange}
+                required
+                size="small"
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                margin="dense"
+                name="PRDESC"
+                label="Description"
+                type="text"
+                fullWidth
+                variant="outlined"
+                value={newParameter.PRDESC}
+                onChange={handleChange}
+                required
+                multiline
+                rows={2}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                margin="dense"
+                name="PRVAL"
+                label="Value"
+                type="text"
+                fullWidth
+                variant="outlined"
+                value={newParameter.PRVAL}
+                onChange={handleChange}
+                required
+              />
+            </Grid>
+          </Grid>
+        </DialogContent>
+        <DialogActions sx={{ p: '16px 24px' }}>
+          <Button onClick={() => setShowAddForm(false)} color="inherit">
+            Cancel
+          </Button>
+          <Button
+            type="submit"
+            variant="contained"
+            color="primary"
+            disabled={loading}
+            startIcon={
+              loading ? <CircularProgress size={20} color="inherit" /> : <SaveIcon />
+            }
+          >
+            Save Parameter
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {error && (
+        <Alert
+          severity="error"
+          onClose={() => setError(null)}
+          sx={{ flexShrink: 0 }}
+        >
+          {error}
+        </Alert>
+      )}
+
+      {/* --- Main Table --- */}
+      <Paper
+        elevation={0}
+        sx={{
+          flex: 1,
+          overflow: 'hidden',
+          display: 'flex',
+          flexDirection: 'column',
+          border: '1px solid',
+          borderColor: theme.palette.divider,
+          borderRadius: 2,
+        }}
+      >
+        {loading && !parameters.length ? (
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              height: '100%',
+            }}
+          >
+            <CircularProgress />
+          </Box>
+        ) : (
+          <TableContainer sx={{ flex: 1, overflow: 'auto' }}>
+            <Table stickyHeader size="small">
+              <TableHead>
+                <TableRow>
+                  <TableCell>Type</TableCell>
+                  <TableCell>Code</TableCell>
+                  <TableCell>Description</TableCell>
+                  <TableCell>Value</TableCell>
+                  <TableCell>Created</TableCell>
+                  <TableCell>Updated</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {filteredParameters.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={6} align="center" sx={{ py: 8 }}>
+                      <InfoIcon color="action" sx={{ mb: 1 }} />
+                      <Typography color="text.secondary">
+                        {parameters.length === 0
+                          ? 'No parameters found.'
+                          : 'No parameters match the filter or search.'}
+                      </Typography>
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  filteredParameters.map((param, index) => (
+                    <TableRow
+                      key={index}
+                      hover
+                      sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+                    >
+                      <TableCell>
+                        <Chip
+                          label={param.PRTYP}
+                          size="small"
+                          color="primary"
+                          variant="outlined"
+                        />
+                      </TableCell>
+                      <TableCell sx={{ fontWeight: 'bold' }}>
+                        {param.PRCD}
+                      </TableCell>
+                      <TableCell>{param.PRDESC}</TableCell>
+                      <TableCell>
+                        <Box
+                          component="span"
+                          sx={{
+                            fontFamily: 'monospace',
+                            backgroundColor: alpha(
+                              theme.palette.action.hover,
+                              0.5
+                            ),
+                            px: 1,
+                            py: 0.5,
+                            borderRadius: 1,
+                          }}
+                        >
+                          {param.PRVAL}
+                        </Box>
+                      </TableCell>
+                      <TableCell sx={{ whiteSpace: 'nowrap' }}>
+                        {formatDate(param.PRRECCRDT)}
+                      </TableCell>
+                      <TableCell sx={{ whiteSpace: 'nowrap' }}>
+                        {formatDate(param.PRRECUPDT)}
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        )}
+      </Paper>
     </Box>
   )
 }

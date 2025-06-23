@@ -14,10 +14,29 @@ def generate_secret_key():
     return Fernet.generate_key()
 
 def get_system_identifier():
-    """Get unique system identifier based on MAC address"""
-    mac = getmac.get_mac_address()
-    print(f"Retrieved MAC address: {mac}")
-    return mac.replace(':', '')
+    """
+    Get a unique and stable system identifier.
+    It first tries to get the MAC address using uuid.getnode().
+    If the returned address is randomly generated (multicast bit is set),
+    it falls back to using the getmac library to find a real hardware address.
+    """
+    mac_int = uuid.getnode()
+    # Check if the MAC address is randomly generated (multicast bit is set).
+    if (mac_int >> 40) & 1:
+        print("uuid.getnode() returned a random MAC address. Falling back to getmac.")
+        mac_str = getmac.get_mac_address()
+        if mac_str:
+            print(f"Retrieved MAC address from getmac: {mac_str}")
+            return mac_str.replace(':', '')
+
+        print("getmac failed. Using the random MAC from uuid.getnode().")
+        mac_hex = f'{mac_int:012x}'
+        return mac_hex
+    else:
+        mac_hex = f'{mac_int:012x}'
+        mac_str = ':'.join(mac_hex[i:i+2] for i in range(0, 12, 2))
+        print(f"Retrieved MAC address from uuid.getnode(): {mac_str}")
+        return mac_str.replace(':', '')
 
 class LicenseKeyGenerator:
     def __init__(self, secret_key=None):

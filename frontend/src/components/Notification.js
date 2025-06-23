@@ -28,7 +28,7 @@ const Notification = () => {
   const [open, setOpen] = useState(false);
   const [notification, setNotification] = useState(null);
   const [loading, setLoading] = useState(true);
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
   const theme = useTheme();
 
   useEffect(() => {
@@ -72,6 +72,12 @@ const Notification = () => {
       console.error('Error dismissing notification:', error);
     }
     setOpen(false);
+
+    // Update user context and local storage to not show notification again
+    if (user) {
+      const updatedUser = { ...user, show_notification: false };
+      updateUser(updatedUser);
+    }
   };
 
   // If no user or no notifications to show, don't render anything

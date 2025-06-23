@@ -137,6 +137,47 @@ export const AuthProvider = ({ children }) => {
     }
   }, [loading, pathname, router]);
 
+  useEffect(() => {
+    let logoutTimer;
+
+    const resetTimer = () => {
+      clearTimeout(logoutTimer);
+      logoutTimer = setTimeout(() => {
+        // Only logout if user is still logged in
+        if (localStorage.getItem('token')) {
+          logout();
+          // Optionally, notify the user they were logged out due to inactivity
+          // You could use a toast notification library for this
+          alert('You have been logged out due to inactivity.');
+        }
+      }, 30 * 60 * 1000); // 30 minutes
+    };
+
+    const handleUserActivity = () => {
+      resetTimer();
+    };
+
+    // Attach event listeners if a user is logged in
+    if (user) {
+      resetTimer(); // Start the timer when the user is first authenticated
+      window.addEventListener('mousemove', handleUserActivity);
+      window.addEventListener('mousedown', handleUserActivity);
+      window.addEventListener('keypress', handleUserActivity);
+      window.addEventListener('scroll', handleUserActivity);
+      window.addEventListener('touchstart', handleUserActivity);
+    }
+
+    // Cleanup function
+    return () => {
+      clearTimeout(logoutTimer);
+      window.removeEventListener('mousemove', handleUserActivity);
+      window.removeEventListener('mousedown', handleUserActivity);
+      window.removeEventListener('keypress', handleUserActivity);
+      window.removeEventListener('scroll', handleUserActivity);
+      window.removeEventListener('touchstart', handleUserActivity);
+    };
+  }, [user]); // Rerun effect when user state changes
+
   const login = async (username, password, recaptchaToken) => {
     try {
       const response = await axios.post(`${API_BASE_URL}/auth/login`, 
@@ -205,6 +246,11 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
     setLicenseStatus(null);
     router.push('/auth/login');
+  };
+
+  const updateUser = (userData) => {
+    setUser(userData);
+    localStorage.setItem('user', JSON.stringify(userData));
   };
 
   const checkTokenExpiration = async () => {
@@ -319,6 +365,7 @@ export const AuthProvider = ({ children }) => {
   const value = {
     user,
     loading,
+    licenseStatus,
     login,
     logout,
     checkTokenExpiration,
@@ -328,9 +375,9 @@ export const AuthProvider = ({ children }) => {
     updateUserProfile,
     changePasswordAfterLogin,
     isAuthenticated: !!user,
-    licenseStatus,
     checkLicenseStatus,
-    needsPasswordChange
+    needsPasswordChange,
+    updateUser
   };
 
   return (
