@@ -29,7 +29,7 @@ export default function LayoutWrapper({ children }) {
                 <motion.div 
                     className="flex-1 flex flex-col min-h-screen"
                     animate={{ 
-                        marginLeft: sidebarOpen ? '18rem' : '6rem'
+                        marginLeft: sidebarOpen ? '15rem' : '3.5rem'
                     }}
                     transition={{ 
                         type: "spring",
@@ -44,7 +44,7 @@ export default function LayoutWrapper({ children }) {
                         showProfile={showProfile}
                         setShowProfile={setShowProfile}
                     />
-                    <main className="flex-1 p-6">
+                    <main className="flex-1 p-3">
                         {children}
                     </main>
                     <Notification />

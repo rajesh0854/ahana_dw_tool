@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, send_file
+from flask import Flask, request, jsonify, send_file, g
 from flask_cors import CORS
 import pandas as pd
 import uuid
@@ -11,8 +11,6 @@ from sqlalchemy import create_engine, text
 import random
 import re
 import traceback
-from modules.login.login import auth_bp, token_required
-from modules.admin.admin import admin_bp, admin_required
 from dotenv import load_dotenv
 from sqlalchemy.orm import Session
 from openpyxl import Workbook, load_workbook
@@ -21,6 +19,8 @@ from openpyxl.utils import get_column_letter
 from database.dbconnect import create_oracle_connection, sqlite_engine
 
 # Import blueprints
+from modules.login.login import auth_bp, token_required
+from modules.admin.admin import admin_bp, admin_required
 from modules.license.license import license_bp
 from modules.mapper.mapper import mapper_bp
 from modules.jobs.jobs import jobs_bp
@@ -52,6 +52,15 @@ CORS(app, supports_credentials=True)
 # Load environment variables
 load_dotenv()
 
+# Error handler for all exceptions
+@app.errorhandler(Exception)
+def handle_exception(e):
+    # Import logger inside the function to avoid circular imports
+    from modules.logger import error
+    # Log the exception without traceback
+    error(f"Unhandled exception: {str(e)}")
+    return jsonify({"error": "An unexpected error occurred"}), 500
+
 # Register blueprints
 app.register_blueprint(auth_bp, url_prefix='/auth')
 app.register_blueprint(admin_bp, url_prefix='/admin')
@@ -67,5 +76,9 @@ os.makedirs('data/drafts', exist_ok=True)
 os.makedirs('data/templates', exist_ok=True)
 
 if __name__ == '__main__':
+    # Import logger inside the function to avoid circular imports
+    from modules.logger import info
+    info("Server starting...")
     app.run(debug=True, port=5000, host='0.0.0.0')   
+    info("Server stopped.")
  

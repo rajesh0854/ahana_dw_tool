@@ -127,11 +127,11 @@ const NavBar = ({ userProfile, showProfile, setShowProfile, sidebarOpen }) => {
         ? 'bg-gray-900/90 border-gray-800 shadow-sm shadow-gray-900/10' 
         : 'bg-white/90 border-gray-100 shadow-sm shadow-gray-200/20'}
     `}>
-      <div className="flex items-center justify-between h-14 px-5">
+      <div className="flex items-center justify-between h-12 px-5">
         {/* Left section - Page Title with icon */}
         <div className="flex items-center">
           <div className={`
-            flex items-center justify-center w-7 h-7 mr-2.5 rounded-md
+            flex items-center justify-center w-6 h-6 mr-2 rounded-md
             ${darkMode 
               ? 'bg-blue-500/10 text-blue-400' 
               : 'bg-blue-500/10 text-blue-600'
@@ -140,7 +140,7 @@ const NavBar = ({ userProfile, showProfile, setShowProfile, sidebarOpen }) => {
             {pageIcon}
           </div>
           <h1 className={`
-            text-base font-semibold tracking-wide relative
+            text-sm font-semibold tracking-wide relative
             ${darkMode ? 'text-gray-100' : 'text-gray-800'}
           `}>
             {pageTitle}
@@ -149,12 +149,12 @@ const NavBar = ({ userProfile, showProfile, setShowProfile, sidebarOpen }) => {
         </div>
         
         {/* Right section */}
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center space-x-2">
           {/* Fullscreen Toggle Button */}
           <button
             onClick={toggleFullscreen}
             className={`
-              p-1.5 rounded-full transition-all duration-200 hover:scale-105
+              p-1 rounded-full transition-all duration-200 hover:scale-105
               ${darkMode 
                 ? 'bg-gray-800 text-indigo-300 hover:bg-gray-700' 
                 : 'bg-gray-100 text-indigo-600 hover:bg-gray-200'
@@ -172,7 +172,7 @@ const NavBar = ({ userProfile, showProfile, setShowProfile, sidebarOpen }) => {
           <button
             onClick={() => setDarkMode(!darkMode)}
             className={`
-              p-1.5 rounded-full transition-all duration-200 hover:scale-105
+              p-1 rounded-full transition-all duration-200 hover:scale-105
               ${darkMode 
                 ? 'bg-gray-800 text-yellow-300 hover:bg-gray-700' 
                 : 'bg-gray-100 text-blue-600 hover:bg-gray-200'
@@ -191,7 +191,7 @@ const NavBar = ({ userProfile, showProfile, setShowProfile, sidebarOpen }) => {
             <button
               onClick={() => setShowProfile(!showProfile)}
               className={`
-                flex items-center space-x-2.5 px-2.5 py-1.5 rounded-full transition-all duration-200
+                flex items-center space-x-2 px-2 py-1 rounded-full transition-all duration-200
                 ${darkMode 
                   ? 'bg-gray-800 hover:bg-gray-700 border border-gray-700' 
                   : 'bg-gray-100 hover:bg-gray-200 border border-gray-200'
@@ -199,7 +199,7 @@ const NavBar = ({ userProfile, showProfile, setShowProfile, sidebarOpen }) => {
               `}
             >
               <div className={`
-                w-7 h-7 rounded-full flex items-center justify-center
+                w-6 h-6 rounded-full flex items-center justify-center
                 bg-gradient-to-br from-blue-500 to-purple-600 text-white text-xs font-medium
                 ring-1 ring-white/30
               `}>

@@ -153,7 +153,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
       `}
       initial={false}
       animate={{ 
-        width: sidebarOpen ? '15rem' : '5rem'
+        width: sidebarOpen ? '15rem' : '3.5rem'
       }}
       transition={{ 
         type: "spring",

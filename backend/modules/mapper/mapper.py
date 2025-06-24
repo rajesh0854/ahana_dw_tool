@@ -13,6 +13,7 @@ from openpyxl import Workbook, load_workbook
 from openpyxl.styles import PatternFill, Font, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
 from modules.helper_functions import create_update_mapping,create_update_mapping_detail, validate_logic2, validate_all_mapping_details,  get_mapping_ref  ,get_mapping_details,get_error_messages_list,get_parameter_mapping_datatype,get_parameter_mapping_scd_type,call_activate_deactivate_mapping, call_delete_mapping, call_delete_mapping_details
+from modules.logger import logger, info, warning, error
 
 
 # Create blueprint
@@ -159,8 +160,7 @@ def download_template():
             download_name=download_name
         )
     except Exception as e:
-        print(f"Error in download_template: {str(e)}")
-        traceback.print_exc()
+        error(f"Error in download_template: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
 @mapper_bp.route('/download-current', methods=['POST'])
@@ -328,8 +328,7 @@ def download_current():
         )
         
     except Exception as e:
-        print(f"Error in download_current: {str(e)}")
-        traceback.print_exc()
+        error(f"Error in download_current: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
 @mapper_bp.route('/upload', methods=['POST'])
@@ -427,8 +426,7 @@ def upload_file():
  
         return jsonify(response_data)
     except Exception as e:
-        print(f"Error in upload_file: {str(e)}")
-        traceback.print_exc()
+        error(f"Error in upload_file: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
 @mapper_bp.route('/get-by-reference/<reference>', methods=['GET'])
@@ -514,7 +512,7 @@ def get_by_reference(reference):
             conn.close()
            
     except Exception as e:
-        print(f"Error in get_by_reference: {str(e)}")
+        error(f"Error in get_by_reference: {str(e)}")
         return jsonify({
             'error': 'An error occurred while retrieving the mapping data',
             'details': str(e)
@@ -528,9 +526,7 @@ def save_to_db():
         user_id = form_data['username']
         rows = data['rows']
         modified_rows = data.get('modifiedRows', [])  # Track modified rows
-        print(form_data)
-        print(rows)
-       
+
         conn = create_oracle_connection()
         try:
             # Oracle connections auto-commit unless explicitly started a transaction
@@ -619,9 +615,8 @@ def save_to_db():
         }), 500
    
     except Exception as e:
-        import traceback
         tb = traceback.format_exc()
-        print(f"Error in save_to_db: {str(e)}\n{tb}")
+        error(f"Error in save_to_db: {str(e)}\n{tb}")
         return jsonify({
             'error': f'An error occurred while saving the mapping data {str(e)}',
             'details': str(e)
@@ -662,11 +657,13 @@ def validate_logic():
                 connection.close()
                
     except Exception as e:
+        error(f"Error in validate_logic: {str(e)}")
         return jsonify({
             'status': 'error',
             'message': f'Error processing request: {str(e)}'
         }), 500
 
+import time
 @mapper_bp.route('/validate-batch', methods=['POST'])
 def validate_batch_logic():
     try:
@@ -677,7 +674,6 @@ def validate_batch_logic():
         connection = create_oracle_connection()
         try:
             results = []
-           
             # First validate all logic together
             bulk_result, bulk_error = validate_all_mapping_details(connection, p_mapref)
             print(bulk_error)
@@ -730,7 +726,7 @@ def validate_batch_logic():
             connection.close()
            
     except Exception as e:
-        traceback.print_exc()
+        error(f"Error in validate_batch: {str(e)}")
         return jsonify({
             'status': 'error',
             'message': str(e)
@@ -742,7 +738,7 @@ def get_parameter_mapping_datatype_api():
         conn = create_oracle_connection()
         return jsonify(get_parameter_mapping_datatype(conn))
     except Exception as e:
-        print(f"Error in get_parameter_mapping_datatype: {str(e)}")
+        error(f"Error in get_parameter_mapping_datatype: {str(e)}")
         return jsonify({'error': str(e)}), 500
  
 @mapper_bp.route('/parameter_scd_type', methods=["GET"])
@@ -777,6 +773,7 @@ def activate_deactivate_mapping():
             }), 400
             
         conn = create_oracle_connection()
+        time.sleep(60)
         try:
             success, message = call_activate_deactivate_mapping(conn, p_mapref, p_stflg)
             return jsonify({
@@ -787,7 +784,7 @@ def activate_deactivate_mapping():
             conn.close()
             
     except Exception as e:
-        print(f"Error in activate_deactivate_mapping: {str(e)}")
+        error(f"Error in activate_deactivate_mapping: {str(e)}")
         return jsonify({
             'success': False,
             'message': f'An error occurred while processing the request: {str(e)}'
@@ -813,7 +810,7 @@ def get_all_mapper_reference():
         cursor.close()
         return jsonify(result)
     except Exception as e:
-        print(f"Error in get_all_mapper_reference: {str(e)}")
+        error(f"Error in get_all_mapper_reference: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
 
@@ -844,7 +841,7 @@ def delete_mapper_reference():
         finally:
             conn.close()
     except Exception as e:
-        print(f"Error in delete_mapper_reference: {str(e)}")
+        error(f"Error in delete_mapper_reference: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
 # Delete mapping detail row
@@ -874,8 +871,7 @@ def delete_mapping_detail():
             conn.close()
             
     except Exception as e:
-        print(f"Error in delete_mapping_detail: {str(e)}")
-        traceback.print_exc()
+        error(f"Error in delete_mapping_detail: {str(e)}")
         return jsonify({
             'success': False,
             'message': f'An error occurred while deleting the mapping detail: {str(e)}'

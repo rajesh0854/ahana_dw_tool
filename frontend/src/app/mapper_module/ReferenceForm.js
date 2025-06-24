@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, memo } from 'react'
+import React, { useState, useEffect, memo, useCallback, useRef, useMemo } from 'react'
 import {
   TextField,
   Button,
@@ -81,6 +81,8 @@ import axios from 'axios'
 import { motion } from 'framer-motion'
 // Add the useReferenceLock import
 import { useReferenceLock, releaseReferenceLock } from './lockUtils'
+import ReferenceRow from './ReferenceRow'
+import LoadingDialog from './LoadingDialog'
 
 // Using memo to prevent unnecessary rerenders
 const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFailed }) => {
@@ -212,6 +214,11 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
   const [originalFormData, setOriginalFormData] = useState(null)
   const [originalRows, setOriginalRows] = useState(null)
 
+  const rowsRef = useRef(rows);
+  useEffect(() => {
+    rowsRef.current = rows;
+  }, [rows]);
+
   // Add state for tracking validated rows
   // REMOVED: const [validatedRows, setValidatedRows] = useState([])
 
@@ -225,7 +232,6 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
   const [showValidateButton, setShowValidateButton] = useState(false)
   const [hasBeenValidated, setHasBeenValidated] = useState(false)
-  const [allRowsValidated, setAllRowsValidated] = useState(false)
 
   // Add new state for key sequence errors
   const [pkSeqErrors, setPkSeqErrors] = useState({})
@@ -240,6 +246,7 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
   const [rowWarnings, setRowWarnings] = useState({})
 
   // Add state for job creation tracking
+  const [isActivating, setIsActivating] = useState(false)
   const [isJobCreating, setIsJobCreating] = useState(false)
   const [isJobCreated, setIsJobCreated] = useState(false)
 
@@ -276,6 +283,7 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
   const [isSaving, setIsSaving] = useState(false)
   // Add state for validation loading
   const [isValidating, setIsValidating] = useState(false)
+  const [isUploading, setIsUploading] = useState(false)
 
   // Add this useEffect to initialize SQL editor content
   useEffect(() => {
@@ -285,7 +293,7 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
   }, [showSqlEditor, selectedRowIndex])
 
   // Add useEffect to update allRowsValidated state based on current row validation status
-  useEffect(() => {
+  const allRowsValidated = useMemo(() => {
     if (hasBeenValidated) {
       const filledRows = rows.filter(
         (row) =>
@@ -298,12 +306,13 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
       )
 
       if (filledRows.length === 0) {
-        setAllRowsValidated(false)
+        return false
       } else {
         const allValid = filledRows.every((row) => row.LogicVerFlag === 'Y')
-        setAllRowsValidated(allValid)
+        return allValid
       }
     }
+    return false
   }, [rows, hasBeenValidated])
 
   // Configure message position
@@ -351,9 +360,11 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
       return
     }
 
+    setIsActivating(true)
+
     try {
       // Show loading state during activation
-      message.loading({ content: 'Activating mapper...', key: 'activateMapper' })
+      message.loading({ content: 'Activating. This may take some time..', key: 'activateMapper', duration: 0 })
       
       // Call the activate-deactivate API
       const response = await fetch(
@@ -410,6 +421,8 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
       
       // Keep validate button enabled to allow retry
       setShowValidateButton(true)
+    } finally {
+      setIsActivating(false)
     }
   }
 
@@ -554,7 +567,6 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
     setHasUnsavedChanges(true)
     setShowValidateButton(false)
     setHasBeenValidated(false)
-    setAllRowsValidated(false)
     setIsActivated(false)
     setIsActivationSuccessful(false) // Reset activation success state when changes are made
   }
@@ -582,7 +594,7 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
   }
 
   // Function to check for .s across all rows
-  const checkDuplicateKeySequences = (rows) => {
+  const checkDuplicateKeySequences = useCallback((rows) => {
     const keySeqValues = {}
     let hasDuplicates = false
 
@@ -602,12 +614,50 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
     // Update duplicate status
     setHasDuplicateKeys(hasDuplicates)
 
+    setPkSeqErrors(prev => {
+        const newPkSeqErrors = { ...prev }
+        // Clear old errors
+        Object.keys(newPkSeqErrors).forEach(key => {
+            if (newPkSeqErrors[key] === 'Duplicate key sequence') delete newPkSeqErrors[key];
+        });
+        // Add new errors
+        if (hasDuplicates) {
+            Object.values(keySeqValues).forEach(indices => {
+                if (indices.length > 1) {
+                    indices.forEach(rowIndex => {
+                        if (rows[rowIndex].primaryKey) newPkSeqErrors[rowIndex] = 'Duplicate key sequence'
+                    });
+                }
+            });
+        }
+        return newPkSeqErrors;
+    })
+
+    setRowWarnings(prev => {
+        const newRowWarnings = { ...prev };
+        // Clear old warnings
+        Object.keys(newRowWarnings).forEach(key => {
+            if (newRowWarnings[key] === 'Duplicate key sequence detected') delete newRowWarnings[key];
+        });
+        // Add new warnings
+        if(hasDuplicates) {
+            Object.values(keySeqValues).forEach(indices => {
+                if (indices.length > 1) {
+                    indices.forEach(rowIndex => {
+                        if (rows[rowIndex].primaryKey) newRowWarnings[rowIndex] = 'Duplicate key sequence detected'
+                    });
+                }
+            });
+        }
+        return newRowWarnings;
+    })
+
     // Return the duplicate map for individual error handling
     return { hasDuplicates, keySeqValues }
-  }
+  }, [])
 
   // Modify handleRowChange to reset activation state when changes are made
-  const handleRowChange = (index, field, value) => {
+  const handleRowChange = useCallback((index, field, value) => {
     // Fields that should not allow spaces
     const noSpaceFields = [
       'fieldName',
@@ -623,112 +673,74 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
       value = preventSpaces(value)
     }
 
-    const newRows = [...rows]
-    newRows[index] = {
-      ...newRows[index],
-      [field]: value,
-    }
-
-    // Reset LogicVerFlag when keyColumn, valColumn, or logic is modified
-    if (field === 'keyColumn' || field === 'valColumn' || field === 'logic') {
-      newRows[index].LogicVerFlag = ''
-    }
-
-    // Special handling for primaryKey changes
-    if (field === 'primaryKey') {
-      // If unchecking primary key
-      if (value === false) {
-        // Clear the pkSeq
-        newRows[index].pkSeq = ''
-
-        // Clear any pkSeq errors and warnings for this row
-        setPkSeqErrors((prev) => {
-          const newErrors = { ...prev }
-          delete newErrors[index]
-          return newErrors
-        })
-
-        setRowWarnings((prev) => {
-          const newWarnings = { ...prev }
-          delete newWarnings[index]
-          return newWarnings
-        })
-      }
-    }
-
-    // When primaryKey or pkSeq changes, verify uniqueness of all key sequences
-    if (
-      (field === 'pkSeq' && newRows[index].primaryKey) ||
-      field === 'primaryKey'
-    ) {
-      const { hasDuplicates, keySeqValues } =
-        checkDuplicateKeySequences(newRows)
-
-      // Update error messages for each row
-      const newPkSeqErrors = { ...pkSeqErrors }
-      const newWarnings = { ...rowWarnings }
-
-      // Clear all existing key sequence errors first
-      Object.keys(newPkSeqErrors).forEach((key) => {
-        if (newPkSeqErrors[key] === 'Duplicate key sequence') {
-          delete newPkSeqErrors[key]
+    setRows(prevRows => {
+        const newRows = [...prevRows]
+        newRows[index] = {
+            ...newRows[index],
+            [field]: value,
         }
-      })
 
-      Object.keys(newWarnings).forEach((key) => {
-        if (newWarnings[key] === 'Duplicate key sequence detected') {
-          delete newWarnings[key]
+        // Reset LogicVerFlag when keyColumn, valColumn, or logic is modified
+        if (field === 'keyColumn' || field === 'valColumn' || field === 'logic') {
+            newRows[index].LogicVerFlag = ''
         }
-      })
 
-      if (hasDuplicates) {
-        // Set error messages only for rows with duplicates
-        Object.entries(keySeqValues).forEach(([seqValue, indices]) => {
-          if (indices.length > 1) {
-            indices.forEach((rowIndex) => {
-              if (newRows[rowIndex].primaryKey) {
-                // Only set errors for rows that are still primary keys
-                newPkSeqErrors[rowIndex] = 'Duplicate key sequence'
-                newWarnings[rowIndex] = 'Duplicate key sequence detected'
-              }
+        // Special handling for primaryKey changes
+        if (field === 'primaryKey') {
+            // If unchecking primary key
+            if (value === false) {
+            // Clear the pkSeq
+            newRows[index].pkSeq = ''
+
+            // Clear any pkSeq errors and warnings for this row
+            setPkSeqErrors((prev) => {
+                const newErrors = { ...prev }
+                delete newErrors[index]
+                return newErrors
             })
-          }
-        })
-      }
 
-      setPkSeqErrors(newPkSeqErrors)
-      setRowWarnings(newWarnings)
+            setRowWarnings((prev) => {
+                const newWarnings = { ...prev }
+                delete newWarnings[index]
+                return newWarnings
+            })
+            }
+        }
 
-      if (hasDuplicates && field === 'pkSeq') {
-        message.warning('Duplicate key sequence values are not allowed')
-      }
-    }
-
-    setRows(newRows)
-
-    // Track modifications if this is an update
-    if (originalRows) {
-      // Check if the row is already in modifiedRows
-      const isAlreadyModified = modifiedRows.includes(index)
-
-      // Check if the current field value is different from the original
-      const isFieldModified =
-        JSON.stringify(originalRows[index]?.[field]) !== JSON.stringify(value)
-
-      // Add to modifiedRows if not already there and the field is modified
-      if (!isAlreadyModified && isFieldModified) {
-        setModifiedRows((prev) => [...prev, index])
-      }
-    }
+        // When primaryKey or pkSeq changes, verify uniqueness of all key sequences
+        if (
+            (field === 'pkSeq' && newRows[index].primaryKey) ||
+            field === 'primaryKey'
+        ) {
+            checkDuplicateKeySequences(newRows)
+        }
+        
+        if (originalRows) {
+            setModifiedRows((prevModifiedRows) => {
+                // Check if the row is already in modifiedRows
+                const isAlreadyModified = prevModifiedRows.includes(index)
+        
+                // Check if the current field value is different from the original
+                const isFieldModified =
+                JSON.stringify(originalRows[index]?.[field]) !== JSON.stringify(value)
+        
+                // Add to modifiedRows if not already there and the field is modified
+                if (!isAlreadyModified && isFieldModified) {
+                    return [...prevModifiedRows, index]
+                }
+                return prevModifiedRows
+            })
+        }
+        return newRows
+    })
 
     // Set hasUnsavedChanges to true and reset validation states when changes are made
     setHasUnsavedChanges(true)
     setShowValidateButton(false)
     setHasBeenValidated(false)
-    setAllRowsValidated(false)
     setIsActivated(false)
     setIsActivationSuccessful(false) // Reset activation success state when changes are made
-  }
+  }, [originalRows, checkDuplicateKeySequences])
 
   // Modify addRow to check for duplicates after adding a row
   const addRow = () => {
@@ -762,7 +774,7 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
   // Add useEffect to check for duplicates when rows change
   useEffect(() => {
     checkDuplicateKeySequences(rows)
-  }, [])
+  }, [rows, checkDuplicateKeySequences])
 
   // Removed pagination handlers - using scrollbar instead
 
@@ -832,7 +844,6 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
     setHasUnsavedChanges(false)
     setShowValidateButton(false)
     setHasBeenValidated(false)
-    setAllRowsValidated(false)
     setIsActivated(false)
   }
 
@@ -1008,11 +1019,11 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
   }
 
   // Add these handler functions
-  const handleOpenSqlEditor = (index) => {
+  const handleOpenSqlEditor = useCallback((index) => {
     setSelectedRowIndex(index)
     setShowSqlEditor(true)
     setSqlError(null)
-  }
+  }, [])
 
   // Add function to handle logic change in SQL editor
   const handleLogicChange = (newLogic) => {
@@ -1053,7 +1064,6 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
       setHasUnsavedChanges(true)
       setShowValidateButton(false)
       setHasBeenValidated(false)
-      setAllRowsValidated(false)
       setIsActivated(false)
     }
   }
@@ -1086,7 +1096,6 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
         setHasUnsavedChanges(true)
         setShowValidateButton(false)
         setHasBeenValidated(false)
-        setAllRowsValidated(false)
         setIsActivated(false)
         setIsActivationSuccessful(false)
         
@@ -1100,6 +1109,7 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
   }
 
   const handleFileUpload = async (event) => {
+    setIsUploading(true)
     try {
       const file = event.target.files[0]
       if (!file) return
@@ -1125,7 +1135,7 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
       const { mapperId, ...cleanedFormData } = data.formData
 
       // Remove excluded fields from rows and normalize fieldName
-      const cleanedRows = data.rows.map((row) => {
+      const cleanedRowsData = data.rows.map((row) => {
         const {
           NewRow,
           validator,
@@ -1164,13 +1174,12 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
 
       // Removed sorting to maintain original order from the uploaded file
       setFormData(cleanedFormData)
-      setRows(cleanedRows)
+      setRows(cleanedRowsData)
 
       // Reset all validation and workflow states
       setHasUnsavedChanges(true) // Make save button visible
       setShowValidateButton(true)
       setHasBeenValidated(false)
-      setAllRowsValidated(false)
       setIsActivated(false)
       setIsActivationSuccessful(false)
       setBulkValidationSuccess(false)
@@ -1199,6 +1208,8 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
     } catch (error) {
       console.error('Error uploading file:', error)
       message.error('Failed to upload file')
+    } finally {
+      setIsUploading(false)
     }
   }
 
@@ -1213,12 +1224,12 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
   }
 
   // Add this to handle number input changes
-  const handleNumberChange = (event, index, field) => {
+  const handleNumberChange = useCallback((event, index, field) => {
     const value = event.target.value
     if (validateNumberInput(value)) {
       handleRowChange(index, field, value)
     }
-  }
+  }, [handleRowChange])
 
   // Modify fetchReferenceDetails to clear warnings when changing mapping ID
   const fetchReferenceDetails = async (reference) => {
@@ -1241,23 +1252,10 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
         ...data.formData,
         freqCode: data.formData.freqCode || '',
       })
+
       setRows(
         data.rows.length > 0
-          ? data.rows.map((row) => ({
-              ...row,
-              // Normalize fieldName on fetch
-              fieldName: typeof row.fieldName === 'string' 
-                ? row.fieldName.toUpperCase().replace(/\s/g, '') 
-                : '',
-              validator: row.validator || 'N',
-              keyColumn: row.keyColumn || '',
-              valColumn: row.valColumn || '',
-              execSequence: row.execSequence || '',
-              mapCombineCode: row.mapCombineCode || '',
-              LogicVerFlag: row.LogicVerFlag || '',
-              scdType: row.scdType || '1',
-              fieldDesc: row.fieldDesc || '',
-            }))
+          ? data.rows
           : [...Array(10)].map(() => ({
               mapdtlid: '',
               fieldName: '',
@@ -1295,7 +1293,6 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
       setHasUnsavedChanges(false)
       setShowValidateButton(true)
       setHasBeenValidated(false)
-      setAllRowsValidated(false)
       setIsActivated(false)
 
       // Show the mapper form
@@ -1341,7 +1338,6 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
         setHasUnsavedChanges(false)
         setShowValidateButton(false)
         setHasBeenValidated(false)
-        setAllRowsValidated(false)
         setIsActivated(false)
         setRowWarnings({})
         setPkSeqErrors({})
@@ -1364,10 +1360,15 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
   }
 
   // Modify the handleRowClick to update selected row's logic
-  const handleRowClick = (index) => {
+  const handleRowClick = useCallback((index) => {
     setSelectedRowIndex(index)
-    setSelectedRowLogic(rows[index].logic || '')
-  }
+    setRows(prev => {
+        if(prev[index]) {
+            setSelectedRowLogic(prev[index].logic || '')
+        }
+        return prev
+    })
+  }, [])
 
   // Function to show logs for a specific row
   const handleShowLogs = (rowIndex) => {
@@ -1387,8 +1388,8 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
   }
 
   // Update handleValidateRow function to call both APIs
-  const handleValidateRow = async (index) => {
-    const currentRow = rows[index]
+  const handleValidateRow = useCallback(async (index) => {
+    const currentRow = rowsRef.current[index]
 
     // Check if required fields are filled
     if (!currentRow.keyColumn || !currentRow.valColumn || !currentRow.logic) {
@@ -1415,12 +1416,14 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
       const data = await response.json()
       if (data.status === 'success') {
         // Update the row's LogicVerFlag directly in rows state
-        const newRows = [...rows]
-        newRows[index] = {
-          ...newRows[index],
-          LogicVerFlag: data.is_valid, // 'Y' or 'N'
-        }
-        setRows(newRows)
+        setRows(prevRows => {
+            const newRows = [...prevRows]
+            newRows[index] = {
+              ...newRows[index],
+              LogicVerFlag: data.is_valid, // 'Y' or 'N'
+            }
+            return newRows
+        })
 
         // Store error message if validation failed
         if (data.is_valid === 'N') {
@@ -1449,12 +1452,14 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
     } catch (error) {
       message.error(error.message || 'Error validating logic')
       // Set LogicVerFlag to 'N' on error
-      const newRows = [...rows]
-      newRows[index] = {
-        ...newRows[index],
-        LogicVerFlag: 'N',
-      }
-      setRows(newRows)
+      setRows(prevRows => {
+        const newRows = [...prevRows]
+        newRows[index] = {
+            ...newRows[index],
+            LogicVerFlag: 'N',
+        }
+        return newRows
+      })
 
       // Store error message
       setErrorMessages((prev) => ({
@@ -1462,7 +1467,7 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
         [index]: error.message || 'Error validating logic',
       }))
     }
-  }
+  }, [])
 
   // Add back the areAllRowsValid function
   const areAllRowsValid = () => {
@@ -1614,7 +1619,6 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
       const isValidationSuccessful = !hasBulkValidationError && !hasRowValidationErrors
       
       setHasBeenValidated(true)
-      setAllRowsValidated(isValidationSuccessful)
       setShowValidateButton(!isValidationSuccessful)
       
       // Reset activation states
@@ -1654,7 +1658,6 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
 
       // Set validation workflow states on error
       setHasBeenValidated(true)
-      setAllRowsValidated(false)
       setShowValidateButton(true)
       setBulkValidationSuccess(false) // Set bulk validation status to false on error
       
@@ -1899,7 +1902,6 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
     setHasUnsavedChanges(false)
     setShowValidateButton(false)
     setHasBeenValidated(false)
-    setAllRowsValidated(false)
     setIsActivated(false)
     setValidationStatus({})
     setErrorMessages({})
@@ -1942,11 +1944,11 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
   const [isDeleting, setIsDeleting] = useState(false);
 
   // Handle row menu open
-  const handleRowMenuOpen = (event, index) => {
+  const handleRowMenuOpen = useCallback((event, index) => {
     event.stopPropagation();
     setRowMenuAnchorEl(event.currentTarget);
     setSelectedActionRowIndex(index);
-  };
+  }, []);
 
   // Handle row menu close
   const handleRowMenuClose = () => {
@@ -1974,7 +1976,6 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
       setHasUnsavedChanges(true);
       setShowValidateButton(false);
       setHasBeenValidated(false);
-      setAllRowsValidated(false);
       setIsActivated(false);
       setIsActivationSuccessful(false);
       
@@ -2059,7 +2060,6 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
         setHasUnsavedChanges(true);
         setShowValidateButton(false);
         setHasBeenValidated(false);
-        setAllRowsValidated(false);
         setIsActivated(false);
         setIsActivationSuccessful(false);
       } else {
@@ -2325,7 +2325,7 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
                   <Button
                     variant="contained"
                     onClick={handleActivate}
-                    disabled={!hasBeenValidated || !bulkValidationSuccess || isActivated}
+                    disabled={!hasBeenValidated || !bulkValidationSuccess || isActivated || isActivating}
                     sx={{
                       height: '30px',
                       minWidth: '70px',
@@ -2345,9 +2345,9 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
                           : 'rgba(255, 255, 255, 0.7)'
                       }
                     }}
-                    startIcon={<CheckIcon fontSize="small" />}
+                    startIcon={isActivating ? <CircularProgress size={16} color="inherit" /> : <CheckIcon fontSize="small" />}
                   >
-                    Activate
+                    {isActivating ? 'Activating...' : 'Activate'}
                   </Button>
                 </span>
               </Tooltip>
@@ -2870,10 +2870,79 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
           style={{ minHeight: '400px' }} /* Increase table height to use space efficiently */
         >
           {/* Remove title section and add row button from here */}
+          {/* Enhanced Add Row section */}
+          <div className={`flex justify-between items-center px-4 py-3 border-b ${
+            darkMode 
+              ? 'border-gray-700 bg-gray-800/30' 
+              : 'border-gray-200 bg-gray-50/50'
+          }`}>
+            <div className="flex items-center gap-3">
+              <Button
+                variant="contained"
+                onClick={addRow}
+                startIcon={<AddIcon />}
+                sx={{
+                  textTransform: 'none',
+                  borderRadius: '8px',
+                  fontSize: '0.875rem',
+                  fontWeight: 500,
+                  padding: '8px 16px',
+                  background: darkMode 
+                    ? 'linear-gradient(135deg, #3B82F6, #1D4ED8)' 
+                    : 'linear-gradient(135deg, #2563EB, #1E40AF)',
+                  boxShadow: darkMode
+                    ? '0 4px 6px -1px rgba(59, 130, 246, 0.3), 0 2px 4px -1px rgba(59, 130, 246, 0.2)'
+                    : '0 4px 6px -1px rgba(37, 99, 235, 0.3), 0 2px 4px -1px rgba(37, 99, 235, 0.2)',
+                  '&:hover': {
+                    background: darkMode
+                      ? 'linear-gradient(135deg, #2563EB, #1E40AF)'
+                      : 'linear-gradient(135deg, #1D4ED8, #1E3A8A)',
+                    boxShadow: darkMode
+                      ? '0 6px 10px -1px rgba(59, 130, 246, 0.4), 0 4px 6px -1px rgba(59, 130, 246, 0.3)'
+                      : '0 6px 10px -1px rgba(37, 99, 235, 0.4), 0 4px 6px -1px rgba(37, 99, 235, 0.3)',
+                    transform: 'translateY(-1px)',
+                  },
+                  '&:active': {
+                    transform: 'translateY(0px)',
+                  },
+                  transition: 'all 0.2s ease-in-out',
+                }}
+              >
+                Add New Row
+              </Button>
+              
+              {/* Row count indicator */}
+              <div className={`flex items-center gap-2 px-3 py-1.5 rounded-md ${
+                darkMode 
+                  ? 'bg-gray-700/50 text-gray-300' 
+                  : 'bg-white/80 text-gray-600'
+              }`}>
+                <TableIcon fontSize="small" className={darkMode ? 'text-gray-400' : 'text-gray-500'} />
+                <span className="text-sm font-medium">
+                  {rows.filter(row => row.fieldName.trim() !== '').length} / {rows.length} rows
+                </span>
+              </div>
+            </div>
+            
+            {/* Additional info or actions can go here */}
+            <div className="flex items-center gap-2">
+              <Tooltip title="Scroll to see all rows" placement="top">
+                <div className={`flex items-center gap-1 px-2 py-1 rounded text-xs ${
+                  darkMode 
+                    ? 'text-gray-400 bg-gray-700/30' 
+                    : 'text-gray-500 bg-gray-200/50'
+                }`}>
+                  <KeyboardArrowUpIcon fontSize="small" sx={{ fontSize: '16px' }} />
+                  <KeyboardArrowDownIcon fontSize="small" sx={{ fontSize: '16px' }} />
+                  <span>Scroll</span>
+                </div>
+              </Tooltip>
+            </div>
+          </div>
           <TableContainer 
             className="overflow-auto"
             sx={{ 
-              maxHeight: 'calc(100vh - 15rem)',
+              maxHeight: 'calc(100vh - 18rem)',
               '&::-webkit-scrollbar': {
                 width: '8px',
                 height: '8px',
@@ -3164,817 +3233,31 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
               </TableHead>
               <TableBody>
                 {rows.map((row, index) => (
-                  <TableRow
-                    key={index}
-                    onClick={() => handleRowClick(index)}
-                    className={`
-                          transition-colors duration-150 cursor-pointer
-                          ${
-                            modifiedRows.includes(index)
-                              ? darkMode
-                                ? 'bg-green-900/20 hover:bg-green-900/30'
-                                : 'bg-green-50 hover:bg-green-100/70'
-                              : darkMode
-                              ? `hover:bg-gray-700/50 ${
-                                  selectedRowIndex === index
-                                    ? 'bg-gray-700/70'
-                                    : ''
-                                }`
-                              : `hover:bg-blue-50/30 ${
-                                  selectedRowIndex === index
-                                    ? 'bg-blue-50/50'
-                                    : ''
-                                }`
-                          }
-                        `}
-                    sx={{ 
-                      height: { xs: '26px', md: '26px' },
-                      '&:hover': {
-                        '& .MuiTableCell-root': {
-                          borderColor: darkMode 
-                            ? 'rgba(96, 165, 250, 0.3)' 
-                            : 'rgba(59, 130, 246, 0.3)',
-                        }
-                      },
-                      '&.Mui-selected, &.Mui-selected:hover': {
-                        '& .MuiTableCell-root': {
-                          borderColor: darkMode 
-                            ? 'rgba(96, 165, 250, 0.5)' 
-                            : 'rgba(59, 130, 246, 0.5)',
-                        }
-                      }
-                    }}
-                  >
-                    <TableCell className="py-0 px-0" sx={{ padding: '0px 2px' }}>
-                      <Checkbox
-                        checked={row.primaryKey}
-                        onChange={(e) =>
-                          handleRowChange(
-                            index,
-                            'primaryKey',
-                            e.target.checked
-                          )
-                        }
-                        className={`${
-                          darkMode ? 'text-blue-400' : 'text-blue-500'
-                        }`}
-                        size="small"
-                        sx={{ padding: '2px', height: '26px' }}
-                      />
-                    </TableCell>
-                    <TableCell className="py-0 px-0" sx={{ padding: '0px 2px' }}>
-                      <TextField
-                        value={row.pkSeq}
-                        onChange={(e) =>
-                          handleNumberChange(e, index, 'pkSeq')
-                        }
-                        disabled={!row.primaryKey}
-                        size="small"
-                        fullWidth
-                        variant="outlined"
-                        error={!!pkSeqErrors[index]}
-                        helperText={pkSeqErrors[index]}
-                        inputProps={{
-                          min: 0,
-                          max: 999,
-                          step: 1,
-                          className: 'px-2 py-0 text-center',
-                          style: { height: '26px', fontSize: '0.8rem' }
-                        }}
-                        className={`${
-                          darkMode ? 'bg-gray-800/50' : 'bg-white'
-                        } rounded-none ${!row.primaryKey ? 'opacity-50' : ''}`}
-                        sx={{
-                          '& .MuiOutlinedInput-root': {
-                            height: '26px',
-                            borderRadius: '0',
-                            '& fieldset': {
-                              borderColor: pkSeqErrors[index]
-                                ? darkMode
-                                  ? 'rgba(239,68,68,0.7)'
-                                  : 'rgba(239,68,68,0.7)'
-                                : 'transparent',
-                            },
-                            '&:hover fieldset': {
-                              borderColor: pkSeqErrors[index]
-                                ? darkMode
-                                  ? 'rgba(239,68,68,0.9)'
-                                  : 'rgba(239,68,68,0.9)'
-                                : darkMode
-                                ? 'rgba(96, 165, 250, 0.5)'
-                                : 'rgba(59, 130, 246, 0.5)',
-                            },
-                            '&.Mui-focused fieldset': {
-                              borderWidth: '1px !important',
-                              borderColor: pkSeqErrors[index]
-                                ? darkMode
-                                  ? 'rgba(239,68,68,1)'
-                                  : 'rgba(239,68,68,1)'
-                                : '#3b82f6',
-                            },
-                            '&.Mui-disabled': {
-                              backgroundColor: darkMode
-                                ? 'rgba(31, 41, 55, 0.5)'
-                                : 'rgba(229, 231, 235, 0.5)',
-                              '& fieldset': {
-                                borderColor: 'transparent',
-                              },
-                              '& input': {
-                                color: darkMode
-                                  ? 'rgba(255,255,255,0.5)'
-                                  : 'rgba(0,0,0,0.5)',
-                              },
-                            },
-                          },
-                          '& .MuiFormHelperText-root': {
-                            color: darkMode
-                              ? 'rgba(239,68,68,0.9)'
-                              : 'rgba(239,68,68,0.9)',
-                            position: 'absolute',
-                            bottom: '-20px',
-                            margin: 0,
-                            fontSize: '0.625rem',
-                          },
-                        }}
-                      />
-                    </TableCell>
-                    
-                    <TableCell className="py-0 px-0" sx={{ padding: '0px 4px' }}>
-                      <TextField
-                        value={row.fieldName}
-                        disabled={!!row.mapdtlid}
-                        onChange={(e) => {
-                          const value = e.target.value
-                            .toUpperCase()
-                            .slice(0, 30)
-                          handleRowChange(
-                            index,
-                            'fieldName',
-                            value
-                          )
-                        }}
-                        size="small"
-                        fullWidth
-                        variant="outlined"
-                        inputProps={{
-                          maxLength: 30,
-                          className: 'px-2 py-0',
-                          style: { height: '26px', fontSize: '0.8rem' }
-                        }}
-                        className={`${
-                          darkMode
-                            ? 'bg-gray-800/50'
-                            : row.mapdtlid
-                            ? 'bg-gray-100'
-                            : 'bg-white'
-                        } rounded-none`}
-                        sx={{
-                          '& .MuiOutlinedInput-root': {
-                            height: '26px',
-                            borderRadius: '0',
-                            '& fieldset': {
-                              borderColor: 'transparent',
-                            },
-                            '&:hover fieldset': {
-                              borderColor: darkMode
-                                ? 'rgba(96, 165, 250, 0.5)'
-                                : 'rgba(59, 130, 246, 0.5)',
-                            },
-                            '&.Mui-focused fieldset': {
-                              borderWidth: '1px !important',
-                              borderColor: '#3b82f6',
-                            },
-                            '&.Mui-disabled': {
-                              backgroundColor: darkMode
-                                ? 'rgba(31, 41, 55, 0.5)'
-                                : 'rgba(229, 231, 235, 0.5)',
-                              '& fieldset': {
-                                borderColor: 'transparent',
-                              },
-                              '& input': {
-                                color: darkMode
-                                  ? 'rgba(255,255,255,0.5)'
-                                  : 'rgba(0,0,0,0.5)',
-                              },
-                            },
-                          },
-                        }}
-                      />
-                    </TableCell>
-                    
-                    <TableCell className="py-0 px-0" sx={{ padding: '0px 4px', width: '100px' }}>
-                      <Autocomplete
-                        value={
-                          dataTypeOptions.find(
-                            (option) => option.PRCD === row.dataType
-                          ) || null
-                        }
-                        disabled={!!row.mapdtlid}
-                        onChange={(event, newValue) => {
-                          handleRowChange(
-                            index,
-                            'dataType',
-                            newValue ? newValue.PRCD : ''
-                          )
-                        }}
-                        options={dataTypeOptions}
-                        getOptionLabel={(option) => option.PRCD}
-                        renderInput={(params) => (
-                          <TextField
-                            {...params}
-                            size="small"
-                            fullWidth
-                            variant="outlined"
-                            className={`${
-                              darkMode
-                                ? 'bg-gray-800/50'
-                                : row.mapdtlid
-                                ? 'bg-gray-100'
-                                : 'bg-white'
-                            } rounded-none`}
-                            sx={{
-                              '& .MuiOutlinedInput-root': {
-                                height: '26px',
-                                borderRadius: '0',
-                                '& fieldset': {
-                                  borderColor: 'transparent',
-                                },
-                                '&:hover fieldset': {
-                                  borderColor: darkMode
-                                    ? 'rgba(96, 165, 250, 0.5)' 
-                                    : 'rgba(59, 130, 246, 0.5)',
-                                },
-                                '&.Mui-focused fieldset': {
-                                  borderWidth: '1px !important',
-                                  borderColor: '#3b82f6',
-                                },
-                                '&.Mui-disabled': {
-                                  backgroundColor: darkMode
-                                    ? 'rgba(31, 41, 55, 0.5)'
-                                    : 'rgba(229, 231, 235, 0.5)',
-                                  '& fieldset': {
-                                    borderColor: 'transparent',
-                                  },
-                                  '& input': {
-                                    color: darkMode
-                                      ? 'rgba(255,255,255,0.5)'
-                                      : 'rgba(0,0,0,0.5)',
-                                  },
-                                },
-                              },
-                              '& .MuiAutocomplete-inputRoot': {
-                                paddingTop: '0 !important',
-                                paddingBottom: '0 !important',
-                              },
-                              '& .MuiInputBase-input': {
-                                padding: '2px 4px !important',
-                                fontSize: '0.8rem',
-                                height: '26px !important',
-                                boxSizing: 'border-box',
-                              }
-                            }}
-                          />
-                        )}
-                        renderOption={(props, option) => (
-                          <li {...props}>
-                            <Tooltip
-                              title={option.PRDESC}
-                              placement="right"
-                              arrow
-                            >
-                              <span>{option.PRCD}</span>
-                            </Tooltip>
-                          </li>
-                        )}
-                        isOptionEqualToValue={(option, value) =>
-                          option.PRCD === value.PRCD
-                        }
-                        className={darkMode ? 'text-gray-200' : ''}
-                        disableClearable
-                      />
-                    </TableCell>
-                    
-                    <TableCell className="py-0 px-0" sx={{ padding: '0px 4px' }}>
-                      <TextField
-                        value={row.fieldDesc}
-                        onChange={(e) => {
-                          const value = e.target.value.slice(0, 100)
-                          handleRowChange(
-                            index,
-                            'fieldDesc',
-                            value
-                          )
-                        }}
-                        size="small"
-                        fullWidth
-                        variant="outlined"
-                        inputProps={{
-                          maxLength: 100,
-                          className: 'px-2 py-0',
-                          style: { height: '26px', fontSize: '0.8rem' }
-                        }}
-                        className={`${
-                          darkMode ? 'bg-gray-800/50' : 'bg-white'
-                        } rounded-none`}
-                        sx={{
-                          '& .MuiOutlinedInput-root': {
-                            height: '26px',
-                            borderRadius: '0',
-                            '& fieldset': {
-                              borderColor: 'transparent',
-                            },
-                            '&:hover fieldset': {
-                              borderColor: darkMode
-                                ? 'rgba(96, 165, 250, 0.5)'
-                                : 'rgba(59, 130, 246, 0.5)',
-                            },
-                            '&.Mui-focused fieldset': {
-                              borderWidth: '1px !important',
-                              borderColor: '#3b82f6',
-                            },
-                          },
-                        }}
-                      />
-                    </TableCell>
-                    
-                    {formData.tableType === 'DIM' && (
-                      <TableCell className="py-0 px-0" sx={{ padding: '0px 4px' }}>
-                        <FormControl
-                          fullWidth
-                          size="small"
-                          variant="outlined"
-                          className={`${
-                            darkMode ? 'bg-gray-800/50' : 'bg-white'
-                          } rounded-none`}
-                        >
-                          <Select
-                            value={row.scdType}
-                            onChange={(e) =>
-                              handleRowChange(
-                                index,
-                                'scdType',
-                                e.target.value
-                              )
-                            }
-                            renderValue={(value) => {
-                              // Find the option with matching PRCD and display its PRCD
-                              const option = scdTypeOptions.find(
-                                (opt) => opt.PRCD === value
-                              )
-                              return option ? option.PRCD : value
-                            }}
-                            className={darkMode ? 'text-gray-200' : ''}
-                            sx={{
-                              height: '26px',
-                              borderRadius: '0',
-                              '& .MuiOutlinedInput-notchedOutline': {
-                                borderColor: 'transparent',
-                                borderRadius: '0',
-                              },
-                              '&:hover .MuiOutlinedInput-notchedOutline': {
-                                borderColor: darkMode
-                                  ? 'rgba(96, 165, 250, 0.5)'
-                                  : 'rgba(59, 130, 246, 0.5)',
-                              },
-                              '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                borderWidth: '1px !important',
-                                borderColor: '#3b82f6',
-                              },
-                              '& .MuiSelect-select': {
-                                padding: '2px 6px',
-                                fontSize: '0.8rem',
-                              },
-                            }}
-                          >
-                            {scdTypeOptions.map((option) => (
-                              <MenuItem key={option.PRCD} value={option.PRCD}>
-                                {option.PRCD}
-                              </MenuItem>
-                            ))}
-                            {/* Fallback option if API hasn't loaded yet */}
-                            {scdTypeOptions.length === 0 && (
-                              <>
-                                <MenuItem value="1">Type 1</MenuItem>
-                                <MenuItem value="2">Type 2</MenuItem>
-                              </>
-                            )}
-                          </Select>
-                        </FormControl>
-                      </TableCell>
-                    )}
-                    
-                    <TableCell className="py-0 px-0" sx={{ padding: '0px 4px' }}>
-                      <div className="relative group">
-                        <TextField
-                          multiline
-                          maxRows={2}
-                          value={row.logic?.substring(0, 100) || ''}
-                          disabled
-                          size="small"
-                          fullWidth
-                          variant="outlined"
-                          placeholder="Click edit to add SQL logic"
-                          className={`${
-                            darkMode ? 'bg-gray-800/50' : 'bg-white'
-                          } rounded-none`}
-                          sx={{
-                            '& .MuiOutlinedInput-root': {
-                              fontSize: '0.75rem',
-                              minHeight: '20px',
-                              height: '26px',
-                              borderRadius: '0',
-                              '& fieldset': {
-                                borderColor: 'transparent',
-                                borderRadius: '0',
-                              },
-                              '&:hover fieldset': {
-                                borderColor: darkMode 
-                                  ? 'rgba(96, 165, 250, 0.5)' 
-                                  : 'rgba(59, 130, 246, 0.5)',
-                              },
-                              '&.Mui-focused fieldset': {
-                                borderWidth: '1px !important',
-                                borderColor: '#3b82f6',
-                              },
-                              '&.Mui-disabled': {
-                                backgroundColor: 'transparent',
-                                '& fieldset': {
-                                  borderColor: 'transparent',
-                                },
-                                '& textarea': {
-                                  color: darkMode
-                                    ? 'rgba(255,255,255,0.8)'
-                                    : 'rgba(0,0,0,0.8)',
-                                },
-                              },
-                            },
-                            '& .MuiInputBase-input': {
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                              whiteSpace: 'nowrap',
-                              height: '26px',
-                              boxSizing: 'border-box',
-                              padding: '2px 4px !important',
-                              lineHeight: '1.2',
-                            }
-                          }}
-                        />
-                        <div className="absolute top-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <Tooltip title="Edit SQL Logic">
-                            <IconButton
-                                                          onClick={(e) => {
-                              e.stopPropagation();
-                              handleOpenSqlEditor(index);
-                            }}
-                              size="small"
-                              sx={{ 
-                                padding: '2px',
-                                backgroundColor: darkMode ? 'rgba(59, 130, 246, 0.3)' : 'rgba(59, 130, 246, 0.1)'
-                              }}
-                            >
-                              <EditIcon fontSize="small" className={darkMode ? 'text-blue-400' : 'text-blue-600'} sx={{ fontSize: '16px' }} />
-                            </IconButton>
-                          </Tooltip>
-                        </div>
-                      </div>
-                    </TableCell>
-                    
-                    <TableCell className="py-0 px-0" sx={{ padding: '0px 4px' }}>
-                      <TextField
-                        value={row.keyColumn}
-                        onChange={(e) => {
-                          const value = e.target.value.slice(0, 250)
-                          handleRowChange(
-                            index,
-                            'keyColumn',
-                            value
-                          )
-                        }}
-                        size="small"
-                        fullWidth
-                        variant="outlined"
-                        inputProps={{
-                          maxLength: 250,
-                          className: 'px-2 py-0',
-                          style: { height: '26px', fontSize: '0.8rem' }
-                        }}
-                        className={`${
-                          darkMode ? 'bg-gray-800/50' : 'bg-white'
-                        } rounded-none`}
-                        sx={{
-                          '& .MuiOutlinedInput-root': {
-                            height: '26px',
-                            borderRadius: '0',
-                            '& fieldset': {
-                              borderColor: 'transparent',
-                            },
-                            '&:hover fieldset': {
-                              borderColor: darkMode
-                                ? 'rgba(96, 165, 250, 0.5)'
-                                : 'rgba(59, 130, 246, 0.5)',
-                            },
-                            '&.Mui-focused fieldset': {
-                              borderWidth: '1px !important',
-                              borderColor: '#3b82f6',
-                            },
-                          },
-                        }}
-                      />
-                    </TableCell>
-                    
-                    <TableCell className="py-0 px-0" sx={{ padding: '0px 4px' }}>
-                      <TextField
-                        value={row.valColumn}
-                        onChange={(e) => {
-                          const value = e.target.value.slice(0, 250)
-                          handleRowChange(
-                            index,
-                            'valColumn',
-                            value
-                          )
-                        }}
-                        size="small"
-                        fullWidth
-                        variant="outlined"
-                        inputProps={{
-                          maxLength: 250,
-                          className: 'px-2 py-0',
-                          style: { height: '26px', fontSize: '0.8rem' }
-                        }}
-                        className={`${
-                          darkMode ? 'bg-gray-800/50' : 'bg-white'
-                        } rounded-none`}
-                        sx={{
-                          '& .MuiOutlinedInput-root': {
-                            height: '26px',
-                            borderRadius: '0',
-                            '& fieldset': {
-                              borderColor: 'transparent',
-                            },
-                            '&:hover fieldset': {
-                              borderColor: darkMode
-                                ? 'rgba(96, 165, 250, 0.5)'
-                                : 'rgba(59, 130, 246, 0.5)',
-                            },
-                            '&.Mui-focused fieldset': {
-                              borderWidth: '1px !important',
-                              borderColor: '#3b82f6',
-                            },
-                          },
-                        }}
-                      />
-                    </TableCell>
-                    
-                    <TableCell className="py-0 px-0" sx={{ padding: '0px 4px' }}>
-                      <TextField
-                        value={row.execSequence}
-                        onChange={(e) => {
-                          // Only allow integers up to 5000
-                          const value = e.target.value;
-                          if (value === '' || (/^\d+$/.test(value) && parseInt(value) <= 5000)) {
-                            handleRowChange(
-                              index,
-                              'execSequence',
-                              value
-                            )
-                          }
-                        }}
-                        size="small"
-                        fullWidth
-                        variant="outlined"
-                        type="number"
-                        inputProps={{
-                          min: 0,
-                          max: 5000,
-                          className: 'px-2 py-0',
-                          style: { height: '26px', fontSize: '0.8rem' }
-                        }}
-                        className={`${
-                          darkMode ? 'bg-gray-800/50' : 'bg-white'
-                        } rounded-none`}
-                        sx={{
-                          '& .MuiOutlinedInput-root': {
-                            height: '26px',
-                            borderRadius: '0',
-                            '& fieldset': {
-                              borderColor: 'transparent',
-                            },
-                            '&:hover fieldset': {
-                              borderColor: darkMode
-                                ? 'rgba(96, 165, 250, 0.5)'
-                                : 'rgba(59, 130, 246, 0.5)',
-                            },
-                            '&.Mui-focused fieldset': {
-                              borderWidth: '1px !important',
-                              borderColor: '#3b82f6',
-                            },
-                          },
-                          '& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button': {
-                            '-webkit-appearance': 'none',
-                            margin: 0,
-                          },
-                          '& input[type=number]': {
-                            '-moz-appearance': 'textfield',
-                          },
-                        }}
-                      />
-                    </TableCell>
-                    
-                    <TableCell className="py-0 px-0" sx={{ padding: '0px 4px' }}>
-                      <TextField
-                        value={row.mapCombineCode}
-                        onChange={(e) => {
-                          const value = e.target.value.slice(0, 30)
-                          handleRowChange(
-                            index,
-                            'mapCombineCode',
-                            value
-                          )
-                        }}
-                        size="small"
-                        fullWidth
-                        variant="outlined"
-                        inputProps={{
-                          maxLength: 30,
-                          className: 'px-2 py-0',
-                          style: { height: '26px', fontSize: '0.8rem' }
-                        }}
-                        className={`${
-                          darkMode ? 'bg-gray-800/50' : 'bg-white'
-                        } rounded-none`}
-                        sx={{
-                          '& .MuiOutlinedInput-root': {
-                            height: '26px',
-                            borderRadius: '0',
-                            '& fieldset': {
-                              borderColor: 'transparent',
-                            },
-                            '&:hover fieldset': {
-                              borderColor: darkMode
-                                ? 'rgba(96, 165, 250, 0.5)'
-                                : 'rgba(59, 130, 246, 0.5)',
-                            },
-                            '&.Mui-focused fieldset': {
-                              borderWidth: '1px !important',
-                              borderColor: '#3b82f6',
-                            },
-                          },
-                        }}
-                      />
-                    </TableCell>
-                    
-                    <TableCell className="py-0 px-0" align="center" sx={{ padding: '0px 2px' }}>
-                      <Tooltip
-                        title={
-                          row.LogicVerFlag === ''
-                            ? 'Validate this row'
-                            : row.LogicVerFlag === 'Y'
-                            ? 'Logic is valid'
-                            : errorMessages[index] ||
-                              'Logic is invalid'
-                        }
-                      >
-                        <IconButton
-                          onClick={(e) => {
-                            e.stopPropagation() // Prevent row selection
-                            handleValidateRow(index)
-                          }}
-                          size="small"
-                          sx={{
-                            padding: '2px',
-                            color:
-                              row.LogicVerFlag === ''
-                                ? darkMode
-                                  ? 'rgba(156, 163, 175, 0.9)'
-                                  : 'rgba(75, 85, 99, 0.9)'
-                                : row.LogicVerFlag === 'Y'
-                                ? darkMode
-                                  ? 'rgba(34, 197, 94, 0.9)'
-                                  : 'rgba(22, 163, 74, 0.9)'
-                                : darkMode
-                                ? 'rgba(239, 68, 68, 0.9)'
-                                : 'rgba(220, 38, 38, 0.9)',
-                            '&:hover': {
-                              color:
-                                row.LogicVerFlag === ''
-                                  ? darkMode
-                                    ? 'rgba(156, 163, 175, 1)'
-                                    : 'rgba(75, 85, 99, 1)'
-                                  : row.LogicVerFlag === 'Y'
-                                  ? darkMode
-                                    ? 'rgba(34, 197, 94, 1)'
-                                    : 'rgba(22, 163, 74, 1)'
-                                  : darkMode
-                                  ? 'rgba(239, 68, 68, 1)'
-                                  : 'rgba(220, 38, 38, 1)',
-                            },
-                          }}
-                        >
-                          {row.LogicVerFlag === '' ? (
-                            <HelpOutlineIcon fontSize="small" sx={{ fontSize: '16px' }} />
-                          ) : row.LogicVerFlag === 'Y' ? (
-                            <CheckCircleIcon fontSize="small" sx={{ fontSize: '16px' }} />
-                          ) : (
-                            <ErrorIcon fontSize="small" sx={{ fontSize: '16px' }} />
-                          )}
-                        </IconButton>
-                      </Tooltip>
-                    </TableCell>
-                    {/* Add Actions cell */}
-                    <TableCell className="py-0 px-0" align="center" sx={{ padding: '0px 2px' }}>
-                      <IconButton
-                        onClick={(e) => handleRowMenuOpen(e, index)}
-                        size="small"
-                        sx={{
-                          padding: '2px',
-                          color: darkMode
-                            ? 'rgba(156, 163, 175, 0.9)'
-                            : 'rgba(75, 85, 99, 0.9)',
-                          '&:hover': {
-                            color: darkMode
-                              ? 'rgba(156, 163, 175, 1)'
-                              : 'rgba(75, 85, 99, 1)',
-                          },
-                        }}
-                      >
-                        <MoreVertIcon fontSize="small" sx={{ fontSize: '16px' }} />
-                      </IconButton>
-                    </TableCell>
-                  </TableRow>
+                    <ReferenceRow
+                        key={row.mapdtlid || index}
+                        row={row}
+                        index={index}
+                        darkMode={darkMode}
+                        selectedRowIndex={selectedRowIndex}
+                        isModified={modifiedRows.includes(index)}
+                        pkSeqError={pkSeqErrors[index]}
+                        dataTypeOptions={dataTypeOptions}
+                        scdTypeOptions={scdTypeOptions}
+                        tableType={formData.tableType}
+                        errorMessage={errorMessages[index]}
+                        handleRowClick={handleRowClick}
+                        handleRowChange={handleRowChange}
+                        handleNumberChange={handleNumberChange}
+                        handleOpenSqlEditor={handleOpenSqlEditor}
+                        handleValidateRow={handleValidateRow}
+                        handleRowMenuOpen={handleRowMenuOpen}
+                    />
                 ))}
               </TableBody>
             </Table>
           </TableContainer>
           
           {/* Enhanced Add Row section */}
-          <div className={`flex justify-between items-center px-4 py-3 border-t ${
-            darkMode 
-              ? 'border-gray-700 bg-gray-800/30' 
-              : 'border-gray-200 bg-gray-50/50'
-          }`}>
-            <div className="flex items-center gap-3">
-              <Button
-                variant="contained"
-                onClick={addRow}
-                startIcon={<AddIcon />}
-                sx={{
-                  textTransform: 'none',
-                  borderRadius: '8px',
-                  fontSize: '0.875rem',
-                  fontWeight: 500,
-                  padding: '8px 16px',
-                  background: darkMode 
-                    ? 'linear-gradient(135deg, #3B82F6, #1D4ED8)' 
-                    : 'linear-gradient(135deg, #2563EB, #1E40AF)',
-                  boxShadow: darkMode
-                    ? '0 4px 6px -1px rgba(59, 130, 246, 0.3), 0 2px 4px -1px rgba(59, 130, 246, 0.2)'
-                    : '0 4px 6px -1px rgba(37, 99, 235, 0.3), 0 2px 4px -1px rgba(37, 99, 235, 0.2)',
-                  '&:hover': {
-                    background: darkMode
-                      ? 'linear-gradient(135deg, #2563EB, #1E40AF)'
-                      : 'linear-gradient(135deg, #1D4ED8, #1E3A8A)',
-                    boxShadow: darkMode
-                      ? '0 6px 10px -1px rgba(59, 130, 246, 0.4), 0 4px 6px -1px rgba(59, 130, 246, 0.3)'
-                      : '0 6px 10px -1px rgba(37, 99, 235, 0.4), 0 4px 6px -1px rgba(37, 99, 235, 0.3)',
-                    transform: 'translateY(-1px)',
-                  },
-                  '&:active': {
-                    transform: 'translateY(0px)',
-                  },
-                  transition: 'all 0.2s ease-in-out',
-                }}
-              >
-                Add New Row
-              </Button>
-              
-              {/* Row count indicator */}
-              <div className={`flex items-center gap-2 px-3 py-1.5 rounded-md ${
-                darkMode 
-                  ? 'bg-gray-700/50 text-gray-300' 
-                  : 'bg-white/80 text-gray-600'
-              }`}>
-                <TableIcon fontSize="small" className={darkMode ? 'text-gray-400' : 'text-gray-500'} />
-                <span className="text-sm font-medium">
-                  {rows.filter(row => row.fieldName.trim() !== '').length} / {rows.length} rows
-                </span>
-              </div>
-            </div>
-            
-            {/* Additional info or actions can go here */}
-            <div className="flex items-center gap-2">
-              <Tooltip title="Scroll to see all rows" placement="top">
-                <div className={`flex items-center gap-1 px-2 py-1 rounded text-xs ${
-                  darkMode 
-                    ? 'text-gray-400 bg-gray-700/30' 
-                    : 'text-gray-500 bg-gray-200/50'
-                }`}>
-                  <KeyboardArrowUpIcon fontSize="small" sx={{ fontSize: '16px' }} />
-                  <KeyboardArrowDownIcon fontSize="small" sx={{ fontSize: '16px' }} />
-                  <span>Scroll</span>
-                </div>
-              </Tooltip>
-            </div>
-          </div>
           
           {/* Remove floating Add Row button */}
           {/*
@@ -4285,6 +3568,18 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
           </Button>
         </DialogActions>
       </Dialog>
+
+      <LoadingDialog
+        open={isUploading}
+        title="Processing Your File"
+        message="Please wait while we upload and process your template."
+      />
+
+      <LoadingDialog
+        open={isSearching}
+        title="Fetching Reference Details"
+        message="Please wait while we retrieve the mapper configuration."
+      />
     </motion.div>
   )
 })

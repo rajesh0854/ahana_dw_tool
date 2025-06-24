@@ -1,1 +1,8 @@
-[]
+[
+  {
+    "reference": "DIM_ACCOUNT",
+    "userId": 1,
+    "username": "rajesh",
+    "lockedAt": "2025-06-24T17:47:19.115Z"
+  }
+]

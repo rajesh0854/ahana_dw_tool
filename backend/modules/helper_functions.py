@@ -1,6 +1,7 @@
 import os
 import oracledb
 import dotenv
+from modules.logger import logger, info, warning, error
 dotenv.load_dotenv()
 
 ORACLE_SCHEMA = os.getenv("SCHEMA")
@@ -22,7 +23,7 @@ def get_parameter_mapping(conn):
         cursor.close()
         return result
     except Exception as e:
-        print(f"Error fetching parameter mapping: {str(e)}")
+        error(f"Error fetching parameter mapping: {str(e)}")
         raise
 
 def add_parameter_mapping(conn, type, code, desc, value):
@@ -37,7 +38,7 @@ def add_parameter_mapping(conn, type, code, desc, value):
         cursor.close()
         return "Parameter mapping added successfully."
     except Exception as e:
-        print(f"Error adding parameter mapping: {str(e)}")
+        error(f"Error adding parameter mapping: {str(e)}")
         raise
 
 def get_mapping_ref(conn, reference):
@@ -65,7 +66,7 @@ def get_mapping_ref(conn, reference):
         cursor.close()
         return result
     except Exception as e:
-        print(f"Error fetching mapping reference: {str(e)}")
+        error(f"Error fetching mapping reference: {str(e)}")
         raise
 
 def get_mapping_details(conn, reference):
@@ -80,10 +81,7 @@ def get_mapping_details(conn, reference):
             FROM DWMAPRDTL 
             WHERE MAPREF = :1
             AND CURFLG = 'Y'
-            ORDER BY 
-                CASE WHEN TRGKEYFLG = 'Y' THEN 0 ELSE 1 END,
-                TRGKEYSEQ NULLS LAST,
-                TRGCLNM
+            ORDER BY MAPDTLID
         """
         cursor.execute(query, [reference])
         
@@ -98,7 +96,7 @@ def get_mapping_details(conn, reference):
         cursor.close()
         return result
     except Exception as e:
-        print(f"Error fetching mapping details: {str(e)}")
+        error(f"Error fetching mapping details: {str(e)}")
         raise
 
 def get_error_message(conn, map_detail_id):
@@ -123,7 +121,7 @@ def get_error_message(conn, map_detail_id):
         
         return row[0]  # Return the first column value
     except Exception as e:
-        print(f"Error getting error message: {str(e)}")
+        error(f"Error getting error message: {str(e)}")
         raise
 
 def get_error_messages_list(conn, map_detail_ids):
@@ -152,7 +150,7 @@ def get_error_messages_list(conn, map_detail_ids):
         return result_dict
        
     except Exception as e:
-        print(f"Error getting error messages: {str(e)}")
+        error(f"Error getting error messages: {str(e)}")
         raise
 def get_parameter_mapping_datatype(conn):
     try:
@@ -171,7 +169,7 @@ def get_parameter_mapping_datatype(conn):
         cursor.close()
         return result
     except Exception as e:
-        print(f"Error fetching parameter mapping: {str(e)}")
+        error(f"Error fetching parameter mapping: {str(e)}")
         raise
 
 def get_parameter_mapping_scd_type(conn):
@@ -191,7 +189,7 @@ def get_parameter_mapping_scd_type(conn):
         cursor.close()
         return result
     except Exception as e:
-        print(f"Error fetching parameter mapping: {str(e)}")
+        error(f"Error fetching parameter mapping: {str(e)}")
         raise
 
 def call_activate_deactivate_mapping(connection, p_mapref, p_stflg):
@@ -289,14 +287,13 @@ def create_update_mapping(connection, p_mapref, p_mapdesc, p_trgschm, p_trgtbtyp
             p_user=user_id
         )
         
-        connection.commit()
         # Get the result
         mapid = v_mapid.getvalue()
 
         return mapid
         
     except Exception as e:
-        print(f"Error creating/updating mapping: {str(e)}")
+        error(f"Error creating/updating mapping: {str(e)}")
         raise
         
     finally:
@@ -358,14 +355,13 @@ def create_update_mapping_detail(connection, p_mapref, p_trgclnm, p_trgcldtyp, p
             p_lgvrfydt=p_lgvrfydt,
             p_user=user_id
         )
-        connection.commit()
         
         # Get the result
         mapdtlid = v_mapdtlid.getvalue()
         return mapdtlid
         
     except Exception as e:
-        print(f"Error creating/updating mapping detail: {str(e)}")
+        error(f"Error creating/updating mapping detail: {str(e)}")
         raise
         
     finally:
@@ -440,7 +436,7 @@ def validate_logic2(connection, p_logic, p_keyclnm, p_valclnm):
         return is_valid, error_message
     
     except Exception as e:
-        print(f"Error validating logic: {str(e)}")
+        error(f"Error validating logic: {str(e)}")
         raise
     
     finally:
@@ -482,7 +478,7 @@ def validate_all_mapping_details(connection, p_mapref):
         return result, error_message
         
     except Exception as e:
-        print(f"Error validating mapping details: {str(e)}")
+        error(f"Error validating mapping details: {str(e)}")
         raise
         
     finally:
@@ -509,7 +505,7 @@ def get_job_list(conn):
         cursor.close()
         return result
     except Exception as e:
-        print(f"Error fetching job list: {str(e)}")
+        error(f"Error fetching job list: {str(e)}")
         raise
 
 
@@ -546,7 +542,7 @@ def call_create_update_job(connection, p_mapref):
     
     except Exception as e:
         error_message = f"Error creating/updating job: {str(e)}"
-        print(error_message)
+        error(error_message)
         return None, error_message
     
     finally:

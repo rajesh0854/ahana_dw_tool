@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify, make_response
+from flask import Blueprint, request, jsonify, make_response, g
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 from datetime import datetime, timedelta
@@ -66,7 +66,8 @@ def send_reset_email(email, reset_token):
         server.quit()
         return True
     except Exception as e:
-        print(f"Error sending email: {str(e)}")
+        from modules.logger import error
+        error(f"Error sending email: {str(e)}")
         return False
     
 @auth_bp.route('/login', methods=['POST'])
@@ -88,7 +89,7 @@ def login():
         ).fetchone()
         
         if not user:
-            return jsonify({'error': 'Invalid credentials'}), 401
+            return jsonify({'error': 'Hmm, that didn’t work. Try again!'}), 401
             
         # Add check for PENDING status
         if user.account_status == 'PENDING':
@@ -123,7 +124,7 @@ def login():
                 }
             )
             session.commit()
-            return jsonify({'error': 'Invalid credentials'}), 401
+            return jsonify({'error': 'Hmm, that didn’t work. Try again!'}), 401
         
         # Generate JWT token with 1 day expiry
         token = jwt.encode(
@@ -190,7 +191,9 @@ def login():
         return response
         
     except Exception as e:
-        print(f"Login error: {str(e)}")
+        # Import logger inside the function to avoid circular imports
+        from modules.logger import error
+        error(f"Login error: {str(e)}")
         return jsonify({'error': 'An error occurred during login'}), 500
     finally:
         session.close()
@@ -333,47 +336,62 @@ def reset_password():
 def token_required(f):
     def decorated(*args, **kwargs):
         token = None
-        auth_header = request.headers.get('Authorization')
         
-        if auth_header:
-            try:
-                # Check if it's a Bearer token
-                if auth_header.startswith('Bearer '):
-                    token = auth_header.split(' ')[1]
-                else:
-                    token = auth_header
-            except:
-                return jsonify({'error': 'Invalid token format'}), 401
+        # Import logger inside the function to avoid circular imports
+        from modules.logger import info, warning, error
         
+        # Check for token in Authorization header
+        if 'Authorization' in request.headers:
+            auth_header = request.headers['Authorization']
+            if auth_header.startswith('Bearer '):
+                token = auth_header.split(' ')[1]
+        
+        # Check for token in cookies
+        if not token and 'token' in request.cookies:
+            token = request.cookies.get('token')
+            
         if not token:
-            return jsonify({'error': 'Token is missing'}), 401
+            error('Authentication failed: No token provided')
+            return jsonify({'error': 'Authentication required'}), 401
             
         try:
+            # Decode token
             data = jwt.decode(token, os.getenv('JWT_SECRET_KEY'), algorithms=['HS256'])
-            current_user_id = data['user_id']
+            user_id = data['user_id']
             
-            # Verify user exists and is active
+            # Get user from database
             session = Session()
             user = session.execute(
-                text("SELECT * FROM users WHERE user_id = :user_id AND is_active = 1"),
-                {'user_id': current_user_id}
+                text("SELECT * FROM users WHERE user_id = :user_id"),
+                {'user_id': user_id}
             ).fetchone()
             session.close()
             
             if not user:
-                return jsonify({'error': 'Invalid or inactive user'}), 401
+                error(f'Authentication failed: User ID {user_id} not found')
+                return jsonify({'error': 'User not found'}), 401
                 
+            # Store user information in Flask's g object for the logger
+            g.user = {
+                'user_id': user_id,
+                'username': user.username,
+                'email': user.email
+            }
+            
+            info(f'User {user.username} authenticated successfully')
+            
+            return f(user_id, *args, **kwargs)
+            
         except jwt.ExpiredSignatureError:
+            error('Authentication failed: Token has expired')
             return jsonify({'error': 'Token has expired'}), 401
         except jwt.InvalidTokenError:
+            error('Authentication failed: Invalid token')
             return jsonify({'error': 'Invalid token'}), 401
-        except Exception as e:
-            return jsonify({'error': 'Token validation failed'}), 401
             
-        return f(current_user_id, *args, **kwargs)
-        
+    # Set the name of the decorated function to avoid endpoint conflicts
     decorated.__name__ = f.__name__
-    return decorated 
+    return decorated
 
 @auth_bp.route('/verify-token', methods=['GET'])
 @token_required

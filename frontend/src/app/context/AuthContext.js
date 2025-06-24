@@ -5,6 +5,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import Cookies from 'js-cookie';
 import { API_BASE_URL } from '../config';
 import axios from 'axios';
+import InactivityLogoutModal from '../../components/InactivityLogoutModal';
 
 const AuthContext = createContext();
 
@@ -20,6 +21,7 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [licenseStatus, setLicenseStatus] = useState(null);
+  const [showInactivityModal, setShowInactivityModal] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
 
@@ -143,14 +145,11 @@ export const AuthProvider = ({ children }) => {
     const resetTimer = () => {
       clearTimeout(logoutTimer);
       logoutTimer = setTimeout(() => {
-        // Only logout if user is still logged in
+        // Only show modal if user is still logged in
         if (localStorage.getItem('token')) {
-          logout();
-          // Optionally, notify the user they were logged out due to inactivity
-          // You could use a toast notification library for this
-          alert('You have been logged out due to inactivity.');
+          setShowInactivityModal(true);
         }
-      }, 30 * 60 * 1000); // 30 minutes
+      }, 30 * 60 * 1000); // 1 minute
     };
 
     const handleUserActivity = () => {
@@ -229,6 +228,9 @@ export const AuthProvider = ({ children }) => {
         show_notification: data.show_notification
       });
 
+      // Hide inactivity modal on successful login
+      setShowInactivityModal(false);
+
       // Check license status after successful login
       await checkLicenseStatus();
 
@@ -245,6 +247,7 @@ export const AuthProvider = ({ children }) => {
     Cookies.remove('token');
     setUser(null);
     setLicenseStatus(null);
+    setShowInactivityModal(false);
     router.push('/auth/login');
   };
 
@@ -383,6 +386,10 @@ export const AuthProvider = ({ children }) => {
   return (
     <AuthContext.Provider value={value}>
       {!loading && children}
+      {showInactivityModal && <InactivityLogoutModal 
+          setShowInactivityModal={setShowInactivityModal} 
+          logout={logout}
+        />}
     </AuthContext.Provider>
   );
 };

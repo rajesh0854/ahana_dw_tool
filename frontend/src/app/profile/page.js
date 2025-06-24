@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Container,
   Paper,
@@ -21,8 +21,10 @@ import {
   Snackbar,
   useMediaQuery,
   Link,
-  Fade,
-  Divider
+  Tooltip,
+  IconButton,
+  Divider,
+  Fade
 } from '@mui/material';
 import {
   Edit as EditIcon,
@@ -31,7 +33,6 @@ import {
   EmailOutlined as EmailIcon,
   PhoneOutlined as PhoneIcon,
   WorkOutline as WorkIcon,
-  CalendarToday as CalendarIcon,
   AccountCircle as AccountIcon,
   Person as PersonIcon,
   SaveOutlined as SaveIcon,
@@ -51,7 +52,6 @@ import ProtectedRoute from '../components/ProtectedRoute';
 const ProfilePage = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  const isSmall = useMediaQuery(theme.breakpoints.down('sm'));
   const { user, logout, updateUserProfile } = useAuth();
   const router = useRouter();
   const [profileData, setProfileData] = useState(null);
@@ -66,55 +66,7 @@ const ProfilePage = () => {
     currentPassword: '', newPassword: '', confirmPassword: ''
   });
 
-  // Animation states
-  const [displayText, setDisplayText] = useState('');
-  const [isTypingComplete, setIsTypingComplete] = useState(false);
-  const typingIndex = useRef(0);
-  const animationStarted = useRef(false);
-
-  const developerName = "Ahana Dev Team";
   const appVersion = "v2.0.0";
-
-  // Typing animation
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && !animationStarted.current) {
-          animationStarted.current = true;
-          setIsTypingComplete(false);
-          typingIndex.current = 0;
-          setDisplayText('');
-        }
-      },
-      { threshold: 0.5 }
-    );
-
-    const signatureElement = document.getElementById('developer-signature');
-    if (signatureElement) {
-      observer.observe(signatureElement);
-    }
-
-    return () => {
-      if (signatureElement) {
-        observer.unobserve(signatureElement);
-      }
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!animationStarted.current || isTypingComplete) return;
-    
-    if (typingIndex.current < developerName.length) {
-      const timer = setTimeout(() => {
-        setDisplayText(prev => prev + developerName[typingIndex.current]);
-        typingIndex.current += 1;
-      }, 100);
-      
-      return () => clearTimeout(timer);
-    } else {
-      setIsTypingComplete(true);
-    }
-  }, [displayText, isTypingComplete]);
 
   useEffect(() => {
     if (!user) return;
@@ -191,489 +143,314 @@ const ProfilePage = () => {
 
   return (
     <ProtectedRoute>
-      <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
+      <Box sx={{ 
+        minHeight: '100vh', 
+        bgcolor: 'grey.50',
+        '@media (prefers-color-scheme: dark)': {
+          bgcolor: 'background.default',
+        },
+      }}>
         <Container maxWidth="xl" sx={{ py: 2 }}>
-          {/* Header */}
-          <Paper
-            elevation={0}
+          <Box
             sx={{
-              bgcolor: 'background.paper',
-              border: 1,
-              borderColor: 'divider',
-              borderRadius: 2,
-              p: { xs: 1.5, md: 2 },
-              mb: 2,
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              mb: 3,
             }}
           >
-            <Stack
-              direction={{ xs: 'column', sm: 'row' }}
-              justifyContent="space-between"
-              alignItems={{ xs: 'stretch', sm: 'center' }}
-              spacing={{ xs: 2, sm: 0 }}
-            >
-              <Typography variant="h5" fontWeight={600} color="text.primary">
-                My Profile
-              </Typography>
-              <Stack direction="row" spacing={1} sx={{ width: { xs: '100%', sm: 'auto' } }}>
-                <Button
-                  variant="outlined"
-                  size="small"
-                  startIcon={<SecurityIcon />}
-                  onClick={handlePasswordDialogOpen}
-                  sx={{
-                    borderRadius: 2,
-                    textTransform: 'none',
-                    flex: { xs: 1, sm: 'none' },
-                    borderColor: 'divider',
-                    color: 'text.secondary',
-                    '&:hover': {
-                      borderColor: 'primary.main',
-                      color: 'primary.main',
-                    },
-                  }}
-                >
-                  Security
-                </Button>
-                <Button
-                  variant="contained"
-                  size="small"
-                  startIcon={<LogoutIcon />}
-                  onClick={handleLogout}
-                  color="error"
-                  sx={{
-                    borderRadius: 2,
-                    textTransform: 'none',
-                    flex: { xs: 1, sm: 'none' },
-                  }}
-                >
-                  Logout
-                </Button>
-              </Stack>
+            <Typography variant={isMobile ? "h6" : "h5"} fontWeight={700} color="text.primary">
+              My Profile
+            </Typography>
+            <Stack direction="row" spacing={1.5}>
+              <Button
+                variant="outlined"
+                startIcon={<SecurityIcon />}
+                onClick={handlePasswordDialogOpen}
+                sx={{
+                  borderRadius: '12px',
+                  textTransform: 'none',
+                  fontWeight: 600,
+                  borderColor: 'divider',
+                  color: 'text.secondary',
+                  '&:hover': {
+                    borderColor: 'primary.main',
+                    backgroundColor: alpha(theme.palette.primary.main, 0.04),
+                  },
+                }}
+              >
+                Security
+              </Button>
+              <Button
+                variant="contained"
+                startIcon={<LogoutIcon />}
+                onClick={handleLogout}
+                color="error"
+                sx={{
+                  borderRadius: '12px',
+                  textTransform: 'none',
+                  fontWeight: 600,
+                  boxShadow: 'none',
+                  '&:hover': {
+                    boxShadow: 'none',
+                    backgroundColor: alpha(theme.palette.error.main, 0.9),
+                  }
+                }}
+              >
+                Logout
+              </Button>
             </Stack>
-          </Paper>
+          </Box>
 
-          <Box sx={{ height: 'calc(100vh - 160px)', display: 'flex', flexDirection: 'column' }}>
-            {/* Top Row - Profile and Details */}
-            <Box sx={{ flex: '0 0 36%', mb: 2 }}>
-              <Grid container spacing={2} sx={{ height: '100%' }}>
-                {/* Profile Card */}
-                <Grid item xs={12} lg={3} md={3} sx={{ height: '100%' }}>
-                  <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} style={{ height: '100%' }}>
-                    <Paper sx={{ 
-                      p: 1.5, 
-                      borderRadius: 2, 
-                      border: 1, 
-                      borderColor: 'divider',
-                      bgcolor: 'background.paper',
-                      height: '100%',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      boxShadow: 'none'
-                    }}>
-                      <Box sx={{ textAlign: 'center', mb: 1.5, flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                        <Avatar sx={{ 
-                          width: 48, 
-                          height: 48, 
-                          mx: 'auto', 
-                          mb: 1,
-                          bgcolor: 'primary.main',
-                          fontSize: '1.2rem',
-                          fontWeight: 600
-                        }}>
-                          {profileData?.first_name?.charAt(0) || profileData?.username?.charAt(0) || 'U'}
-                        </Avatar>
-                        <Typography variant="subtitle1" fontWeight={600} color="text.primary" gutterBottom sx={{ fontSize: '0.9rem', lineHeight: 1.2 }}>
-                          {`${profileData?.first_name || ''} ${profileData?.last_name || ''}`.trim() || profileData?.username}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary" sx={{ mb: 1, fontSize: '0.75rem' }}>
-                          {profileData?.role || 'User'}
-                        </Typography>
-                        <Box sx={{ 
-                          display: 'inline-flex', 
-                          alignItems: 'center', 
-                          px: 1, 
-                          py: 0.25, 
-                          bgcolor: profileData?.is_active ? alpha(theme.palette.success.main, 0.1) : alpha(theme.palette.error.main, 0.1),
-                          color: profileData?.is_active ? 'success.main' : 'error.main',
-                          borderRadius: 1,
-                          fontSize: '0.65rem',
-                          fontWeight: 500,
-                          gap: 0.25,
-                          mx: 'auto'
-                        }}>
-                          <CheckCircleIcon sx={{ fontSize: '0.65rem' }} />
-                          {profileData?.is_active ? 'Active' : 'Inactive'}
-                        </Box>
-                      </Box>
-                      
-                      <Button 
-                        variant="contained" 
-                        fullWidth 
-                        startIcon={<EditIcon sx={{ fontSize: '1rem' }} />}
-                        onClick={handleEditDialogOpen}
-                        sx={{ 
-                          borderRadius: 1.5, 
-                          textTransform: 'none',
-                          py: 0.75,
-                          fontSize: '0.8rem',
-                          fontWeight: 500
-                        }}
-                      >
-                        Edit Profile
-                      </Button>
-                    </Paper>
-                  </motion.div>
-                </Grid>
-
-                {/* Details Section */}
-                <Grid item xs={12} lg={9} md={9} sx={{ height: '100%' }}>
-                  <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1 }} style={{ height: '100%' }}>
-                    <Paper sx={{ 
-                      p: 1.5, 
-                      borderRadius: 2, 
-                      border: 1, 
-                      borderColor: 'divider', 
-                      bgcolor: 'background.paper',
-                      height: '100%',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      boxShadow: 'none'
-                    }}>
-                      <Typography variant="h6" fontWeight={600} color="text.primary" sx={{ mb: 1.5, fontSize: '0.9rem' }}>
-                        Account Information
+          <Grid container spacing={2} sx={{ alignItems: 'stretch' }}>
+            <Grid item xs={12} md={4} lg={3}>
+              <Stack spacing={2} sx={{ height: '100%' }}>
+                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+                  <Paper sx={{
+                    p: 2,
+                    borderRadius: 4,
+                    boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.05)',
+                    border: '1px solid rgba(0,0,0,0.03)',
+                  }}>
+                    <Box sx={{ textAlign: 'center', mb: 2 }}>
+                      <Avatar sx={{
+                        width: 60,
+                        height: 60,
+                        mx: 'auto',
+                        mb: 1.5,
+                        bgcolor: 'primary.main',
+                        fontSize: '2rem',
+                        fontWeight: 600,
+                        color: 'white'
+                      }}>
+                        {profileData?.first_name?.charAt(0) || profileData?.username?.charAt(0) || 'U'}
+                      </Avatar>
+                      <Typography variant="subtitle1" fontWeight={600} color="text.primary">
+                        {`${profileData?.first_name || ''} ${profileData?.last_name || ''}`.trim() || profileData?.username}
                       </Typography>
-                      
-                      <Box sx={{ flex: 1, overflow: 'hidden' }}>
-                        <Grid container spacing={1.5} sx={{ height: '100%' }}>
-                          {[
-                            { label: 'Username', value: profileData?.username, icon: <AccountIcon color="primary" sx={{ fontSize: '1.1rem' }} /> },
-                            { label: 'Email', value: profileData?.email, icon: <EmailIcon color="primary" sx={{ fontSize: '1.1rem' }} /> },
-                            { label: 'Phone', value: profileData?.phone || 'Not provided', icon: <PhoneIcon color="primary" sx={{ fontSize: '1.1rem' }} /> },
-                            { label: 'Department', value: profileData?.department || 'Not specified', icon: <WorkIcon color="primary" sx={{ fontSize: '1.1rem' }} /> },
-                            { label: 'First Name', value: profileData?.first_name || 'Not provided', icon: <PersonIcon color="primary" sx={{ fontSize: '1.1rem' }} /> },
-                            { label: 'Last Name', value: profileData?.last_name || 'Not provided', icon: <PersonIcon color="primary" sx={{ fontSize: '1.1rem' }} /> }
-                          ].map((item, index) => (
-                            <Grid item xs={12} sm={6} lg={4} key={index} sx={{ height: '33.33%' }}>
-                              <Box sx={{ 
-                                p: 1, 
-                                bgcolor: alpha(theme.palette.primary.main, 0.03), 
-                                borderRadius: 1.5,
-                                border: 1,
-                                borderColor: alpha(theme.palette.primary.main, 0.08),
-                                transition: 'all 0.2s ease',
-                                height: '100%',
-                                display: 'flex',
-                                alignItems: 'center',
-                                '&:hover': {
-                                  borderColor: alpha(theme.palette.primary.main, 0.3),
-                                  bgcolor: alpha(theme.palette.primary.main, 0.06)
-                                }
-                              }}>
-                                <Stack direction="row" spacing={1} alignItems="center" sx={{ width: '100%' }}>
-                                  {item.icon}
-                                  <Box sx={{ minWidth: 0, flex: 1 }}>
-                                    <Typography variant="caption" color="text.secondary" fontWeight={500} sx={{ fontSize: '0.65rem' }}>
-                                      {item.label}
-                                    </Typography>
-                                    <Typography 
-                                      variant="body2" 
-                                      fontWeight={600} 
-                                      color="text.primary"
-                                      sx={{ 
-                                        wordBreak: 'break-word',
-                                        overflow: 'hidden',
-                                        textOverflow: 'ellipsis',
-                                        fontSize: '0.75rem',
-                                        lineHeight: 1.1
-                                      }}
-                                    >
-                                      {item.value}
-                                    </Typography>
-                                  </Box>
-                                </Stack>
-                              </Box>
-                            </Grid>
-                          ))}
-                        </Grid>
+                      <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+                        {profileData?.role || 'User'}
+                      </Typography>
+                      <Box sx={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        px: 1.5,
+                        py: 0.5,
+                        bgcolor: profileData?.is_active ? alpha(theme.palette.success.main, 0.1) : alpha(theme.palette.error.main, 0.1),
+                        color: profileData?.is_active ? 'success.dark' : 'error.dark',
+                        borderRadius: '12px',
+                        fontSize: '0.75rem',
+                        fontWeight: 600,
+                        gap: 0.5,
+                      }}>
+                        <CheckCircleIcon sx={{ fontSize: '1rem' }} />
+                        {profileData?.is_active ? 'Active' : 'Inactive'}
                       </Box>
-                    </Paper>
-                  </motion.div>
-                </Grid>
-              </Grid>
-            </Box>
-
-            {/* Bottom Row - Company and App Info */}
-            <Box sx={{ flex: '0 0 52%', mb: 1 }}>
-              <Grid container spacing={2} sx={{ height: '100%' }}>
-                {/* Company Info */}
-                <Grid item xs={12} md={6} sx={{ height: '100%' }}>
-                  <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }} style={{ height: '100%' }}>
-                    <Paper sx={{ 
-                      p: 2, 
-                      borderRadius: 2, 
-                      border: 1, 
-                      borderColor: 'divider',
-                      bgcolor: 'background.paper',
-                      height: '100%',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      boxShadow: 'none'
-                    }}>
+                    </Box>
+                    <Button
+                      variant="contained"
+                      fullWidth
+                      startIcon={<EditIcon />}
+                      onClick={handleEditDialogOpen}
+                      sx={{
+                        borderRadius: '12px',
+                        textTransform: 'none',
+                        py: 1,
+                        fontSize: '0.8rem',
+                        fontWeight: 600,
+                        boxShadow: 'none',
+                      }}
+                    >
+                      Edit Profile
+                    </Button>
+                  </Paper>
+                </motion.div>
+                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }} style={{ flexGrow: 1 }}>
+                   <Paper sx={{
+                    p: 2,
+                    borderRadius: 4,
+                    boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.05)',
+                    border: '1px solid rgba(0,0,0,0.03)',
+                    height: '100%',
+                   }}>
                       <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 2 }}>
-                        <Avatar sx={{ 
-                          bgcolor: alpha(theme.palette.primary.main, 0.1), 
-                          color: 'primary.main', 
-                          width: 36, 
-                          height: 36 
-                        }}>
-                          <BusinessIcon sx={{ fontSize: '1.1rem' }} />
+                        <Avatar sx={{ bgcolor: alpha(theme.palette.secondary.main, 0.1), color: 'secondary.main', width: 32, height: 32 }}>
+                          <CodeIcon />
                         </Avatar>
-                        <Typography variant="h6" fontWeight={600} color="text.primary" sx={{ fontSize: '1.1rem' }}>
-                          About Company
-                        </Typography>
+                        <Typography variant="subtitle1" fontWeight={600}>Application</Typography>
                       </Stack>
-                      
-                      <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-                        <Typography variant="h6" fontWeight={700} color="text.primary" sx={{ fontSize: '1rem', mb: 1 }}>
-                          Ahana Systems & Solutions Pvt Ltd
-                        </Typography>
-                        <Typography
-                          variant="body2"
-                          sx={{
-                            mb: 2,
-                            fontSize: '0.9rem',
-                            fontWeight: 'medium',
-                            fontStyle: 'italic',
-                            color: 'primary.main',
-                            letterSpacing: '0.05em',
-                            animation: 'shine 3s infinite ease-in-out',
-                            '@keyframes shine': {
-                              '0%, 100%': {
-                                textShadow: `
-                                  0 0 5px ${alpha(theme.palette.primary.main, 0.5)},
-                                  0 0 10px ${alpha(theme.palette.primary.main, 0.3)},
-                                  0 0 15px ${alpha(theme.palette.primary.main, 0.2)}
-                                `,
-                              },
-                              '50%': {
-                                textShadow: `
-                                  0 0 10px ${alpha(theme.palette.primary.main, 0.7)},
-                                  0 0 20px ${alpha(theme.palette.primary.main, 0.5)},
-                                  0 0 25px ${alpha(theme.palette.primary.main, 0.3)}
-                                `,
-                              },
-                            },
-                          }}
-                        >
-                          "Creating Possibilities"
-                        </Typography>
-                        
-                        <Divider sx={{ my: 1.5 }} />
-                        
-                        <Stack spacing={1.5} sx={{ mt: 'auto' }}>
-                          <Stack direction="row" spacing={1.5} alignItems="center">
-                            <LanguageIcon sx={{ color: 'text.secondary', fontSize: 18 }} />
-                            <Link 
-                              href="https://www.ahanait.com" 
-                              target="_blank" 
-                              sx={{ 
-                                color: 'primary.main', 
-                                textDecoration: 'none', 
-                                fontSize: '0.85rem',
-                                fontWeight: 500,
-                                '&:hover': { textDecoration: 'underline' }
-                              }}
-                            >
-                              www.ahanait.com
-                            </Link>
-                          </Stack>
-                          <Stack direction="row" spacing={1.5} alignItems="center">
-                            <EmailIcon sx={{ color: 'text.secondary', fontSize: 18 }} />
-                            <Link 
-                              href="mailto:info@ahanait.co.in" 
-                              sx={{ 
-                                color: 'primary.main', 
-                                textDecoration: 'none', 
-                                fontSize: '0.85rem',
-                                fontWeight: 500,
-                                '&:hover': { textDecoration: 'underline' }
-                              }}
-                            >
-                              info@ahanait.co.in
-                            </Link>
-                          </Stack>
-                        </Stack>
+                      <Stack spacing={1.5}>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                           <Typography variant="body2" color="text.secondary">Version</Typography>
+                           <Typography variant="body2" fontWeight={600}>{appVersion}</Typography>
+                        </Box>
+                         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                           <Typography variant="body2" color="text.secondary">Status</Typography>
+                           <Box sx={{
+                              px: 1, py: 0.25,
+                              bgcolor: alpha(theme.palette.success.main, 0.1),
+                              color: 'success.dark',
+                              borderRadius: '8px',
+                              fontSize: '0.75rem',
+                              fontWeight: 600
+                           }}>Active</Box>
+                        </Box>
+                      </Stack>
+                   </Paper>
+                </motion.div>
+              </Stack>
+            </Grid>
 
-                        <Divider sx={{ my: 1.5 }} />
-
-                        <Box sx={{ mt: 'auto' }}>
-                          <Box sx={{ textAlign: 'center', mb: 1.5 }}>
-                            <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.85rem', fontWeight: 500 }}>
-                              Connect with us:
-                            </Typography>
-                          </Box>
-                          
-                          <Box sx={{ 
-                            display: 'flex', 
-                            gap: 1.5, 
-                            flexWrap: 'wrap',
-                            justifyContent: 'center',
-                            mb: 1.5
+            <Grid item xs={12} md={8} lg={9}>
+              <Stack spacing={2}>
+                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1 }}>
+                  <Paper sx={{
+                    p: 2,
+                    borderRadius: 4,
+                    boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.05)',
+                    border: '1px solid rgba(0,0,0,0.03)',
+                  }}>
+                    <Typography variant="subtitle1" fontWeight={600} color="text.primary" sx={{ mb: 2 }}>
+                      Account Information
+                    </Typography>
+                    <Grid container spacing={1.5}>
+                      {[
+                        { label: 'Username', value: profileData?.username, icon: <AccountIcon color="primary" /> },
+                        { label: 'Email', value: profileData?.email, icon: <EmailIcon color="primary" /> },
+                        { label: 'Phone', value: profileData?.phone || 'Not provided', icon: <PhoneIcon color="primary" /> },
+                        { label: 'Department', value: profileData?.department || 'Not specified', icon: <WorkIcon color="primary" /> },
+                        { label: 'First Name', value: profileData?.first_name || 'Not provided', icon: <PersonIcon color="primary" /> },
+                        { label: 'Last Name', value: profileData?.last_name || 'Not provided', icon: <PersonIcon color="primary" /> }
+                      ].map((item, index) => (
+                        <Grid item xs={12} sm={6} lg={4} key={index}>
+                          <Box sx={{
+                            p: 1.5,
+                            bgcolor: 'action.hover',
+                            borderRadius: 3,
+                            transition: 'all 0.3s ease',
+                            height: '100%',
+                            '&:hover': {
+                              transform: 'translateY(-2px)',
+                              boxShadow: '0 4px 12px 0 rgba(0,0,0,0.08)',
+                            }
                           }}>
-                            {[
-                              { icon: <LanguageIcon />, href: "https://www.ahanait.com", color: 'text.secondary' },
-                              { icon: <EmailIcon />, href: "mailto:info@ahanait.co.in", color: 'error.main' },
-                              { icon: <LinkedInIcon />, href: "https://www.linkedin.com/company/ahana-systems-solutions/", color: '#0077b5' },
-                              { icon: <TwitterIcon />, href: "https://twitter.com/ahana_it", color: '#1da1f2' },
-                              { icon: <GitHubIcon />, href: "https://github.com/ahana-systems", color: 'text.primary' }
-                            ].map((social, index) => (
-                              <Box
-                                key={index}
-                                component={Link}
-                                href={social.href}
-                                target="_blank"
-                                sx={{
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                  width: 36,
-                                  height: 36,
-                                  borderRadius: 2,
-                                  bgcolor: alpha(theme.palette.primary.main, 0.05),
-                                  color: social.color,
-                                  textDecoration: 'none',
-                                  border: 1,
-                                  borderColor: alpha(theme.palette.primary.main, 0.1),
-                                  transition: 'all 0.2s ease',
-                                  '&:hover': { 
-                                    bgcolor: alpha(theme.palette.primary.main, 0.1),
-                                    borderColor: alpha(theme.palette.primary.main, 0.3),
-                                    transform: 'translateY(-2px)',
-                                    boxShadow: theme.shadows[3]
-                                  },
-                                  '& svg': {
-                                    fontSize: '1.1rem'
-                                  }
-                                }}
-                              >
-                                {social.icon}
+                            <Stack direction="row" spacing={1.5} alignItems="center">
+                               {item.icon}
+                              <Box>
+                                <Typography variant="caption" color="text.secondary" fontWeight={500}>
+                                  {item.label}
+                                </Typography>
+                                <Typography variant="body2" fontWeight={600} color="text.primary" sx={{ wordBreak: 'break-all' }}>
+                                  {item.value}
+                                </Typography>
                               </Box>
-                            ))}
+                            </Stack>
                           </Box>
-                          
-                        </Box>
-                      </Box>
-                    </Paper>
-                  </motion.div>
-                </Grid>
-
-                {/* App Info */}
-                <Grid item xs={12} md={6} sx={{ height: '100%' }}>
-                  <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.3 }} style={{ height: '100%' }}>
-                    <Paper sx={{ 
-                      p: 2, 
-                      borderRadius: 2, 
-                      border: 1, 
-                      borderColor: 'divider',
-                      bgcolor: 'background.paper',
-                      height: '100%',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      boxShadow: 'none'
-                    }}>
-                      <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 2 }}>
-                        <Avatar sx={{ 
-                          bgcolor: alpha(theme.palette.secondary.main, 0.1), 
-                          color: 'secondary.main', 
-                          width: 36, 
-                          height: 36 
-                        }}>
-                          <CodeIcon sx={{ fontSize: '1.1rem' }} />
-                        </Avatar>
-                        <Typography variant="h6" fontWeight={600} color="text.primary" sx={{ fontSize: '1.1rem' }}>
-                          Application
-                        </Typography>
-                      </Stack>
-                      
-                      <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-                        <Grid container spacing={1.5} sx={{ mb: 2 }}>
-                          <Grid item xs={6}>
-                            <Box sx={{ 
-                              textAlign: 'center', 
-                              p: 1.5, 
-                              bgcolor: alpha(theme.palette.primary.main, 0.05), 
-                              borderRadius: 1.5,
-                              border: 1,
-                              borderColor: alpha(theme.palette.primary.main, 0.15)
-                            }}>
-                              <Typography variant="h5" fontWeight={700} color="primary.main" sx={{ fontSize: '1.1rem' }}>
-                                {appVersion}
-                              </Typography>
-                              <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
-                                Version
-                              </Typography>
-                            </Box>
-                          </Grid>
-                          <Grid item xs={6}>
-                            <Box sx={{ 
-                              textAlign: 'center', 
-                              p: 1.5, 
-                              bgcolor: alpha(theme.palette.success.main, 0.05), 
-                              borderRadius: 1.5,
-                              border: 1,
-                              borderColor: alpha(theme.palette.success.main, 0.15)
-                            }}>
-                              <Typography variant="h5" fontWeight={700} color="success.main" sx={{ fontSize: '1.1rem' }}>
-                                Active
-                              </Typography>
-                              <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
-                                Status
-                              </Typography>
-                            </Box>
-                          </Grid>
                         </Grid>
+                      ))}
+                    </Grid>
+                  </Paper>
+                </motion.div>
 
-                        <Box sx={{ mt: 'auto', textAlign: 'center' }}>
-                          <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.75rem', fontStyle: 'italic', mb: 1 }}>
-                            Developed with ❤️
-                          </Typography>
-                          <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.8rem' }}>
-                            © {new Date().getFullYear()} Ahana Systems & Solutions
-                          </Typography>
-                          <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem', display: 'block', mt: 0.5 }}>
-                            Data Warehouse Management System
-                          </Typography>
-                        </Box>
+                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.3 }}>
+                  <Paper sx={{
+                    p: 2,
+                    borderRadius: 4,
+                    boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.05)',
+                    border: '1px solid rgba(0,0,0,0.03)',
+                  }}>
+                    <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 2 }}>
+                      <Avatar sx={{ bgcolor: alpha(theme.palette.primary.main, 0.1), color: 'primary.main', width: 32, height: 32 }}>
+                        <BusinessIcon />
+                      </Avatar>
+                      <Typography variant="subtitle1" fontWeight={600}>About Company</Typography>
+                    </Stack>
+                    <Stack spacing={1.5}>
+                      <Typography variant="subtitle1" fontWeight={700} color="text.primary">
+                        Ahana Systems & Solutions Pvt Ltd
+                      </Typography>
+                      <Typography variant="body1" sx={{ fontStyle: 'italic', color: 'text.secondary' }}>
+                        "Creating Possibilities"
+                      </Typography>
+                      <Divider />
+                      <Stack spacing={1}>
+                        <Stack direction="row" spacing={1.5} alignItems="center">
+                          <LanguageIcon sx={{ color: 'text.secondary' }} />
+                          <Link href="https://www.ahanait.com" target="_blank" sx={{ color: 'primary.main', textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}>
+                            www.ahanait.com
+                          </Link>
+                        </Stack>
+                        <Stack direction="row" spacing={1.5} alignItems="center">
+                          <EmailIcon sx={{ color: 'text.secondary' }} />
+                          <Link href="mailto:info@ahanait.co.in" sx={{ color: 'primary.main', textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}>
+                            info@ahanait.co.in
+                          </Link>
+                        </Stack>
+                      </Stack>
+                      <Divider sx={{ my: 1 }}/>
+                      <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
+                        {[
+                          { icon: <LanguageIcon />, href: "https://www.ahanait.com", name: 'Website' },
+                          { icon: <LinkedInIcon />, href: "https://www.linkedin.com/company/ahana-systems-solutions/", name: 'LinkedIn' },
+                          { icon: <TwitterIcon />, href: "https://twitter.com/ahana_it", name: 'Twitter' },
+                          { icon: <GitHubIcon />, href: "https://github.com/ahana-systems", name: 'GitHub' }
+                        ].map((social) => (
+                          <Tooltip title={social.name} key={social.name}>
+                            <IconButton
+                              component={Link}
+                              href={social.href}
+                              target="_blank"
+                              sx={{
+                                color: 'text.secondary',
+                                border: '1px solid',
+                                borderColor: 'divider',
+                                '&:hover': {
+                                  bgcolor: 'action.hover'
+                                }
+                              }}
+                            >
+                              {social.icon}
+                            </IconButton>
+                          </Tooltip>
+                        ))}
                       </Box>
-                    </Paper>
-                  </motion.div>
-                </Grid>
-              </Grid>
-            </Box>
+                    </Stack>
+                  </Paper>
+                </motion.div>
+              </Stack>
+            </Grid>
+          </Grid>
+          <Box sx={{ mt: 2, textAlign: 'center' }}>
+            <Typography variant="body2" color="text.secondary">
+              © {new Date().getFullYear()} Ahana Systems & Solutions. All Rights Reserved.
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              Data Warehouse Management System
+            </Typography>
           </Box>
         </Container>
       </Box>
 
-      {/* Edit Dialog */}
-      <Dialog 
-        open={openEditDialog} 
-        onClose={handleEditDialogClose} 
-        maxWidth="sm" 
+      <Dialog
+        open={openEditDialog}
+        onClose={handleEditDialogClose}
+        maxWidth="sm"
         fullWidth
         PaperProps={{
           sx: {
-            borderRadius: 3,
-            bgcolor: 'background.paper'
+            borderRadius: 4,
+            bgcolor: 'background.paper',
+            boxShadow: theme.shadows[24]
           }
         }}
       >
-        <DialogTitle sx={{ borderBottom: 1, borderColor: 'divider' }}>
-          <Typography variant="h6" fontWeight={600} color="text.primary">
-            Edit Profile
+        <DialogTitle>
+          <Typography variant="h6" fontWeight={600}>
+            Edit Your Profile
           </Typography>
         </DialogTitle>
-        <DialogContent sx={{ pt: 3 }}>
-          <Grid container spacing={2}>
+        <DialogContent dividers sx={{ p: 3 }}>
+          <Grid container spacing={2.5}>
             <Grid item xs={12} sm={6}>
               <TextField
                 label="First Name"
@@ -681,7 +458,6 @@ const ProfilePage = () => {
                 value={editedData.first_name}
                 onChange={handleEditChange}
                 fullWidth
-                size="small"
                 sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
               />
             </Grid>
@@ -692,7 +468,6 @@ const ProfilePage = () => {
                 value={editedData.last_name}
                 onChange={handleEditChange}
                 fullWidth
-                size="small"
                 sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
               />
             </Grid>
@@ -703,7 +478,6 @@ const ProfilePage = () => {
                 value={editedData.email}
                 onChange={handleEditChange}
                 fullWidth
-                size="small"
                 sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
               />
             </Grid>
@@ -714,7 +488,6 @@ const ProfilePage = () => {
                 value={editedData.phone}
                 onChange={handleEditChange}
                 fullWidth
-                size="small"
                 sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
               />
             </Grid>
@@ -725,118 +498,84 @@ const ProfilePage = () => {
                 value={editedData.department}
                 onChange={handleEditChange}
                 fullWidth
-                size="small"
                 sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
               />
             </Grid>
           </Grid>
         </DialogContent>
-        <DialogActions sx={{ p: 3, borderTop: 1, borderColor: 'divider' }}>
-          <Button 
-            onClick={handleEditDialogClose} 
-            sx={{ textTransform: 'none', color: 'text.secondary' }}
-          >
-            Cancel
-          </Button>
-          <Button 
-            onClick={handleSaveProfile} 
-            variant="contained" 
-            startIcon={<SaveIcon />}
-            sx={{ textTransform: 'none' }}
-          >
+        <DialogActions sx={{ p: 2, borderTop: 1, borderColor: 'divider' }}>
+          <Button onClick={handleEditDialogClose} variant="outlined" color="secondary">Cancel</Button>
+          <Button onClick={handleSaveProfile} variant="contained" startIcon={<SaveIcon />}>
             Save Changes
           </Button>
         </DialogActions>
       </Dialog>
 
-      {/* Password Dialog */}
-      <Dialog 
-        open={openPasswordDialog} 
-        onClose={handlePasswordDialogClose} 
-        maxWidth="sm" 
+      <Dialog
+        open={openPasswordDialog}
+        onClose={handlePasswordDialogClose}
+        maxWidth="sm"
         fullWidth
         PaperProps={{
           sx: {
-            borderRadius: 3,
-            bgcolor: 'background.paper'
+            borderRadius: 4,
+            bgcolor: 'background.paper',
+            boxShadow: theme.shadows[24]
           }
         }}
       >
-        <DialogTitle sx={{ borderBottom: 1, borderColor: 'divider' }}>
-          <Typography variant="h6" fontWeight={600} color="text.primary">
+        <DialogTitle>
+          <Typography variant="h6" fontWeight={600}>
             Change Password
           </Typography>
         </DialogTitle>
-        <DialogContent sx={{ pt: 3 }}>
-          <Grid container spacing={2}>
-            <Grid item xs={12}>
-              <TextField
-                label="Current Password"
-                name="currentPassword"
-                type="password"
-                value={passwordData.currentPassword}
-                onChange={handlePasswordChange}
-                fullWidth
-                size="small"
-                sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                label="New Password"
-                name="newPassword"
-                type="password"
-                value={passwordData.newPassword}
-                onChange={handlePasswordChange}
-                fullWidth
-                size="small"
-                sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                label="Confirm New Password"
-                name="confirmPassword"
-                type="password"
-                value={passwordData.confirmPassword}
-                onChange={handlePasswordChange}
-                fullWidth
-                size="small"
-                sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
-              />
-            </Grid>
-          </Grid>
+        <DialogContent dividers sx={{ p: 3 }}>
+          <Stack spacing={2.5}>
+            <TextField
+              label="Current Password"
+              name="currentPassword"
+              value={passwordData.currentPassword}
+              onChange={handlePasswordChange}
+              type="password"
+              fullWidth
+              sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+            />
+            <TextField
+              label="New Password"
+              name="newPassword"
+              value={passwordData.newPassword}
+              onChange={handlePasswordChange}
+              type="password"
+              fullWidth
+              sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+            />
+            <TextField
+              label="Confirm New Password"
+              name="confirmPassword"
+              value={passwordData.confirmPassword}
+              onChange={handlePasswordChange}
+              type="password"
+              fullWidth
+              sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+            />
+          </Stack>
         </DialogContent>
-        <DialogActions sx={{ p: 3, borderTop: 1, borderColor: 'divider' }}>
-          <Button 
-            onClick={handlePasswordDialogClose} 
-            sx={{ textTransform: 'none', color: 'text.secondary' }}
-          >
-            Cancel
-          </Button>
-          <Button 
-            onClick={handleChangePassword} 
-            variant="contained" 
-            startIcon={<SecurityIcon />}
-            sx={{ textTransform: 'none' }}
-          >
+        <DialogActions sx={{ p: 2, borderTop: 1, borderColor: 'divider' }}>
+          <Button onClick={handlePasswordDialogClose} variant="outlined" color="secondary">Cancel</Button>
+          <Button onClick={handleChangePassword} variant="contained">
             Update Password
           </Button>
         </DialogActions>
       </Dialog>
-      
-      <Snackbar 
-        open={notification.open} 
-        autoHideDuration={6000} 
+
+      <Snackbar
+        open={notification.open}
         onClose={handleCloseNotification}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+        autoHideDuration={6000}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        TransitionComponent={Fade}
       >
-        <Alert 
-          onClose={handleCloseNotification} 
-          severity={notification.severity} 
-          variant="filled"
-          sx={{ borderRadius: 2 }}
-        >
+        <Alert onClose={handleCloseNotification} severity={notification.severity} sx={{ width: '100%', borderRadius: 2, boxShadow: theme.shadows[3] }} variant="filled">
           {notification.message}
         </Alert>
       </Snackbar>

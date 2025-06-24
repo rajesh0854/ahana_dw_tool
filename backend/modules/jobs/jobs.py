@@ -5,6 +5,10 @@ import os
 import dotenv
 import oracledb
 import threading
+import pandas as pd
+import json
+import traceback
+from modules.logger import logger, info, warning, error, exception
 dotenv.load_dotenv()
 ORACLE_SCHEMA = os.getenv("SCHEMA")
 # Create blueprint
@@ -576,7 +580,7 @@ def save_parent_child_job():
             conn.close()
             
     except Exception as e:
-        print(f"Error in save_parent_child_job: {str(e)}")
+        error(f"Error in save_parent_child_job: {str(e)}", exc_info=True)
         return jsonify({
             'success': False,
             'message': f'An error occurred while saving the parent-child job relationship: {str(e)}'
