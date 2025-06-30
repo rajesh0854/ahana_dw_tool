@@ -27,6 +27,7 @@ from modules.jobs.jobs import jobs_bp
 from modules.type_mapping.parameter_mapping import parameter_mapping_bp
 from modules.dashboard.dashboard import dashboard_bp
 from modules.admin.access_control import access_control_bp
+from modules.manage_sql.manage_sql import manage_sql_bp
 
 app = Flask(__name__)
 # CORS(app, resources={
@@ -70,6 +71,7 @@ app.register_blueprint(jobs_bp, url_prefix='/job')
 app.register_blueprint(parameter_mapping_bp, url_prefix='/mapping')
 app.register_blueprint(dashboard_bp, url_prefix='/dashboard')
 app.register_blueprint(access_control_bp, url_prefix='/access-control')
+app.register_blueprint(manage_sql_bp, url_prefix='/manage-sql')
 
 # Create directories if they don't exist
 os.makedirs('data/drafts', exist_ok=True)

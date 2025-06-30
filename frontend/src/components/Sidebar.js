@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { useTheme } from '@/context/ThemeContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import React, { useState } from 'react';
-import { ChevronLeft, ChevronRight, LayoutDashboard, PieChart, FileSpreadsheet, Database, Settings, UserCog, Layers, Briefcase, ActivitySquare, LineChart } from 'lucide-react';
+import { ChevronLeft, ChevronRight, LayoutDashboard, PieChart, FileSpreadsheet, Database, Settings, UserCog, Layers, Briefcase, ActivitySquare, LineChart, Code } from 'lucide-react';
 
 const SidebarItem = ({ icon, text, active = false, expanded = true, href }) => {
   const { darkMode } = useTheme();
@@ -239,6 +239,14 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
           active={pathname === '/type_mapper'} 
           expanded={sidebarOpen}
           href="/type_mapper"
+        />
+
+        <SidebarItem 
+          icon={<Code />} 
+          text="Manage SQL" 
+          active={pathname === '/manage_sql'} 
+          expanded={sidebarOpen}
+          href="/manage_sql"
         />
 
         <SidebarItem 

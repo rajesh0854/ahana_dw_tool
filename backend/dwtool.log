@@ -739,3 +739,105 @@
 2025-06-24 18:26:21 : system : info : Validating license with system ID: 00155d7d2c64
 2025-06-24 18:26:21 : system : info : License validation successful
 2025-06-24 18:26:21 : system : info : License status checked successfully
+2025-06-30 11:01:57 : system : info : Loading secret key from: /mnt/d/INNOVA/DW_TOOL/ahana_dw_tool/backend/modules/license/secret.key
+2025-06-30 11:01:57 : system : info : License Manager initialized with system ID: 00155daafd4f
+2025-06-30 11:01:57 : system : info : Loading secret key from: /mnt/d/INNOVA/DW_TOOL/ahana_dw_tool/backend/modules/license/secret.key
+2025-06-30 11:01:57 : system : info : License Manager initialized with system ID: 00155daafd4f
+2025-06-30 11:01:57 : system : info : Server starting...
+2025-06-30 11:01:58 : system : info : Loading secret key from: /mnt/d/INNOVA/DW_TOOL/ahana_dw_tool/backend/modules/license/secret.key
+2025-06-30 11:01:58 : system : info : License Manager initialized with system ID: 00155daafd4f
+2025-06-30 11:01:58 : system : info : Loading secret key from: /mnt/d/INNOVA/DW_TOOL/ahana_dw_tool/backend/modules/license/secret.key
+2025-06-30 11:01:58 : system : info : License Manager initialized with system ID: 00155daafd4f
+2025-06-30 11:01:58 : system : info : Server starting...
+2025-06-30 11:07:01 : rajesh : info : User rajesh authenticated successfully
+2025-06-30 11:07:01 : rajesh : info : User rajesh authenticated successfully
+2025-06-30 11:07:28 : system : info : Oracle connection established successfully
+2025-06-30 11:07:29 : system : info : Oracle connection established successfully
+2025-06-30 11:07:31 : system : info : Oracle connection established successfully
+2025-06-30 11:07:31 : system : info : Oracle connection established successfully
+2025-06-30 11:07:31 : system : info : Oracle connection established successfully
+2025-06-30 11:07:32 : system : info : Oracle connection established successfully
+2025-06-30 11:07:32 : system : info : Oracle connection established successfully
+2025-06-30 11:07:32 : system : info : Oracle connection established successfully
+2025-06-30 11:17:20 : system : info : Oracle connection established successfully
+2025-06-30 11:17:20 : system : info : Oracle connection established successfully
+2025-06-30 11:17:53 : system : info : Oracle connection established successfully
+2025-06-30 11:17:53 : system : info : Oracle connection established successfully
+2025-06-30 11:17:54 : system : info : Oracle connection established successfully
+2025-06-30 11:17:54 : system : info : Oracle connection established successfully
+2025-06-30 11:19:03 : system : info : Oracle connection established successfully
+2025-06-30 11:19:04 : system : info : Oracle connection established successfully
+2025-06-30 11:30:59 : system : info : Oracle connection established successfully
+2025-06-30 11:30:59 : system : info : Oracle connection established successfully
+2025-06-30 11:30:59 : system : info : Oracle connection established successfully
+2025-06-30 11:30:59 : system : info : Oracle connection established successfully
+2025-06-30 12:23:21 : system : info : Oracle connection established successfully
+2025-06-30 12:23:21 : system : info : Oracle connection established successfully
+2025-06-30 12:26:28 : rajesh : info : User rajesh authenticated successfully
+2025-06-30 12:26:29 : rajesh : info : User rajesh authenticated successfully
+2025-06-30 12:26:29 : system : error : Unhandled exception: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2025-06-30 12:26:29 : system : error : Unhandled exception: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2025-06-30 12:27:07 : system : info : Server stopped.
+2025-06-30 12:27:07 : system : info : Server stopped.
+2025-06-30 12:27:10 : system : info : Loading secret key from: /mnt/d/INNOVA/DW_TOOL/ahana_dw_tool/backend/modules/license/secret.key
+2025-06-30 12:27:10 : system : info : License Manager initialized with system ID: 00155daafd4f
+2025-06-30 12:27:10 : system : info : Loading secret key from: /mnt/d/INNOVA/DW_TOOL/ahana_dw_tool/backend/modules/license/secret.key
+2025-06-30 12:27:10 : system : info : License Manager initialized with system ID: 00155daafd4f
+2025-06-30 12:27:10 : system : info : Server starting...
+2025-06-30 12:27:11 : system : info : Loading secret key from: /mnt/d/INNOVA/DW_TOOL/ahana_dw_tool/backend/modules/license/secret.key
+2025-06-30 12:27:11 : system : info : License Manager initialized with system ID: 00155daafd4f
+2025-06-30 12:27:11 : system : info : Loading secret key from: /mnt/d/INNOVA/DW_TOOL/ahana_dw_tool/backend/modules/license/secret.key
+2025-06-30 12:27:11 : system : info : License Manager initialized with system ID: 00155daafd4f
+2025-06-30 12:27:11 : system : info : Server starting...
+2025-06-30 12:27:24 : system : info : Oracle connection established successfully
+2025-06-30 12:27:24 : system : info : Fetched 3 SQL codes
+2025-06-30 12:27:27 : system : info : Oracle connection established successfully
+2025-06-30 12:27:27 : system : info : Fetched SQL logic for code: DIM_ACCOUNT
+2025-06-30 12:27:38 : system : info : Oracle connection established successfully
+2025-06-30 12:27:38 : system : info : Fetched SQL logic for code: DIM_ACCOUNT_2
+2025-06-30 12:30:17 : system : info : Oracle connection established successfully
+2025-06-30 12:30:17 : system : info : Fetched 3 SQL codes
+2025-06-30 12:30:18 : system : info : Oracle connection established successfully
+2025-06-30 12:30:18 : system : info : Fetched SQL logic for code: DIM_ACCOUNT
+2025-06-30 12:30:27 : system : info : Oracle connection established successfully
+2025-06-30 12:30:27 : system : info : Fetched SQL logic for code: DIM_ACCOUNT
+2025-06-30 12:35:45 : system : info : Oracle connection established successfully
+2025-06-30 12:35:45 : system : info : Fetched SQL logic for code: DIM_ACCOUNT_2
+2025-06-30 12:35:46 : system : info : Oracle connection established successfully
+2025-06-30 12:35:46 : system : info : Fetched 3 SQL codes
+2025-06-30 12:35:48 : system : info : Oracle connection established successfully
+2025-06-30 12:35:48 : system : info : Fetched SQL logic for code: DIM_CUSTOMER_INITIAL_MAIN
+2025-06-30 12:35:51 : system : info : Oracle connection established successfully
+2025-06-30 12:35:51 : system : info : Fetched SQL logic for code: DIM_ACCOUNT
+2025-06-30 12:35:54 : system : info : Oracle connection established successfully
+2025-06-30 12:35:54 : system : info : Fetched SQL logic for code: DIM_ACCOUNT_2
+2025-06-30 12:38:04 : system : info : Oracle connection established successfully
+2025-06-30 12:38:04 : system : info : SQL validation passed successfully
+2025-06-30 12:38:15 : system : info : Oracle connection established successfully
+2025-06-30 12:38:15 : system : info : SQL validation failed
+2025-06-30 12:38:24 : system : info : Oracle connection established successfully
+2025-06-30 12:38:24 : system : info : SQL validation passed successfully
+2025-06-30 12:38:26 : system : info : Oracle connection established successfully
+2025-06-30 12:39:45 : system : info : Oracle connection established successfully
+2025-06-30 12:39:45 : system : info : SQL validation passed successfully
+2025-06-30 12:39:49 : system : info : Oracle connection established successfully
+2025-06-30 12:40:15 : system : info : Oracle connection established successfully
+2025-06-30 12:40:15 : system : info : SQL validation failed
+2025-06-30 12:40:21 : system : info : Oracle connection established successfully
+2025-06-30 12:40:21 : system : info : SQL validation passed successfully
+2025-06-30 12:40:24 : system : info : Oracle connection established successfully
+2025-06-30 12:40:24 : system : info : SQL validation passed successfully
+2025-06-30 12:41:45 : system : info : Oracle connection established successfully
+2025-06-30 12:41:45 : system : info : Oracle connection established successfully
+2025-06-30 12:42:07 : system : info : Oracle connection established successfully
+2025-06-30 12:42:07 : system : info : Fetched 3 SQL codes
+2025-06-30 12:42:08 : system : info : Oracle connection established successfully
+2025-06-30 12:42:08 : system : info : Fetched 3 SQL codes
+2025-06-30 12:42:16 : system : info : Oracle connection established successfully
+2025-06-30 12:42:17 : system : info : Oracle connection established successfully
+2025-06-30 12:43:43 : system : info : Oracle connection established successfully
+2025-06-30 12:43:43 : system : info : Fetched 3 SQL codes
+2025-06-30 12:43:44 : system : info : Oracle connection established successfully
+2025-06-30 12:43:44 : system : info : Fetched 3 SQL codes
+2025-06-30 12:48:38 : system : info : Oracle connection established successfully
+2025-06-30 12:48:38 : system : info : Oracle connection established successfully

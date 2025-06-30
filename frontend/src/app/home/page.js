@@ -47,13 +47,21 @@ const Page = () => {
 
   const cards = [
     {
+      title: 'Manage SQL',
+      path: '/manage_sql',
+      gradient: 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)',
+      description: 'Create, edit and execute SQL queries with advanced editor',
+      icon: <BarChart sx={{ fontSize: '2rem', color: '#fff' }} />,
+      delay: 0.1,
+    },
+    {
       title: 'Data Mapper',
       path: '/mapper_module',
       gradient: 'linear-gradient(135deg, #6366F1 0%, #4F46E5 100%)',
       description:
         'Map and transform your data structures with intuitive visual tools',
       icon: <Storage sx={{ fontSize: '2rem', color: '#fff' }} />,
-      delay: 0.1,
+      delay: 0.2,
     },
     {
       title: 'Jobs',
@@ -61,7 +69,7 @@ const Page = () => {
       gradient: 'linear-gradient(135deg, #0EA5E9 0%, #0284C7 100%)',
       description: 'Schedule, manage and monitor all your processing jobs',
       icon: <Timeline sx={{ fontSize: '2rem', color: '#fff' }} />,
-      delay: 0.2,
+      delay: 0.3,
     },
     {
       title: 'Parameter Mapping',
@@ -69,7 +77,7 @@ const Page = () => {
       gradient: 'linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%)',
       description: 'Convert and validate data types with automated mapping',
       icon: <AutoFixHigh sx={{ fontSize: '2rem', color: '#fff' }} />,
-      delay: 0.3,
+      delay: 0.4,
     },
     {
       title: 'Admin',
@@ -77,7 +85,7 @@ const Page = () => {
       gradient: 'linear-gradient(135deg, #EC4899 0%, #DB2777 100%)',
       description: 'Comprehensive administrative tools for user management',
       icon: <AdminPanelSettings sx={{ fontSize: '2rem', color: '#fff' }} />,
-      delay: 0.4,
+      delay: 0.5,
     },
     {
       title: 'Jobs and Status',
