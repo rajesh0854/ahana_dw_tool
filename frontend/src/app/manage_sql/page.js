@@ -89,7 +89,7 @@ const ManageSQLPage = () => {
   const fetchAllSqlCodes = async () => {
     setFetchingCodes(true);
     try {
-      const response = await fetch('http://localhost:5000/manage-sql/fetch-all-sql-codes');
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/manage-sql/fetch-all-sql-codes`);
       const result = await response.json();
       
       if (result.success) {
@@ -112,7 +112,7 @@ const ManageSQLPage = () => {
     
     setFetchingLogic(true);
     try {
-      const response = await fetch(`http://localhost:5000/manage-sql/fetch-sql-logic?sql_code=${encodeURIComponent(sqlCode)}`);
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/manage-sql/fetch-sql-logic?sql_code=${encodeURIComponent(sqlCode)}`);
       const result = await response.json();
       
       if (result.success) {
@@ -144,7 +144,7 @@ const ManageSQLPage = () => {
 
     setValidating(true);
     try {
-      const response = await fetch('http://localhost:5000/manage-sql/validate-sql', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/manage-sql/validate-sql`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -191,7 +191,7 @@ const ManageSQLPage = () => {
 
     setSaving(true);
     try {
-      const response = await fetch('http://localhost:5000/manage-sql/save-sql', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/manage-sql/save-sql`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

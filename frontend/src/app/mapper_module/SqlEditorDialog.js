@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   Dialog,
   DialogActions,
@@ -12,6 +12,10 @@ import {
   Chip,
   Box,
   Typography,
+  Autocomplete,
+  TextField,
+  Divider,
+  CircularProgress,
 } from '@mui/material'
 import {
   Clear as ClearIcon,
@@ -32,6 +36,67 @@ const SqlEditorDialog = ({
   fieldName,
   sqlError,
 }) => {
+  const [sqlCodes, setSqlCodes] = useState([])
+  const [selectedSqlCode, setSelectedSqlCode] = useState(null)
+  const [fetchingCodes, setFetchingCodes] = useState(false)
+  const [fetchingLogic, setFetchingLogic] = useState(false)
+
+  // Fetch all SQL codes when dialog opens
+  useEffect(() => {
+    if (open && sqlCodes.length === 0) {
+      fetchAllSqlCodes()
+    }
+  }, [open])
+
+  const fetchAllSqlCodes = async () => {
+    setFetchingCodes(true)
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/manage-sql/fetch-all-sql-codes`)
+      const result = await response.json()
+      
+      if (result.success) {
+        setSqlCodes(result.data || [])
+        message.success(`Loaded ${result.count} SQL codes`)
+      } else {
+        message.error(result.message || 'Failed to fetch SQL codes')
+      }
+    } catch (error) {
+      console.error('Error fetching SQL codes:', error)
+      message.error('Network error while fetching SQL codes')
+    } finally {
+      setFetchingCodes(false)
+    }
+  }
+
+  const fetchSqlLogic = async (sqlCode) => {
+    if (!sqlCode) return
+    
+    setFetchingLogic(true)
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/manage-sql/fetch-sql-logic?sql_code=${encodeURIComponent(sqlCode)}`)
+      const result = await response.json()
+      
+      if (result.success) {
+        onChange(result.data.sql_content || '')
+        message.success(`Loaded SQL logic for ${sqlCode}`)
+      } else {
+        message.error(result.message || 'Failed to fetch SQL logic')
+      }
+    } catch (error) {
+      console.error('Error fetching SQL logic:', error)
+      message.error('Network error while fetching SQL logic')
+    } finally {
+      setFetchingLogic(false)
+    }
+  }
+
+  const handleSqlCodeSelect = (event, newValue) => {
+    setSelectedSqlCode(newValue)
+    if (newValue) {
+      fetchSqlLogic(newValue)
+    }
+  }
+
   const handleFormatSql = () => {
     try {
       const formatted = format(value || '', {
@@ -58,6 +123,8 @@ const SqlEditorDialog = ({
       })
   }
 
+
+
   return (
     <Dialog
       open={open}
@@ -70,7 +137,7 @@ const SqlEditorDialog = ({
           borderRadius: '12px',
           position: 'absolute',
           bottom: '24px',
-          maxHeight: 'calc(50vh)',
+          maxHeight: 'calc(60vh)',
         },
       }}
     >
@@ -109,6 +176,67 @@ const SqlEditorDialog = ({
         </div>
       </DialogTitle>
       <DialogContent sx={{ padding: '16px 20px' }}>
+        {/* SQL Code Search Section - Always Visible */}
+        <Box mb={2}>
+          <Autocomplete
+            value={selectedSqlCode}
+            onChange={handleSqlCodeSelect}
+            options={sqlCodes}
+            loading={fetchingCodes || fetchingLogic}
+            loadingText={fetchingCodes ? "Loading SQL codes..." : "Loading SQL logic..."}
+            noOptionsText="No SQL codes available"
+            size="small"
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                backgroundColor: darkMode ? 'rgba(55, 65, 81, 0.5)' : 'rgba(249, 250, 251, 1)',
+                borderColor: darkMode ? 'rgba(75, 85, 99, 0.5)' : 'rgba(209, 213, 219, 1)',
+                '&:hover': {
+                  borderColor: darkMode ? 'rgba(96, 165, 250, 0.5)' : 'rgba(59, 130, 246, 0.5)',
+                },
+              },
+              '& .MuiInputLabel-root': {
+                color: darkMode ? '#9CA3AF' : '#6B7280',
+              },
+              '& .MuiAutocomplete-input': {
+                color: darkMode ? 'white' : 'inherit',
+              },
+            }}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                placeholder="Search SQL templates..."
+                variant="outlined"
+                InputProps={{
+                  ...params.InputProps,
+                  endAdornment: (
+                    <>
+                      {fetchingCodes || fetchingLogic ? (
+                        <CircularProgress color="inherit" size={20} />
+                      ) : null}
+                      {params.InputProps.endAdornment}
+                    </>
+                  ),
+                }}
+              />
+            )}
+            renderOption={(props, option) => (
+              <li {...props} key={option}>
+                <Typography 
+                  variant="body2" 
+                  sx={{ 
+                    color: darkMode ? 'white' : 'inherit',
+                    fontSize: '0.875rem'
+                  }}
+                >
+                  {option}
+                </Typography>
+              </li>
+            )}
+          />
+          <Divider sx={{ mt: 2, borderColor: darkMode ? 'rgba(75, 85, 99, 0.3)' : 'rgba(229, 231, 235, 1)' }} />
+        </Box>
+
+        {/* SQL Editor */}
         <div
           className={`h-[120px] rounded-lg overflow-hidden border ${
             darkMode ? 'border-gray-700' : 'border-gray-200'

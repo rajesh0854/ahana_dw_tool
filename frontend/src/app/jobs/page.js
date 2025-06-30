@@ -29,7 +29,9 @@ import {
   FormControl,
   InputLabel,
   Chip,
-  Fade
+  Fade,
+  FormControlLabel,
+  Checkbox
 } from '@mui/material';
 import { styled, useTheme as useMuiTheme } from '@mui/material/styles';
 import { 
@@ -877,11 +879,23 @@ const JobsPage = () => {
   };
 
   // Handle confirm execute
-  const handleConfirmExecute = async () => {
+  const handleConfirmExecute = async (executeData) => {
     try {
+      const payload = {
+        mapref: executingJob.MAPREF,
+        loadType: executeData.loadType
+      };
+
+      // Add history load specific parameters
+      if (executeData.loadType === 'history') {
+        payload.startDate = executeData.startDate;
+        payload.endDate = executeData.endDate;
+        payload.truncateLoad = executeData.truncateLoad ? 'Y' : 'N';
+      }
+
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_API_URL}/job/schedule-job-immediately`,
-        { mapref: executingJob.MAPREF }
+        payload
       );
 
       if (response.data.success) {
@@ -1513,12 +1527,59 @@ const LogicViewDialog = ({ open, onClose, job }) => {
 // Execute Job Dialog Component
 const ExecuteJobDialog = ({ open, onClose, job, onConfirm }) => {
   const { darkMode } = useTheme();
-  
+  const [loadType, setLoadType] = useState('regular');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [truncateLoad, setTruncateLoad] = useState(false);
+  const [errors, setErrors] = useState({});
+
+  // Reset form when dialog opens/closes
+  useEffect(() => {
+    if (open) {
+      setLoadType('regular');
+      setStartDate('');
+      setEndDate('');
+      setTruncateLoad(false);
+      setErrors({});
+    }
+  }, [open]);
+
+  const validateForm = () => {
+    const newErrors = {};
+    
+    if (loadType === 'history') {
+      if (!startDate) {
+        newErrors.startDate = 'Start date is required for history load';
+      }
+      if (!endDate) {
+        newErrors.endDate = 'End date is required for history load';
+      }
+      if (startDate && endDate && new Date(startDate) > new Date(endDate)) {
+        newErrors.endDate = 'End date must be after start date';
+      }
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleExecute = () => {
+    if (validateForm()) {
+      const executeData = {
+        loadType,
+        startDate: loadType === 'history' ? startDate : null,
+        endDate: loadType === 'history' ? endDate : null,
+        truncateLoad: loadType === 'history' ? truncateLoad : false
+      };
+      onConfirm(executeData);
+    }
+  };
+
   return (
     <Dialog
       open={open}
       onClose={onClose}
-      maxWidth="sm"
+      maxWidth="md"
       fullWidth
       PaperProps={{
         sx: {
@@ -1577,16 +1638,193 @@ const ExecuteJobDialog = ({ open, onClose, job, onConfirm }) => {
         </IconButton>
       </DialogTitle>
       <DialogContent sx={{ mt: 2, p: 3, color: darkMode ? 'white' : 'text.primary' }}>
-        <Typography variant="body1" sx={{ mb: 2, fontSize: '0.9375rem' }}>
-          Are you sure you want to execute this job immediately?
-        </Typography>
-        <Typography variant="body2" sx={{ 
-          color: darkMode ? '#A0AEC0' : '#718096',
-          fontSize: '0.8125rem',
-          fontStyle: 'italic'
-        }}>
-          This will trigger the job execution outside of its scheduled time.
-        </Typography>
+        {/* Load Type Selection */}
+        <Box sx={{ mb: 3 }}>
+          <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 600 }}>
+            Load Type
+          </Typography>
+          <FormControl component="fieldset">
+            <Box sx={{ display: 'flex', gap: 2 }}>
+              <Button
+                variant={loadType === 'regular' ? 'contained' : 'outlined'}
+                onClick={() => setLoadType('regular')}
+                sx={{
+                  borderRadius: 1.5,
+                  px: 3,
+                  py: 1,
+                  fontSize: '0.875rem',
+                  fontWeight: 600,
+                  backgroundColor: loadType === 'regular' ? (darkMode ? '#3B82F6' : '#3B82F6') : 'transparent',
+                  borderColor: darkMode ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.2)',
+                  color: loadType === 'regular' ? 'white' : (darkMode ? '#E2E8F0' : '#4A5568'),
+                  '&:hover': {
+                    backgroundColor: loadType === 'regular' ? (darkMode ? '#2563EB' : '#2563EB') : (darkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)')
+                  }
+                }}
+              >
+                Regular Load
+              </Button>
+              <Button
+                variant={loadType === 'history' ? 'contained' : 'outlined'}
+                onClick={() => setLoadType('history')}
+                sx={{
+                  borderRadius: 1.5,
+                  px: 3,
+                  py: 1,
+                  fontSize: '0.875rem',
+                  fontWeight: 600,
+                  backgroundColor: loadType === 'history' ? (darkMode ? '#3B82F6' : '#3B82F6') : 'transparent',
+                  borderColor: darkMode ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.2)',
+                  color: loadType === 'history' ? 'white' : (darkMode ? '#E2E8F0' : '#4A5568'),
+                  '&:hover': {
+                    backgroundColor: loadType === 'history' ? (darkMode ? '#2563EB' : '#2563EB') : (darkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)')
+                  }
+                }}
+              >
+                History Load
+              </Button>
+            </Box>
+          </FormControl>
+        </Box>
+
+        {/* Regular Load Description */}
+        {loadType === 'regular' && (
+          <Box sx={{ mb: 3 }}>
+            <Typography variant="body1" sx={{ mb: 1, fontSize: '0.9375rem' }}>
+              Regular Load will execute the job with its standard configuration.
+            </Typography>
+            <Typography variant="body2" sx={{ 
+              color: darkMode ? '#A0AEC0' : '#718096',
+              fontSize: '0.8125rem',
+              fontStyle: 'italic'
+            }}>
+              This will trigger the job execution outside of its scheduled time.
+            </Typography>
+          </Box>
+        )}
+
+        {/* History Load Configuration */}
+        {loadType === 'history' && (
+          <Box sx={{ mb: 3 }}>
+            <Typography variant="body1" sx={{ mb: 2, fontSize: '0.9375rem' }}>
+              History Load allows you to process data for a specific date range.
+            </Typography>
+            
+                         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+               {/* Date Range */}
+               <Box sx={{ display: 'flex', gap: 2 }}>
+                 <Box sx={{ flex: 1 }}>
+                   <Typography variant="caption" sx={{ 
+                     display: 'block', 
+                     mb: 0.5, 
+                     color: darkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.6)',
+                     fontWeight: 500,
+                     fontSize: '0.75rem'
+                   }}>
+                     Start Date
+                   </Typography>
+                   <DatePicker 
+                     value={startDate ? new Date(startDate) : null}
+                     onChange={(date) => setStartDate(date ? date.toISOString().split('T')[0] : '')}
+                     slotProps={{
+                       textField: {
+                         size: "small",
+                         fullWidth: true,
+                         error: !!errors.startDate,
+                         helperText: errors.startDate,
+                         InputProps: {
+                           sx: {
+                             fontSize: '0.8125rem',
+                             height: '36px',
+                             backgroundColor: darkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)',
+                             borderRadius: '6px',
+                             '& fieldset': {
+                               borderColor: darkMode ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.2)',
+                             },
+                             '&:hover fieldset': {
+                               borderColor: darkMode ? 'rgba(255, 255, 255, 0.3)' : 'rgba(0, 0, 0, 0.3)',
+                             },
+                           }
+                         },
+                         InputLabelProps: {
+                           sx: {
+                             color: darkMode ? '#E2E8F0' : '#4A5568',
+                             fontSize: '0.8125rem'
+                           }
+                         }
+                       }
+                     }}
+                   />
+                 </Box>
+                 <Box sx={{ flex: 1 }}>
+                   <Typography variant="caption" sx={{ 
+                     display: 'block', 
+                     mb: 0.5, 
+                     color: darkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.6)',
+                     fontWeight: 500,
+                     fontSize: '0.75rem'
+                   }}>
+                     End Date
+                   </Typography>
+                   <DatePicker 
+                     value={endDate ? new Date(endDate) : null}
+                     onChange={(date) => setEndDate(date ? date.toISOString().split('T')[0] : '')}
+                     minDate={startDate ? new Date(startDate) : undefined}
+                     slotProps={{
+                       textField: {
+                         size: "small",
+                         fullWidth: true,
+                         error: !!errors.endDate,
+                         helperText: errors.endDate,
+                         InputProps: {
+                           sx: {
+                             fontSize: '0.8125rem',
+                             height: '36px',
+                             backgroundColor: darkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)',
+                             borderRadius: '6px',
+                             '& fieldset': {
+                               borderColor: darkMode ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.2)',
+                             },
+                             '&:hover fieldset': {
+                               borderColor: darkMode ? 'rgba(255, 255, 255, 0.3)' : 'rgba(0, 0, 0, 0.3)',
+                             },
+                           }
+                         },
+                         InputLabelProps: {
+                           sx: {
+                             color: darkMode ? '#E2E8F0' : '#4A5568',
+                             fontSize: '0.8125rem'
+                           }
+                         }
+                       }
+                     }}
+                   />
+                 </Box>
+               </Box>
+
+              {/* Truncate Load Option */}
+              <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
+                <input
+                  type="checkbox"
+                  id="truncateLoad"
+                  checked={truncateLoad}
+                  onChange={(e) => setTruncateLoad(e.target.checked)}
+                  style={{
+                    marginRight: '8px',
+                    accentColor: darkMode ? '#3B82F6' : '#3B82F6'
+                  }}
+                />
+                <label htmlFor="truncateLoad" style={{ 
+                  fontSize: '0.875rem',
+                  color: darkMode ? '#E2E8F0' : '#4A5568',
+                  cursor: 'pointer'
+                }}>
+                  Truncate & Load (Clear target table before loading data)
+                </label>
+              </Box>
+            </Box>
+          </Box>
+        )}
       </DialogContent>
       <DialogActions sx={{ 
         backgroundColor: darkMode ? '#1A202C' : '#F9FAFB',
@@ -1615,7 +1853,7 @@ const ExecuteJobDialog = ({ open, onClose, job, onConfirm }) => {
           Cancel
         </Button>
         <Button 
-          onClick={onConfirm} 
+          onClick={handleExecute} 
           variant="contained" 
           color="primary"
           size="small"
@@ -1628,7 +1866,7 @@ const ExecuteJobDialog = ({ open, onClose, job, onConfirm }) => {
             fontWeight: 600
           }}
         >
-          Execute Now
+          Execute {loadType === 'history' ? 'History Load' : 'Now'}
         </Button>
       </DialogActions>
     </Dialog>

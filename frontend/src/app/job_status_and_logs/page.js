@@ -99,7 +99,9 @@ const JobStatusAndLogs = () => {
         actualStartDate: log.ACTUAL_START_DATE,
         errorMessage: log.ERROR_MESSAGE,
         runDurationSeconds: log.RUN_DURATION_SECONDS,
-        sessionId: log.SESSION_ID
+        sessionId: log.SESSION_ID,
+        sourceRows: log.SOURCE_ROWS,
+        targetRows: log.TARGET_ROWS
       }));
 
       // Calculate job statistics
@@ -729,6 +731,18 @@ const JobStatusAndLogs = () => {
                                                   Duration: {formatDuration(log.runDurationSeconds)}
                                                 </div>
                                               )}
+                                              {(log.sourceRows !== null && log.sourceRows !== undefined) && (
+                                                <div className={`text-xs flex items-center ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                                                  <Database size={12} className="mr-1" />
+                                                  Source: {log.sourceRows?.toLocaleString() || 'N/A'}
+                                                </div>
+                                              )}
+                                              {(log.targetRows !== null && log.targetRows !== undefined) && (
+                                                <div className={`text-xs flex items-center ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                                                  <TrendingUp size={12} className="mr-1" />
+                                                  Target: {log.targetRows?.toLocaleString() || 'N/A'}
+                                                </div>
+                                              )}
                                             </div>
                                             <div className="flex items-center space-x-2 ml-auto">
                                               {log.status === 'FL' && (
@@ -759,7 +773,9 @@ const JobStatusAndLogs = () => {
                                                     status: log.status,
                                                     logDate: log.logDate,
                                                     actualStartDate: log.actualStartDate,
-                                                    duration: formatDuration(log.runDurationSeconds)
+                                                    duration: formatDuration(log.runDurationSeconds),
+                                                    sourceRows: log.sourceRows,
+                                                    targetRows: log.targetRows
                                                   }, null, 2));
                                                 }}
                                                 className={`

@@ -270,6 +270,8 @@ def get_scheduled_jobs():
                     		pl.strtdt AS actual_start_date,
                     		err.errmsg||chr(10)||err.dberrmsg error_message,
                     		pl.sessionid AS session_id,
+                            jl.srcrows AS source_rows,
+                    		jl.trgrows AS target_rows,
                            case 
                            when pl.enddt IS NOT NULL THEN
                                 EXTRACT(DAY FROM (pl.enddt - pl.strtdt)) * 86400 + 
@@ -635,10 +637,7 @@ def enable_disable_job():
 
 
 
-def call_schedule_immediate_job_async(p_mapref):
-    """
-    Asynchronous version of call_schedule_immediate_job that runs in background
-    """
+def call_schedule_regular_job_async(p_mapref):
     def background_job():
         connection = None
         cursor = None
@@ -685,6 +684,68 @@ def call_schedule_immediate_job_async(p_mapref):
     thread = threading.Thread(target=background_job, daemon=True)
     thread.start()
     return True, f"Job {p_mapref} execution started in background"
+
+
+def call_schedule_history_job_async(p_mapref, p_strtdt, p_enddt, p_tlflg):
+    def background_job():
+        connection = None
+        cursor = None
+        try:
+            info(f"Starting background history job scheduling for {p_mapref} from {p_strtdt} to {p_enddt}")
+            connection = create_oracle_connection()
+            cursor = connection.cursor()
+            
+            sql = f"""
+            DECLARE
+              v_mapref VARCHAR2(100) := :p_mapref;
+              v_strtdt DATE := TO_DATE(:p_strtdt, 'YYYY-MM-DD');
+              v_enddt DATE := TO_DATE(:p_enddt, 'YYYY-MM-DD');
+              v_tlflg VARCHAR2(1) := :p_tlflg;
+            BEGIN
+              {ORACLE_SCHEMA}.PKGDWPRC.SCHEDULE_HISTORY_JOB_IMMEDIATE(
+                p_mapref => v_mapref,
+                p_strtdt => v_strtdt,
+                p_enddt => v_enddt,
+                p_tlflg => v_tlflg
+              );
+            END;
+            """
+            
+            # Execute with named parameters
+            cursor.execute(sql, {
+                'p_mapref': p_mapref,
+                'p_strtdt': p_strtdt,
+                'p_enddt': p_enddt,
+                'p_tlflg': p_tlflg
+            })
+            connection.commit()
+            
+            info(f"History job {p_mapref} scheduled for immediate execution successfully")
+            
+        except Exception as e:
+            error_message = f"Exception while scheduling history job {p_mapref}: {str(e)}"
+            error(f"Error: {error_message}")
+            if connection:
+                try:
+                    connection.rollback()
+                except:
+                    pass
+        finally:
+            if cursor:
+                try:
+                    cursor.close()
+                except:
+                    pass
+            if connection:
+                try:
+                    connection.close()
+                except:
+                    pass
+    
+    # Start the background thread
+    thread = threading.Thread(target=background_job, daemon=True)
+    thread.start()
+    return True, f"History job {p_mapref} execution started in background (from {p_strtdt} to {p_enddt})"
 
 
 def call_schedule_immediate_job(connection, p_mapref):
@@ -746,12 +807,26 @@ def schedule_job_immediately():
     try:
         data = request.json
         p_mapref = data.get('mapref')
+        load_type = data.get('loadType', 'regular')  # 'regular' or 'history'
+        
+        # For history load, get additional parameters
+        start_date = data.get('startDate')
+        end_date = data.get('endDate')
+        truncate_load = data.get('truncateLoad', 'N')  # 'Y' or 'N'
 
         if not p_mapref:
             return jsonify({
                 'success': False,
                 'message': 'Missing required parameter: mapref'
             }), 400
+
+        # Validate history load parameters
+        if load_type == 'history':
+            if not start_date or not end_date:
+                return jsonify({
+                    'success': False,
+                    'message': 'Missing required parameters for history load: startDate and endDate'
+                }), 400
 
         conn = create_oracle_connection()
         try:
@@ -762,8 +837,13 @@ def schedule_job_immediately():
                     'message': f'{p_mapref} : Job is already running'
                 }), 400
                 
-            # Schedule the job immediately in background
-            success, message = call_schedule_immediate_job_async(p_mapref)
+            if load_type == 'history':
+                # Schedule the history job immediately in background
+                success, message = call_schedule_history_job_async(p_mapref, start_date, end_date, truncate_load)
+            else:
+                # Schedule the regular job immediately in background
+                success, message = call_schedule_regular_job_async(p_mapref)
+                
             return jsonify({
                 'success': success,
                 'message': message  
@@ -771,6 +851,6 @@ def schedule_job_immediately():
         finally:
             conn.close()
     except Exception as e:
-        print(f"Error in schedule_job_immediately: {str(e)}")
+        error(f"Error in schedule_job_immediately: {str(e)}")
         return jsonify({'error': str(e)}), 500
     

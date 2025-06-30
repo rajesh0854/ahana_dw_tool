@@ -841,3 +841,125 @@
 2025-06-30 12:43:44 : system : info : Fetched 3 SQL codes
 2025-06-30 12:48:38 : system : info : Oracle connection established successfully
 2025-06-30 12:48:38 : system : info : Oracle connection established successfully
+2025-06-30 12:49:54 : system : info : Oracle connection established successfully
+2025-06-30 12:49:54 : system : info : Oracle connection established successfully
+2025-06-30 12:50:11 : system : info : Oracle connection established successfully
+2025-06-30 12:50:11 : system : info : Fetched 3 SQL codes
+2025-06-30 12:50:12 : system : info : Oracle connection established successfully
+2025-06-30 12:50:12 : system : info : Fetched 3 SQL codes
+2025-06-30 12:50:13 : system : info : Oracle connection established successfully
+2025-06-30 12:50:13 : system : info : Fetched SQL logic for code: DIM_CUSTOMER_INITIAL_MAIN
+2025-06-30 12:53:12 : rajesh : info : User rajesh authenticated successfully
+2025-06-30 12:53:12 : rajesh : info : User rajesh authenticated successfully
+2025-06-30 12:53:35 : system : info : Oracle connection established successfully
+2025-06-30 12:53:35 : system : info : Fetched 3 SQL codes
+2025-06-30 12:53:35 : system : info : Oracle connection established successfully
+2025-06-30 12:53:35 : system : info : Fetched 3 SQL codes
+2025-06-30 12:54:17 : system : info : Oracle connection established successfully
+2025-06-30 12:54:18 : system : info : Oracle connection established successfully
+2025-06-30 12:55:18 : system : info : Oracle connection established successfully
+2025-06-30 12:55:18 : system : info : Oracle connection established successfully
+2025-06-30 12:55:19 : system : info : Oracle connection established successfully
+2025-06-30 12:55:19 : system : info : Oracle connection established successfully
+2025-06-30 12:59:59 : system : info : Oracle connection established successfully
+2025-06-30 12:59:59 : system : info : Fetched 3 SQL codes
+2025-06-30 12:59:59 : system : info : Oracle connection established successfully
+2025-06-30 12:59:59 : system : info : Fetched 3 SQL codes
+2025-06-30 13:00:45 : rajesh : info : User rajesh authenticated successfully
+2025-06-30 13:00:45 : rajesh : info : User rajesh authenticated successfully
+2025-06-30 13:00:46 : system : info : Oracle connection established successfully
+2025-06-30 13:00:46 : system : info : Oracle connection established successfully
+2025-06-30 13:00:52 : system : info : Oracle connection established successfully
+2025-06-30 13:00:52 : system : info : Oracle connection established successfully
+2025-06-30 13:00:52 : system : info : Oracle connection established successfully
+2025-06-30 13:00:52 : system : info : Oracle connection established successfully
+2025-06-30 13:00:52 : system : info : Oracle connection established successfully
+2025-06-30 13:00:52 : system : info : Oracle connection established successfully
+2025-06-30 13:00:54 : system : info : Oracle connection established successfully
+2025-06-30 13:00:54 : system : info : Fetched 3 SQL codes
+2025-06-30 13:01:08 : system : info : Oracle connection established successfully
+2025-06-30 13:01:08 : system : info : Oracle connection established successfully
+2025-06-30 13:01:09 : system : info : Oracle connection established successfully
+2025-06-30 13:01:10 : system : info : Oracle connection established successfully
+2025-06-30 13:01:10 : system : info : Oracle connection established successfully
+2025-06-30 13:01:10 : system : info : Oracle connection established successfully
+2025-06-30 13:01:13 : system : info : Oracle connection established successfully
+2025-06-30 13:01:13 : system : info : Fetched 3 SQL codes
+2025-06-30 13:01:51 : system : info : Oracle connection established successfully
+2025-06-30 13:01:51 : system : info : Fetched SQL logic for code: DIM_ACCOUNT
+2025-06-30 13:03:53 : system : info : Oracle connection established successfully
+2025-06-30 13:03:53 : system : info : Fetched 3 SQL codes
+2025-06-30 13:03:53 : system : info : Oracle connection established successfully
+2025-06-30 13:03:53 : system : info : Fetched 3 SQL codes
+2025-06-30 13:04:04 : system : info : Oracle connection established successfully
+2025-06-30 13:04:05 : system : info : Oracle connection established successfully
+2025-06-30 13:04:06 : system : info : Oracle connection established successfully
+2025-06-30 13:04:07 : system : info : Oracle connection established successfully
+2025-06-30 13:04:07 : system : info : Oracle connection established successfully
+2025-06-30 13:04:07 : system : info : Oracle connection established successfully
+2025-06-30 13:04:09 : system : info : Oracle connection established successfully
+2025-06-30 13:04:09 : system : info : Fetched 3 SQL codes
+2025-06-30 13:04:21 : system : info : Oracle connection established successfully
+2025-06-30 13:04:21 : system : info : Fetched SQL logic for code: DIM_CUSTOMER_INITIAL_MAIN
+2025-06-30 13:04:42 : system : info : Oracle connection established successfully
+2025-06-30 13:04:42 : system : info : Fetched SQL logic for code: DIM_ACCOUNT
+2025-06-30 13:10:45 : system : info : Oracle connection established successfully
+2025-06-30 13:10:45 : system : info : Fetched SQL logic for code: DIM_CUSTOMER_INITIAL_MAIN
+2025-06-30 13:10:49 : system : info : Oracle connection established successfully
+2025-06-30 13:10:50 : system : info : Oracle connection established successfully
+2025-06-30 13:10:54 : system : info : Oracle connection established successfully
+2025-06-30 13:10:54 : system : info : Fetched 3 SQL codes
+2025-06-30 13:10:54 : system : info : Oracle connection established successfully
+2025-06-30 13:10:54 : system : info : Fetched 3 SQL codes
+2025-06-30 13:13:13 : system : info : Oracle connection established successfully
+2025-06-30 13:13:13 : system : info : SQL validation failed
+2025-06-30 13:13:34 : system : info : Oracle connection established successfully
+2025-06-30 13:13:34 : system : info : Oracle connection established successfully
+2025-06-30 13:30:50 : system : info : Oracle connection established successfully
+2025-06-30 13:34:27 : system : info : Server stopped.
+2025-06-30 13:34:27 : system : info : Server stopped.
+2025-06-30 13:34:31 : system : info : Loading secret key from: /mnt/d/INNOVA/DW_TOOL/ahana_dw_tool/backend/modules/license/secret.key
+2025-06-30 13:34:31 : system : info : License Manager initialized with system ID: 00155daafd4f
+2025-06-30 13:34:31 : system : info : Loading secret key from: /mnt/d/INNOVA/DW_TOOL/ahana_dw_tool/backend/modules/license/secret.key
+2025-06-30 13:34:31 : system : info : License Manager initialized with system ID: 00155daafd4f
+2025-06-30 13:34:31 : system : info : Server starting...
+2025-06-30 13:34:32 : system : info : Loading secret key from: /mnt/d/INNOVA/DW_TOOL/ahana_dw_tool/backend/modules/license/secret.key
+2025-06-30 13:34:32 : system : info : License Manager initialized with system ID: 00155daafd4f
+2025-06-30 13:34:32 : system : info : Loading secret key from: /mnt/d/INNOVA/DW_TOOL/ahana_dw_tool/backend/modules/license/secret.key
+2025-06-30 13:34:32 : system : info : License Manager initialized with system ID: 00155daafd4f
+2025-06-30 13:34:33 : system : info : Server starting...
+2025-06-30 13:35:09 : system : info : Oracle connection established successfully
+2025-06-30 13:35:09 : system : info : Starting background history job scheduling for DIM_ACCOUNT from 2025-06-30 to 2025-06-30
+2025-06-30 13:35:09 : system : info : Oracle connection established successfully
+2025-06-30 13:35:09 : system : info : Oracle connection established successfully
+2025-06-30 13:35:09 : system : info : History job DIM_ACCOUNT scheduled for immediate execution successfully
+2025-06-30 13:35:10 : system : info : Oracle connection established successfully
+2025-06-30 13:35:10 : system : info : Oracle connection established successfully
+2025-06-30 13:35:10 : system : info : Oracle connection established successfully
+2025-06-30 13:35:10 : system : info : Oracle connection established successfully
+2025-06-30 13:35:10 : system : info : Oracle connection established successfully
+2025-06-30 13:35:10 : system : info : Oracle connection established successfully
+2025-06-30 13:35:11 : system : info : Oracle connection established successfully
+2025-06-30 13:35:11 : system : info : Oracle connection established successfully
+2025-06-30 13:35:11 : system : info : Oracle connection established successfully
+2025-06-30 13:35:11 : system : info : Oracle connection established successfully
+2025-06-30 13:35:11 : system : info : Oracle connection established successfully
+2025-06-30 13:35:11 : system : info : Oracle connection established successfully
+2025-06-30 13:35:31 : system : info : Oracle connection established successfully
+2025-06-30 13:35:31 : system : info : Oracle connection established successfully
+2025-06-30 13:35:57 : system : info : Oracle connection established successfully
+2025-06-30 13:36:01 : system : info : Oracle connection established successfully
+2025-06-30 13:36:08 : system : info : Oracle connection established successfully
+2025-06-30 13:36:11 : system : info : Oracle connection established successfully
+2025-06-30 13:43:19 : system : info : Server stopped.
+2025-06-30 13:43:19 : system : info : Server stopped.
+2025-06-30 13:43:22 : system : info : Loading secret key from: /mnt/d/INNOVA/DW_TOOL/ahana_dw_tool/backend/modules/license/secret.key
+2025-06-30 13:43:22 : system : info : License Manager initialized with system ID: 00155daafd4f
+2025-06-30 13:43:22 : system : info : Loading secret key from: /mnt/d/INNOVA/DW_TOOL/ahana_dw_tool/backend/modules/license/secret.key
+2025-06-30 13:43:22 : system : info : License Manager initialized with system ID: 00155daafd4f
+2025-06-30 13:43:22 : system : info : Server starting...
+2025-06-30 13:43:23 : system : info : Loading secret key from: /mnt/d/INNOVA/DW_TOOL/ahana_dw_tool/backend/modules/license/secret.key
+2025-06-30 13:43:23 : system : info : License Manager initialized with system ID: 00155daafd4f
+2025-06-30 13:43:23 : system : info : Loading secret key from: /mnt/d/INNOVA/DW_TOOL/ahana_dw_tool/backend/modules/license/secret.key
+2025-06-30 13:43:23 : system : info : License Manager initialized with system ID: 00155daafd4f
+2025-06-30 13:43:23 : system : info : Server starting...
