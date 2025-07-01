@@ -963,3 +963,190 @@
 2025-06-30 13:43:23 : system : info : Loading secret key from: /mnt/d/INNOVA/DW_TOOL/ahana_dw_tool/backend/modules/license/secret.key
 2025-06-30 13:43:23 : system : info : License Manager initialized with system ID: 00155daafd4f
 2025-06-30 13:43:23 : system : info : Server starting...
+2025-06-30 13:43:31 : system : info : Oracle connection established successfully
+2025-06-30 13:43:31 : system : info : Fetched 3 SQL codes
+2025-06-30 13:43:31 : system : info : Oracle connection established successfully
+2025-06-30 13:43:31 : system : info : Fetched 3 SQL codes
+2025-06-30 13:43:35 : system : info : Oracle connection established successfully
+2025-06-30 13:43:35 : system : info : Oracle connection established successfully
+2025-06-30 13:43:39 : system : info : Oracle connection established successfully
+2025-06-30 13:43:39 : system : info : Oracle connection established successfully
+2025-06-30 13:59:09 : system : info : Oracle connection established successfully
+2025-06-30 13:59:10 : system : info : Oracle connection established successfully
+2025-06-30 17:44:21 : system : info : Loading secret key from: /mnt/d/INNOVA/DW_TOOL/ahana_dw_tool/backend/modules/license/secret.key
+2025-06-30 17:44:21 : system : info : License Manager initialized with system ID: 00155daafaac
+2025-06-30 17:44:21 : system : info : Loading secret key from: /mnt/d/INNOVA/DW_TOOL/ahana_dw_tool/backend/modules/license/secret.key
+2025-06-30 17:44:21 : system : info : License Manager initialized with system ID: 00155daafaac
+2025-06-30 17:44:22 : system : info : Server starting...
+2025-06-30 17:44:24 : system : info : Loading secret key from: /mnt/d/INNOVA/DW_TOOL/ahana_dw_tool/backend/modules/license/secret.key
+2025-06-30 17:44:24 : system : info : License Manager initialized with system ID: 00155daafaac
+2025-06-30 17:44:24 : system : info : Loading secret key from: /mnt/d/INNOVA/DW_TOOL/ahana_dw_tool/backend/modules/license/secret.key
+2025-06-30 17:44:24 : system : info : License Manager initialized with system ID: 00155daafaac
+2025-06-30 17:44:25 : system : info : Server starting...
+2025-06-30 17:45:50 : rajesh : info : User rajesh authenticated successfully
+2025-06-30 17:45:50 : rajesh : info : User rajesh authenticated successfully
+2025-06-30 17:46:11 : system : info : Oracle connection established successfully
+2025-06-30 17:46:11 : system : info : Fetched 3 SQL codes
+2025-06-30 17:46:12 : system : info : Oracle connection established successfully
+2025-06-30 17:46:12 : system : info : Fetched 3 SQL codes
+2025-06-30 17:46:17 : system : info : Oracle connection established successfully
+2025-06-30 17:46:18 : system : info : Fetched SQL logic for code: DIM_ACCOUNT
+2025-06-30 17:52:33 : system : info : Oracle connection established successfully
+2025-06-30 17:52:33 : system : info : Fetched SQL logic for code: DIM_ACCOUNT
+2025-06-30 17:56:06 : system : info : Oracle connection established successfully
+2025-06-30 17:56:06 : system : info : Fetched 3 SQL codes
+2025-06-30 17:59:58 : rajesh : info : User rajesh authenticated successfully
+2025-06-30 17:59:58 : rajesh : info : User rajesh authenticated successfully
+2025-06-30 18:00:11 : rajesh : info : User rajesh authenticated successfully
+2025-06-30 18:00:12 : rajesh : info : User rajesh authenticated successfully
+2025-06-30 18:00:12 : system : info : Oracle connection established successfully
+2025-06-30 18:00:12 : system : info : Fetched 3 SQL codes
+2025-06-30 18:00:13 : system : info : Oracle connection established successfully
+2025-06-30 18:00:13 : system : info : Fetched 3 SQL codes
+2025-06-30 18:00:28 : system : info : Oracle connection established successfully
+2025-06-30 18:00:28 : system : info : Fetched SQL logic for code: DIM_ACCOUNT
+2025-06-30 18:05:58 : rajesh : info : User rajesh authenticated successfully
+2025-06-30 18:05:58 : rajesh : info : User rajesh authenticated successfully
+2025-06-30 18:05:58 : system : info : Oracle connection established successfully
+2025-06-30 18:05:58 : system : info : Fetched 3 SQL codes
+2025-06-30 18:05:59 : system : info : Oracle connection established successfully
+2025-06-30 18:05:59 : system : info : Fetched 3 SQL codes
+2025-06-30 18:06:44 : system : info : Oracle connection established successfully
+2025-06-30 18:06:44 : system : info : Fetched SQL logic for code: DIM_ACCOUNT
+2025-06-30 18:08:38 : system : info : Oracle connection established successfully
+2025-06-30 18:08:38 : system : info : Fetched 3 SQL codes
+2025-06-30 18:11:12 : system : info : Oracle connection established successfully
+2025-06-30 18:11:12 : system : info : Fetched SQL logic for code: DIM_CUSTOMER_INITIAL_MAIN
+2025-06-30 18:11:24 : system : info : Oracle connection established successfully
+2025-06-30 18:11:24 : system : info : Fetched 3 SQL codes
+2025-06-30 18:11:28 : system : info : Oracle connection established successfully
+2025-06-30 18:11:28 : system : info : Fetched SQL logic for code: DIM_ACCOUNT_2
+2025-06-30 18:11:31 : system : info : Oracle connection established successfully
+2025-06-30 18:11:31 : system : info : Fetched SQL logic for code: DIM_ACCOUNT
+2025-06-30 18:11:32 : system : info : Oracle connection established successfully
+2025-06-30 18:11:32 : system : info : Fetched SQL logic for code: DIM_CUSTOMER_INITIAL_MAIN
+2025-06-30 18:16:05 : system : info : Oracle connection established successfully
+2025-06-30 18:16:05 : system : info : Fetched SQL logic for code: DIM_ACCOUNT
+2025-06-30 18:16:30 : system : info : Oracle connection established successfully
+2025-06-30 18:16:30 : system : info : Fetched SQL logic for code: DIM_CUSTOMER_INITIAL_MAIN
+2025-06-30 18:16:51 : system : info : Oracle connection established successfully
+2025-06-30 18:16:51 : system : info : SQL validation failed
+2025-06-30 18:17:01 : system : info : Oracle connection established successfully
+2025-06-30 18:17:01 : system : info : Fetched SQL logic for code: DIM_ACCOUNT
+2025-06-30 18:17:12 : system : info : Oracle connection established successfully
+2025-06-30 18:17:12 : system : info : SQL validation passed successfully
+2025-06-30 18:20:17 : system : info : Oracle connection established successfully
+2025-06-30 18:20:17 : system : info : Fetched 3 SQL codes
+2025-06-30 18:20:18 : system : info : Oracle connection established successfully
+2025-06-30 18:20:18 : system : info : Fetched 3 SQL codes
+2025-06-30 18:21:00 : system : info : Oracle connection established successfully
+2025-06-30 18:21:00 : system : info : Fetched SQL logic for code: DIM_ACCOUNT
+2025-06-30 18:21:12 : system : info : Oracle connection established successfully
+2025-06-30 18:21:12 : system : info : SQL validation failed
+2025-06-30 18:21:21 : system : info : Oracle connection established successfully
+2025-06-30 18:21:21 : system : info : SQL validation failed
+2025-06-30 18:21:26 : system : info : Oracle connection established successfully
+2025-06-30 18:21:26 : system : info : Fetched SQL logic for code: DIM_ACCOUNT
+2025-06-30 18:21:41 : system : info : Oracle connection established successfully
+2025-06-30 18:21:41 : system : info : SQL validation passed successfully
+2025-06-30 18:24:13 : system : info : Oracle connection established successfully
+2025-06-30 18:24:13 : system : info : Fetched 3 SQL codes
+2025-06-30 18:24:13 : system : info : Oracle connection established successfully
+2025-06-30 18:24:13 : system : info : Fetched 3 SQL codes
+2025-06-30 18:24:24 : system : info : Oracle connection established successfully
+2025-06-30 18:24:24 : system : info : Fetched SQL logic for code: DIM_ACCOUNT
+2025-06-30 18:24:27 : system : info : Oracle connection established successfully
+2025-06-30 18:24:27 : system : info : SQL validation passed successfully
+2025-06-30 18:24:38 : system : info : Oracle connection established successfully
+2025-06-30 18:24:38 : system : info : SQL validation passed successfully
+2025-06-30 18:25:00 : system : info : Oracle connection established successfully
+2025-06-30 18:25:00 : system : info : SQL validation passed successfully
+2025-06-30 18:25:04 : system : info : Oracle connection established successfully
+2025-06-30 18:25:04 : system : info : SQL validation passed successfully
+2025-06-30 18:28:18 : system : info : Oracle connection established successfully
+2025-06-30 18:28:18 : system : info : Fetched SQL logic for code: DIM_ACCOUNT
+2025-06-30 18:28:27 : system : info : Oracle connection established successfully
+2025-06-30 18:28:27 : system : info : SQL validation passed successfully
+2025-06-30 18:28:33 : rajesh : info : User rajesh authenticated successfully
+2025-06-30 18:28:33 : rajesh : info : User rajesh authenticated successfully
+2025-06-30 18:28:34 : system : info : Oracle connection established successfully
+2025-06-30 18:28:34 : system : info : Fetched 3 SQL codes
+2025-06-30 18:28:34 : system : info : Oracle connection established successfully
+2025-06-30 18:28:34 : system : info : Fetched 3 SQL codes
+2025-06-30 18:28:40 : system : info : Oracle connection established successfully
+2025-06-30 18:28:40 : system : info : SQL validation passed successfully
+2025-06-30 18:28:48 : system : info : Oracle connection established successfully
+2025-06-30 18:28:48 : system : info : SQL validation passed successfully
+2025-06-30 18:30:29 : system : info : Oracle connection established successfully
+2025-06-30 18:30:29 : system : info : SQL validation passed successfully
+2025-06-30 18:30:36 : rajesh : info : User rajesh authenticated successfully
+2025-06-30 18:30:36 : rajesh : info : User rajesh authenticated successfully
+2025-06-30 18:30:37 : system : info : Oracle connection established successfully
+2025-06-30 18:30:37 : system : info : Fetched 3 SQL codes
+2025-06-30 18:30:37 : system : info : Oracle connection established successfully
+2025-06-30 18:30:37 : system : info : Fetched 3 SQL codes
+2025-06-30 18:30:59 : system : info : Oracle connection established successfully
+2025-06-30 18:30:59 : system : info : SQL validation passed successfully
+2025-06-30 18:32:28 : system : info : Oracle connection established successfully
+2025-06-30 18:32:28 : system : info : Fetched 3 SQL codes
+2025-06-30 18:32:29 : system : info : Oracle connection established successfully
+2025-06-30 18:32:29 : system : info : Fetched 3 SQL codes
+2025-06-30 18:33:09 : system : info : Oracle connection established successfully
+2025-06-30 18:33:09 : system : info : SQL validation passed successfully
+2025-06-30 18:33:12 : system : info : Oracle connection established successfully
+2025-06-30 18:33:17 : system : info : Oracle connection established successfully
+2025-06-30 18:33:17 : system : info : Fetched SQL logic for code: TEST
+2025-06-30 18:33:21 : system : info : Oracle connection established successfully
+2025-06-30 18:33:21 : system : info : SQL validation passed successfully
+2025-06-30 18:33:24 : system : info : Oracle connection established successfully
+2025-06-30 18:35:32 : system : info : Oracle connection established successfully
+2025-06-30 18:35:32 : system : info : SQL validation passed successfully
+2025-06-30 18:35:34 : system : info : Oracle connection established successfully
+2025-06-30 18:35:34 : system : info : SQL validation passed successfully
+2025-06-30 18:42:49 : system : info : Oracle connection established successfully
+2025-06-30 18:42:49 : system : info : SQL validation passed successfully
+2025-06-30 18:42:54 : system : info : Oracle connection established successfully
+2025-06-30 18:42:54 : system : info : SQL validation passed successfully
+2025-06-30 18:42:56 : system : info : Oracle connection established successfully
+2025-06-30 18:45:16 : system : info : Oracle connection established successfully
+2025-06-30 18:45:16 : system : info : Fetched 4 SQL codes
+2025-06-30 18:45:31 : system : info : Oracle connection established successfully
+2025-06-30 18:45:32 : system : info : Fetched SQL logic for code: DIM_ACCOUNT
+2025-06-30 18:45:58 : system : info : Oracle connection established successfully
+2025-06-30 18:45:58 : system : info : Oracle connection established successfully
+2025-06-30 18:46:03 : system : info : Oracle connection established successfully
+2025-06-30 18:46:03 : system : info : Fetched 4 SQL codes
+2025-06-30 18:46:03 : system : info : Oracle connection established successfully
+2025-06-30 18:46:03 : system : info : Fetched 4 SQL codes
+2025-06-30 18:46:08 : system : info : Oracle connection established successfully
+2025-06-30 18:46:09 : system : info : Fetched SQL logic for code: DIM_ACCOUNT
+2025-06-30 18:46:13 : system : info : Oracle connection established successfully
+2025-06-30 18:46:13 : system : info : SQL validation passed successfully
+2025-06-30 18:46:27 : system : info : Oracle connection established successfully
+2025-06-30 18:46:27 : system : info : Oracle connection established successfully
+2025-06-30 18:46:29 : system : info : Oracle connection established successfully
+2025-06-30 18:46:29 : system : info : Oracle connection established successfully
+2025-06-30 18:46:29 : system : info : Oracle connection established successfully
+2025-06-30 18:46:29 : system : info : Oracle connection established successfully
+2025-06-30 18:46:32 : system : info : Oracle connection established successfully
+2025-06-30 18:46:32 : system : info : Fetched 4 SQL codes
+2025-06-30 18:46:34 : system : info : Oracle connection established successfully
+2025-06-30 18:46:34 : system : info : Fetched SQL logic for code: TEST
+2025-06-30 18:46:39 : system : info : Oracle connection established successfully
+2025-06-30 18:46:40 : system : info : Oracle connection established successfully
+2025-06-30 18:46:42 : system : info : Oracle connection established successfully
+2025-06-30 18:46:42 : system : info : Fetched 4 SQL codes
+2025-06-30 18:46:42 : system : info : Oracle connection established successfully
+2025-06-30 18:46:42 : system : info : Fetched 4 SQL codes
+2025-06-30 18:51:57 : rajesh : info : User rajesh authenticated successfully
+2025-06-30 18:51:57 : rajesh : info : User rajesh authenticated successfully
+2025-06-30 18:51:58 : system : info : Oracle connection established successfully
+2025-06-30 18:51:58 : system : info : Fetched 4 SQL codes
+2025-06-30 18:51:58 : system : info : Oracle connection established successfully
+2025-06-30 18:51:58 : system : info : Fetched 4 SQL codes
+2025-06-30 18:52:47 : rajesh : info : User rajesh authenticated successfully
+2025-06-30 18:52:47 : rajesh : info : User rajesh authenticated successfully
+2025-06-30 18:52:48 : system : info : Oracle connection established successfully
+2025-06-30 18:52:48 : system : info : Fetched 4 SQL codes
+2025-06-30 18:52:49 : system : info : Oracle connection established successfully
+2025-06-30 18:52:49 : system : info : Fetched 4 SQL codes
