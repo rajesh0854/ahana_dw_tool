@@ -120,6 +120,85 @@ def fetch_sql_logic():
         }), 500
 
 
+
+@manage_sql_bp.route('/fetch-sql-history', methods=['GET'])
+def fetch_sql_history():
+    try:
+        # Get sql_code from query parameters
+        sql_code = request.args.get('sql_code')
+        
+        if not sql_code:
+            return jsonify({
+                'success': False,
+                'message': 'SQL code parameter is required'
+            }), 400
+        
+        conn = create_oracle_connection()
+        
+        try:
+            cursor = conn.cursor()
+            
+            # Query to fetch SQL logic for specific code
+            query = "SELECT RECCRDT,DWMAPRSQL FROM DWMAPRSQL WHERE DWMAPRSQLCD = :sql_code AND CURFLG = 'N'"
+            cursor.execute(query, {'sql_code': sql_code})
+            
+            # Fetch all results - we want to get all historical versions
+            results = cursor.fetchall()
+            
+            if results:
+                # Process all historical versions
+                history_items = []
+                for result in results:
+                    # Extract the date (first column)
+                    date_value = result[0]
+                    # Extract the SQL content (second column - CLOB)
+                    sql_content = result[1].read() if hasattr(result[1], 'read') else str(result[1])
+                    
+                    # Add to history items
+                    history_items.append({
+                        'date': date_value.strftime('%Y-%m-%d %H:%M:%S') if hasattr(date_value, 'strftime') else str(date_value),
+                        'sql_content': sql_content
+                    })
+                
+                info(f"Fetched {len(history_items)} historical versions for SQL code: {sql_code}")
+                
+                return jsonify({
+                    'success': True,
+                    'message': f'Successfully fetched SQL history for code: {sql_code}',
+                    'data': {
+                        'sql_code': sql_code,
+                        'history_items': history_items
+                    }
+                })
+            else:
+                return jsonify({
+                    'success': False,
+                    'message': f'No SQL history found for code: {sql_code}'
+                }), 404
+                
+        except Exception as e:
+            error_message = str(e)
+            error(f"Database error in fetch_sql_history: {error_message}")
+            return jsonify({
+                'success': False,
+                'message': f'Database error: {error_message}'
+            }), 500
+            
+        finally:
+            conn.close()
+            
+    except Exception as e:
+        error(f"Error in fetch_sql_history: {str(e)}", exc_info=True)
+        return jsonify({
+            'success': False,
+            'message': f'An error occurred while fetching SQL history: {str(e)}'
+        }), 500
+
+
+
+
+
+
 @manage_sql_bp.route('/save-sql', methods=['POST'])
 def save_sql():
     try:

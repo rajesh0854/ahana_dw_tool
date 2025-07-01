@@ -49,6 +49,35 @@ import { useTheme } from '@/context/ThemeContext'
 import axios from 'axios'
 import { motion } from 'framer-motion'
 
+const getApiErrorMessage = (error, defaultMessage) => {
+  // Check if it's an Axios error
+  if (axios.isAxiosError(error)) {
+    if (error.response) {
+      // The request was made and the server responded with a status code
+      // that falls out of the range of 2xx
+      const serverMessage = error.response.data?.error || error.response.data?.message;
+      if (serverMessage) {
+        return `Operation failed: ${serverMessage}`;
+      }
+      return `Server Error: Received status code ${error.response.status}. If the problem persists, please contact support.`;
+    } else if (error.request) {
+      // The request was made but no response was received
+      return 'Network Error: Unable to connect to the server. Please check your internet connection and try again.';
+    }
+  }
+
+  // This could be a standard Error from fetch (network error) or other JS errors
+  if (error instanceof Error) {
+    if (error.message.includes('Failed to fetch')) {
+      return 'Network Error: Could not connect to the backend. Please ensure the server is running and accessible.';
+    }
+    return `An unexpected error occurred: ${error.message}`;
+  }
+  
+  // Fallback for other types of thrown values
+  return defaultMessage || 'An unknown error occurred. Please try again.';
+};
+
 const ReferenceTable = ({ handleEditReference, handleCreateNewReference }) => {
   const { darkMode } = useTheme()
   const muiTheme = useMuiTheme()
@@ -116,6 +145,7 @@ const ReferenceTable = ({ handleEditReference, handleCreateNewReference }) => {
       setLockedReferences(lockStatus)
     } catch (error) {
       console.error('Error fetching lock status:', error)
+      message.error(getApiErrorMessage(error, 'Failed to fetch lock status'))
     } finally {
       setLoadingLocks(false)
     }
@@ -137,7 +167,7 @@ const ReferenceTable = ({ handleEditReference, handleCreateNewReference }) => {
       }
     } catch (error) {
       console.error('Error fetching mapper references:', error)
-      message.error('Failed to load mapper references')
+      message.error(getApiErrorMessage(error, 'Failed to load mapper references'))
     } finally {
       setLoadingReferences(false)
     }
@@ -181,15 +211,7 @@ const ReferenceTable = ({ handleEditReference, handleCreateNewReference }) => {
       }
     } catch (error) {
       console.error('Error deleting mapper reference:', error)
-      if (
-        error.response &&
-        error.response.data &&
-        error.response.data.message
-      ) {
-        message.error(error.response.data.message)
-      } else {
-        message.error('Failed to delete mapper reference. Please try again.')
-      }
+      message.error(getApiErrorMessage(error, 'Failed to delete mapper reference. Please try again.'))
     } finally {
       setLoadingReferences(false)
     }

@@ -85,6 +85,35 @@ import ReferenceRow from './ReferenceRow'
 import LoadingDialog from './LoadingDialog'
 import SqlEditorDialog from './SqlEditorDialog'
 
+const getApiErrorMessage = (error, defaultMessage) => {
+  // Check if it's an Axios error
+  if (axios.isAxiosError(error)) {
+    if (error.response) {
+      // The request was made and the server responded with a status code
+      // that falls out of the range of 2xx
+      const serverMessage = error.response.data?.error || error.response.data?.message;
+      if (serverMessage) {
+        return `Operation failed: ${serverMessage}`;
+      }
+      return `Server Error: Received status code ${error.response.status}. If the problem persists, please contact support.`;
+    } else if (error.request) {
+      // The request was made but no response was received
+      return 'Network Error: Unable to connect to the server. Please check your internet connection and try again.';
+    }
+  }
+
+  // This could be a standard Error from fetch (network error) or other JS errors
+  if (error instanceof Error) {
+    if (error.message.includes('Failed to fetch')) {
+      return 'Network Error: Could not connect to the backend. Please ensure the server is running and accessible.';
+    }
+    return `An unexpected error occurred: ${error.message}`;
+  }
+  
+  // Fallback for other types of thrown values
+  return defaultMessage || 'An unknown error occurred. Please try again.';
+};
+
 // Using memo to prevent unnecessary rerenders
 const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFailed }) => {
   const { darkMode } = useTheme()
@@ -167,7 +196,7 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
         const data = await response.json()
         setDataTypeOptions(data)
       } catch (error) {
-        message.error('Failed to load data type options')
+        message.error(getApiErrorMessage(error, 'Failed to load data type options'))
       }
     }
 
@@ -355,6 +384,12 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
 
   // Add function to handle activation
   const handleActivate = async () => {
+    // Check if job has already been created
+    if (isJobCreated) {
+      message.error('This mapping has a job created. No changes are allowed.')
+      return
+    }
+    
     // Only allow activation if all rows are valid
     if (!allRowsValidated || !hasBeenValidated) {
       message.error('All rows must be validated successfully before activation')
@@ -405,7 +440,7 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
         setIsActivated(false)
         setIsActivationSuccessful(false) // Reset activation success flag
         message.error({ 
-          content: data.message || 'Failed to activate mapper',
+          content: getApiErrorMessage(error, 'Failed to activate mapper'),
           key: 'activateMapper'
         })
         
@@ -416,7 +451,7 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
       setIsActivated(false)
       setIsActivationSuccessful(false) // Reset activation success flag on error
       message.error({
-        content: 'Failed to activate mapper: ' + (error.message || 'Unknown error'),
+        content: getApiErrorMessage(error, 'Failed to activate mapper'),
         key: 'activateMapper'
       })
       
@@ -434,6 +469,12 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
 
   // Modify handleFormChange to reset activation state when changes are made
   const handleFormChange = (field, value) => {
+    // Prevent changes if a job has been created
+    if (isJobCreated) {
+      message.error('This mapping has a job created. No changes are allowed.')
+      return
+    }
+    
     // Fields that should not allow spaces
     const noSpaceFields = ['targetSchema', 'tableName', 'sourceSystem']
 
@@ -659,6 +700,12 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
 
   // Modify handleRowChange to reset activation state when changes are made
   const handleRowChange = useCallback((index, field, value) => {
+    // Prevent changes if a job has been created
+    if (isJobCreated) {
+      message.error('This mapping has a job created. No changes are allowed.')
+      return
+    }
+    
     // Fields that should not allow spaces
     const noSpaceFields = [
       'fieldName',
@@ -745,6 +792,12 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
 
   // Modify addRow to check for duplicates after adding a row
   const addRow = () => {
+    // Prevent adding rows if a job has been created
+    if (isJobCreated) {
+      message.error('This mapping has a job created. No changes are allowed.')
+      return
+    }
+    
     const newRows = [
       ...rows,
       {
@@ -850,6 +903,12 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
 
   // Modified handleSave to not return to reference table after successful save
   const handleSave = async () => {
+    // Check if job has already been created
+    if (isJobCreated) {
+      message.error('This mapping has a job created. No changes are allowed.')
+      return
+    }
+    
     // Validate form fields
     try {
       // Create a schema using zod for form validation
@@ -895,6 +954,7 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
         })
         return
       }
+      message.error(getApiErrorMessage(error, 'An unexpected error occurred during form validation.'))
     }
 
     // Check if there are any rows added
@@ -1012,7 +1072,7 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
     } catch (error) {
 
       message.error(
-        error.response?.data?.error || 'Failed to save mapper configuration'
+        getApiErrorMessage(error, 'Failed to save mapper configuration')
       )
     } finally {
       setIsSaving(false)
@@ -1021,13 +1081,25 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
 
   // Add these handler functions
   const handleOpenSqlEditor = useCallback((index) => {
+    // Prevent opening SQL editor if a job has been created
+    if (isJobCreated) {
+      message.error('This mapping has a job created. No changes are allowed.')
+      return
+    }
+    
     setSelectedRowIndex(index)
     setShowSqlEditor(true)
     setSqlError(null)
-  }, [])
+  }, [isJobCreated])
 
   // Add function to handle logic change in SQL editor
   const handleLogicChange = (newLogic) => {
+    // Prevent changes if a job has been created
+    if (isJobCreated) {
+      message.error('This mapping has a job created. No changes are allowed.')
+      return
+    }
+    
     if (selectedRowIndex !== null) {
       const newRows = [...rows]
       newRows[selectedRowIndex] = {
@@ -1071,6 +1143,13 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
 
   // Modify handleSaveSql to set hasUnsavedChanges when SQL is saved
   const handleSaveSql = () => {
+    // Prevent changes if a job has been created
+    if (isJobCreated) {
+      message.error('This mapping has a job created. No changes are allowed.')
+      setShowSqlEditor(false)
+      return
+    }
+    
     if (selectedRowIndex !== null) {
       const newRows = [...rows]
       const originalLogic = newRows[selectedRowIndex].logic;
@@ -1208,7 +1287,7 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
       message.success('File uploaded successfully')
     } catch (error) {
       console.error('Error uploading file:', error)
-      message.error('Failed to upload file')
+      message.error(getApiErrorMessage(error, 'Failed to upload file'))
     } finally {
       setIsUploading(false)
     }
@@ -1290,11 +1369,19 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
       setPkSeqErrors({})
       setHasDuplicateKeys(false)
 
-      // Reset workflow states
-      setHasUnsavedChanges(false)
-      setShowValidateButton(true)
-      setHasBeenValidated(false)
-      setIsActivated(false)
+      // Set state based on the new status fields from the backend
+      const logicVerificationStatus = data.formData.logic_verification_status === 'Y';
+      const activateStatus = data.formData.activate_status === 'A';
+      const jobCreationStatus = data.formData.job_creation_status === 'Y';
+
+      // Update workflow states based on backend status
+      setHasUnsavedChanges(false);
+      setShowValidateButton(!logicVerificationStatus);
+      setHasBeenValidated(logicVerificationStatus);
+      setIsActivated(activateStatus);
+      setIsActivationSuccessful(activateStatus);
+      setIsJobCreated(jobCreationStatus);
+      setBulkValidationSuccess(logicVerificationStatus);
 
       // Show the mapper form
       setShowReferenceTable(false)
@@ -1340,6 +1427,9 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
         setShowValidateButton(false)
         setHasBeenValidated(false)
         setIsActivated(false)
+        setIsActivationSuccessful(false)
+        setIsJobCreated(false)
+        setBulkValidationSuccess(false)
         setRowWarnings({})
         setPkSeqErrors({})
         setHasDuplicateKeys(false)
@@ -1351,7 +1441,7 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
         setShowMapperForm(true)
       } else {
         message.error(
-          error.response?.data?.error || 'Failed to fetch reference details'
+          getApiErrorMessage(error, 'Failed to fetch reference details')
         )
         console.error('Error fetching reference:', error)
       }
@@ -1390,6 +1480,12 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
 
   // Update handleValidateRow function to call both APIs
   const handleValidateRow = useCallback(async (index) => {
+    // Prevent validation if a job has been created
+    if (isJobCreated) {
+      message.error('This mapping has a job created. No changes are allowed.')
+      return
+    }
+    
     const currentRow = rowsRef.current[index]
 
     // Check if required fields are filled
@@ -1451,7 +1547,7 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
         throw new Error(data.message || 'Validation failed')
       }
     } catch (error) {
-      message.error(error.message || 'Error validating logic')
+      message.error(getApiErrorMessage(error, 'Error validating logic'))
       // Set LogicVerFlag to 'N' on error
       setRows(prevRows => {
         const newRows = [...prevRows]
@@ -1465,10 +1561,10 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
       // Store error message
       setErrorMessages((prev) => ({
         ...prev,
-        [index]: error.message || 'Error validating logic',
+        [index]: getApiErrorMessage(error, 'Error validating logic'),
       }))
     }
-  }, [])
+  }, [isJobCreated])
 
   // Add back the areAllRowsValid function
   const areAllRowsValid = () => {
@@ -1496,6 +1592,12 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
 
   // Update validateAll function to use the batch validation API
   const validateAll = async () => {
+    // Check if job has already been created
+    if (isJobCreated) {
+      message.error('This mapping has a job created. No changes are allowed.')
+      return
+    }
+    
     // Get rows that have any data filled
     const filledRows = rows.filter(
       (row) =>
@@ -1652,7 +1754,7 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
 
     } catch (error) {
       message.error({
-        content: 'Error validating rows: ' + (error.message || 'Unknown error'),
+        content: getApiErrorMessage(error, 'Error validating rows: ' + (error.message || 'Unknown error')),
         key: 'validateAll',
       })
       console.error('Validation error:', error)
@@ -1763,7 +1865,7 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
       })
     } catch (error) {
       message.error({
-        content: 'Failed to download template',
+        content: getApiErrorMessage(error, 'Failed to download template'),
         key: 'downloadTemplate',
       })
       console.error('Download error:', error)
@@ -1829,7 +1931,7 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
       }
     } catch (error) {
       message.error({
-        content: 'Failed to create job: ' + (error.message || 'Unknown error'),
+        content: getApiErrorMessage(error, 'Failed to create job'),
         key: 'createJob'
       })
     } finally {
@@ -1851,7 +1953,7 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
         setScdTypeOptions(data)
       } catch (error) {
         console.error('Error fetching SCD type options:', error)
-        message.error('Failed to load SCD type options')
+        message.error(getApiErrorMessage(error, 'Failed to load SCD type options'))
       }
     }
 
@@ -1946,10 +2048,16 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
 
   // Handle row menu open
   const handleRowMenuOpen = useCallback((event, index) => {
+    // Prevent opening menu if a job has been created
+    if (isJobCreated) {
+      message.error('This mapping has a job created. No changes are allowed.')
+      return
+    }
+    
     event.stopPropagation();
     setRowMenuAnchorEl(event.currentTarget);
     setSelectedActionRowIndex(index);
-  }, []);
+  }, [isJobCreated]);
 
   // Handle row menu close
   const handleRowMenuClose = () => {
@@ -1958,6 +2066,13 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
 
   // Handle duplicate row
   const handleDuplicateRow = () => {
+    // Prevent duplicating rows if a job has been created
+    if (isJobCreated) {
+      message.error('This mapping has a job created. No changes are allowed.')
+      handleRowMenuClose();
+      return
+    }
+    
     if (selectedActionRowIndex !== null) {
       const rowToDuplicate = rows[selectedActionRowIndex];
       
@@ -1987,6 +2102,13 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
 
   // Handle delete row dialog open
   const handleDeleteRowDialogOpen = () => {
+    // Prevent deleting rows if a job has been created
+    if (isJobCreated) {
+      message.error('This mapping has a job created. No changes are allowed.')
+      handleRowMenuClose();
+      return
+    }
+    
     if (selectedActionRowIndex !== null) {
       const rowToDelete = rows[selectedActionRowIndex];
       
@@ -2068,7 +2190,7 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
       }
     } catch (error) {
       console.error('Error deleting row:', error);
-      message.error(error.response?.data?.message || 'Failed to delete row');
+      message.error(getApiErrorMessage(error, 'Failed to delete row'));
     } finally {
       setIsDeleting(false);
       handleCancelDelete();
@@ -2214,18 +2336,20 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
               {/* Save/Update Button */}
               <Tooltip
                 title={
-                  areAllRowsValid()
-                    ? isUpdateMode
-                      ? 'Update Mapper Configuration'
-                      : 'Save Mapper Configuration'
-                    : 'All rows must be validated successfully before saving'
+                  isJobCreated
+                    ? 'Job has already been created, no changes allowed'
+                    : areAllRowsValid()
+                      ? isUpdateMode
+                        ? 'Update Mapper Configuration'
+                        : 'Save Mapper Configuration'
+                      : 'All rows must be validated successfully before saving'
                 }
               >
                 <span>
                   <Button
                     variant="contained"
                     onClick={handleSave}
-                    disabled={isSaving || (!hasUnsavedChanges && modifiedRows.length === 0)}
+                    disabled={isSaving || (!hasUnsavedChanges && modifiedRows.length === 0) || isJobCreated}
                     sx={{
                       height: '30px',
                       minWidth: '70px',
@@ -2265,21 +2389,23 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
                 </span>
               </Tooltip>
 
-              {/* Validate Button - Always show but disable when appropriate */}
+              {/* Validate Button - Enable based on job creation status */}
               <Tooltip
                 title={
-                  hasUnsavedChanges
-                    ? 'Save changes before validating'
-                    : showValidateButton
-                      ? 'Validate all rows' 
-                      : 'Validation completed successfully'
+                  isJobCreated
+                    ? 'Job has already been created, no changes allowed'
+                    : hasUnsavedChanges
+                      ? 'Save changes before validating'
+                      : showValidateButton
+                        ? 'Validate all rows' 
+                        : 'Validation completed successfully'
                 }
               >
                 <span>
                   <Button
                     variant="contained"
                     onClick={validateAll}
-                    disabled={isValidating || hasUnsavedChanges || !showValidateButton}
+                    disabled={isValidating || hasUnsavedChanges || !showValidateButton || isJobCreated}
                     sx={{
                       height: '30px',
                       minWidth: '70px',
@@ -2312,21 +2438,23 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
                 </span>
               </Tooltip>
 
-              {/* Activate Button - Always show but disable when not validated */}
+              {/* Activate Button - Enable only if logic verification is successful and job not created */}
               <Tooltip
                 title={
-                  !hasBeenValidated
-                    ? 'Validation must be attempted before activation'
-                    : isActivated 
-                      ? 'Mapper is already activated'
-                      : 'Activate mapper configuration'
+                  isJobCreated
+                    ? 'Job has already been created, no changes allowed'
+                    : !hasBeenValidated
+                      ? 'Validation must be successful before activation'
+                      : isActivated 
+                        ? 'Mapper is already activated'
+                        : 'Activate mapper configuration'
                 }
               >
                 <span>
                   <Button
                     variant="contained"
                     onClick={handleActivate}
-                    disabled={!hasBeenValidated || !bulkValidationSuccess || isActivated || isActivating}
+                    disabled={!hasBeenValidated || !bulkValidationSuccess || isActivated || isActivating || isJobCreated}
                     sx={{
                       height: '30px',
                       minWidth: '70px',
@@ -2353,13 +2481,13 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
                 </span>
               </Tooltip>
 
-              {/* Create Job Button - Always show but disable when not activated or already created */}
+              {/* Create Job Button - Enable only if activated and job not already created */}
               <Tooltip
                 title={
-                  !isActivated // Change from isActivationSuccessful to isActivated
-                    ? 'Mapper must be activated before creating a job'
-                    : isJobCreated
-                      ? 'Job has been created successfully'
+                  isJobCreated
+                    ? 'Job has already been created'
+                    : !isActivated
+                      ? 'Mapper must be activated before creating a job'
                       : 'Create job for this mapper configuration'
                 }
               >
@@ -2367,7 +2495,7 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
                   <Button
                     variant="contained"
                     onClick={handleCreateJob}
-                    disabled={!isActivated || isJobCreated || isJobCreating} // Change from isActivationSuccessful to isActivated
+                    disabled={!isActivated || isJobCreated || isJobCreating}
                     sx={{
                       height: '30px',
                       minWidth: '70px',
@@ -2881,6 +3009,7 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
               <Button
                 variant="contained"
                 onClick={addRow}
+                disabled={isJobCreated}
                 startIcon={<AddIcon />}
                 sx={{
                   textTransform: 'none',
@@ -3246,6 +3375,7 @@ const ReferenceForm = memo(({ handleReturnToReferenceTable, reference, onLockFai
                         scdTypeOptions={scdTypeOptions}
                         tableType={formData.tableType}
                         errorMessage={errorMessages[index]}
+                        isJobCreated={isJobCreated}
                         handleRowClick={handleRowClick}
                         handleRowChange={handleRowChange}
                         handleNumberChange={handleNumberChange}

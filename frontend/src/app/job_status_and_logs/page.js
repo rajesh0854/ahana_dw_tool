@@ -43,12 +43,13 @@ const JobStatusAndLogs = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [sortBy, setSortBy] = useState('log_date');
   const [sortOrder, setSortOrder] = useState('desc');
+  const [timePeriod, setTimePeriod] = useState(7); // Default to 7 days
 
   // Fetch scheduled jobs data
   const fetchScheduledJobs = async () => {
     try {
       setRefreshing(true);
-      const response = await fetch(`${API_BASE_URL}/job/get_scheduled_jobs`);
+      const response = await fetch(`${API_BASE_URL}/job/get_scheduled_jobs?period=${timePeriod}`);
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -79,7 +80,7 @@ const JobStatusAndLogs = () => {
 
   useEffect(() => {
     fetchScheduledJobs();
-  }, []);
+  }, [timePeriod]);
 
   // Process grouped jobs from API into the expected format
   const groupedJobs = useMemo(() => {
@@ -101,7 +102,8 @@ const JobStatusAndLogs = () => {
         runDurationSeconds: log.RUN_DURATION_SECONDS,
         sessionId: log.SESSION_ID,
         sourceRows: log.SOURCE_ROWS,
-        targetRows: log.TARGET_ROWS
+        targetRows: log.TARGET_ROWS,
+        param1: log.PARAM1
       }));
 
       // Calculate job statistics
@@ -366,6 +368,25 @@ const JobStatusAndLogs = () => {
               </div>
 
               <div className="flex flex-col md:flex-row gap-2 w-full lg:w-auto">
+                {/* Time Period Filter */}
+                <div className="w-full md:w-48">
+                  <select
+                    value={timePeriod}
+                    onChange={(e) => setTimePeriod(Number(e.target.value))}
+                    className={`
+                      w-full px-3 py-2 rounded-lg border text-sm
+                      ${darkMode 
+                        ? 'bg-gray-700 border-gray-600 text-white' 
+                        : 'bg-gray-50 border-gray-300 text-gray-900'}
+                      focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all
+                    `}
+                  >
+                    <option value={7}>Last 7 Days</option>
+                    <option value={15}>Last 15 Days</option>
+                    <option value={30}>Last 30 Days</option>
+                  </select>
+                </div>
+
                 {/* Status Filter */}
                 <div className="w-full md:w-48">
                   <select
@@ -743,6 +764,12 @@ const JobStatusAndLogs = () => {
                                                   Target: {log.targetRows?.toLocaleString() || 'N/A'}
                                                 </div>
                                               )}
+                                              {log.param1 && (
+                                                <div className={`text-xs flex items-center ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                                                  <Zap size={12} className="mr-1" />
+                                                  Param: {log.param1}
+                                                </div>
+                                              )}
                                             </div>
                                             <div className="flex items-center space-x-2 ml-auto">
                                               {log.status === 'FL' && (
@@ -775,7 +802,8 @@ const JobStatusAndLogs = () => {
                                                     actualStartDate: log.actualStartDate,
                                                     duration: formatDuration(log.runDurationSeconds),
                                                     sourceRows: log.sourceRows,
-                                                    targetRows: log.targetRows
+                                                    targetRows: log.targetRows,
+                                                    param1: log.param1
                                                   }, null, 2));
                                                 }}
                                                 className={`

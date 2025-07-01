@@ -12,7 +12,7 @@ import traceback
 from openpyxl import Workbook, load_workbook
 from openpyxl.styles import PatternFill, Font, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
-from modules.helper_functions import create_update_mapping,create_update_mapping_detail, validate_logic2, validate_all_mapping_details,  get_mapping_ref  ,get_mapping_details,get_error_messages_list,get_parameter_mapping_datatype,get_parameter_mapping_scd_type,call_activate_deactivate_mapping, call_delete_mapping, call_delete_mapping_details
+from modules.helper_functions import create_update_mapping,create_update_mapping_detail, validate_logic2, validate_all_mapping_details,  get_mapping_ref  ,get_mapping_details,get_error_messages_list,get_parameter_mapping_datatype,get_parameter_mapping_scd_type,call_activate_deactivate_mapping, call_delete_mapping, call_delete_mapping_details,check_if_job_already_created
 from modules.logger import logger, info, warning, error
 
 
@@ -445,6 +445,10 @@ def get_by_reference(reference):
            
             # Get mapping details
             details_result = get_mapping_details(conn, reference)
+
+            # Get job created status
+            job_status=check_if_job_already_created(conn, reference)
+
            
             # Format response
             form_data = {
@@ -457,7 +461,10 @@ def get_by_reference(reference):
                 'freqCode': main_result['FRQCD'] or '',
                 'sourceSystem': main_result['SRCSYSTM'] or '',
                 'bulkProcessRows': main_result['BLKPRCROWS'],
-                'isReferenceDisabled': True
+                'isReferenceDisabled': True,
+                'logic_verification_status': main_result['LGVRFYFLG'],
+                'activate_status' : main_result['STFLG'],
+                'job_creation_status': job_status
             }
            
             # Transform the details result into rows
@@ -541,9 +548,9 @@ def save_to_db():
                 form_data['tableName'],
                 form_data['freqCode'],
                 form_data['sourceSystem'],
-                'Y',  # Default to Y
+                'N',  # Default to Y
                 datetime.datetime.now(),
-                'A' , # Default to Active
+                'N' , # Default to Active
                 form_data['bulkProcessRows'],
                 user_id  # Pass the user_id parameter
             )
@@ -680,6 +687,15 @@ def validate_batch_logic():
             print(bulk_result)
            
             if bulk_error is None:
+                for row in rows:
+                    if row.get('logic'):
+                        results.append({
+                            'rowId': row.get('mapdtlid'),
+                            'fieldName': row.get('fieldName'),
+                            'isValid': True,
+                            'error': None,
+                            'detailedError': 'Logic is Verified'
+                        })
                 return jsonify({
                     'status': 'success',
                     'bulkValidation': {
@@ -773,7 +789,6 @@ def activate_deactivate_mapping():
             }), 400
             
         conn = create_oracle_connection()
-        time.sleep(60)
         try:
             success, message = call_activate_deactivate_mapping(conn, p_mapref, p_stflg)
             return jsonify({

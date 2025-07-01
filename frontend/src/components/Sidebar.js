@@ -201,6 +201,14 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
         />
 
         <SidebarItem 
+          icon={<Code />} 
+          text="Manage SQL" 
+          active={pathname === '/manage_sql'} 
+          expanded={sidebarOpen}
+          href="/manage_sql"
+        />
+
+        <SidebarItem 
           icon={<Briefcase />} 
           text="Mapper Module" 
           active={pathname === '/mapper_module'} 
@@ -241,13 +249,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
           href="/type_mapper"
         />
 
-        <SidebarItem 
-          icon={<Code />} 
-          text="Manage SQL" 
-          active={pathname === '/manage_sql'} 
-          expanded={sidebarOpen}
-          href="/manage_sql"
-        />
+
 
         <SidebarItem 
           icon={<Settings />} 

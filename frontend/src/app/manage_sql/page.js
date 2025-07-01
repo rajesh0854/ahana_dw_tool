@@ -25,7 +25,11 @@ import {
   Switch,
   FormControlLabel,
   Container,
-  Stack
+  Stack,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemButton
 } from '@mui/material';
 import {
   Search,
@@ -37,7 +41,9 @@ import {
   Close,
   Add,
   Code,
-  DataObject
+  DataObject,
+  History,
+  ContentCopy
 } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles';
 import Editor from '@monaco-editor/react';
@@ -59,6 +65,13 @@ const ManageSQLPage = () => {
   const [isCreating, setIsCreating] = useState(false);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'info' });
   const [validationStatus, setValidationStatus] = useState(null);
+
+  // SQL History states
+  const [sqlHistory, setSqlHistory] = useState([]);
+  const [historyDialog, setHistoryDialog] = useState(false);
+  const [fetchingHistory, setFetchingHistory] = useState(false);
+  const [selectedHistoryItem, setSelectedHistoryItem] = useState(null);
+  const [historyPreviewDialog, setHistoryPreviewDialog] = useState(false);
 
   // State for Autocomplete input to allow clearing it
   const [inputValue, setInputValue] = useState('');
@@ -123,6 +136,33 @@ const ManageSQLPage = () => {
       setOriginalSqlContent('');
     } finally {
       setFetchingLogic(false);
+    }
+  };
+
+  // Function to fetch SQL history
+  const fetchSqlHistory = async (sqlCode) => {
+    if (!sqlCode) return;
+    
+    setFetchingHistory(true);
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/manage-sql/fetch-sql-history?sql_code=${encodeURIComponent(sqlCode)}`);
+      const result = await response.json();
+      
+      if (result.success && result.data && result.data.history_items) {
+        // Process history data from the updated API response
+        setSqlHistory(result.data.history_items);
+        setHistoryDialog(true);
+        showSnackbar(`Successfully loaded ${result.data.history_items.length} historical versions for ${sqlCode}`, 'success');
+      } else {
+        showSnackbar(result.message || 'No history found for this SQL code', 'info');
+        setSqlHistory([]);
+      }
+    } catch (error) {
+      console.error('Error fetching SQL history:', error);
+      showSnackbar('Network error while fetching SQL history', 'error');
+      setSqlHistory([]);
+    } finally {
+      setFetchingHistory(false);
     }
   };
 
@@ -231,9 +271,61 @@ const ManageSQLPage = () => {
     setNewSqlCode('');
   };
 
+  const handleViewHistory = () => {
+    if (selectedSqlCode) {
+      fetchSqlHistory(selectedSqlCode);
+    } else {
+      showSnackbar('Please select an SQL code first', 'warning');
+    }
+  };
+
+  const handleHistoryItemClick = (historyItem) => {
+    setSelectedHistoryItem(historyItem);
+    setHistoryPreviewDialog(true);
+  };
+
+  const handleCopyHistoryContent = () => {
+    if (selectedHistoryItem) {
+      navigator.clipboard.writeText(selectedHistoryItem.sql_content)
+        .then(() => {
+          showSnackbar('SQL content copied to clipboard', 'success');
+        })
+        .catch(err => {
+          console.error('Failed to copy content: ', err);
+          showSnackbar('Failed to copy content', 'error');
+        });
+    }
+  };
+
+  const handleUseHistoryVersion = () => {
+    if (selectedHistoryItem) {
+      setSqlContent(selectedHistoryItem.sql_content);
+      setHistoryPreviewDialog(false);
+      setHistoryDialog(false);
+      setValidationStatus(null);
+      showSnackbar('Historical SQL version loaded into editor', 'success');
+    }
+  };
+
   const isSaveEnabled = () => {
     const hasCode = isCreating ? newSqlCode.trim() !== '' : selectedSqlCode !== null;
     return hasCode && validationStatus === 'valid' && !saving;
+  };
+
+  // Add function to handle copying SQL content to clipboard
+  const handleCopySqlContent = () => {
+    if (sqlContent) {
+      navigator.clipboard.writeText(sqlContent)
+        .then(() => {
+          showSnackbar('SQL content copied to clipboard', 'success');
+        })
+        .catch(err => {
+          console.error('Failed to copy content: ', err);
+          showSnackbar('Failed to copy content', 'error');
+        });
+    } else {
+      showSnackbar('No SQL content to copy', 'warning');
+    }
   };
 
   return (
@@ -243,87 +335,125 @@ const ManageSQLPage = () => {
       color: 'text.primary' // Use theme text color
     }}>
       <Container maxWidth={false} sx={{ py: 2, px: 3, mb: 4 }}>
-        {/* Top Control Bar */}
-        <Box sx={{ 
-          mb: 2, 
-          p: 1.5, 
-          borderRadius: 2, 
-          bgcolor: 'background.paper', // Use theme paper color
-          border: '1px solid',
-          borderColor: 'divider'
-        }}>
-          <Grid container spacing={1} alignItems="center">
-            {isCreating ? (
-              <>
-                <Grid item xs>
-                  <TextField
-                    label="New SQL Code Name"
+        {/* Top Control Bar - Removed the box container */}
+        <Grid container spacing={2} alignItems="center" sx={{ mb: 2 }}>
+          {isCreating ? (
+            <>
+              <Grid item xs>
+                <TextField
+                  label="New SQL Code Name"
+                  variant="outlined"
+                  size="small"
+                  fullWidth
+                  value={newSqlCode}
+                  onChange={(e) => setNewSqlCode(e.target.value.replace(/\s/g, ''))}
+                  helperText="No spaces allowed"
+                />
+              </Grid>
+              <Grid item>
+                <Button onClick={handleCancelCreate} size="small">Cancel</Button>
+              </Grid>
+            </>
+          ) : (
+            <>
+              <Grid item xs={6} md={4}>
+                <Autocomplete
+                  value={selectedSqlCode}
+                  onChange={handleSelectCode}
+                  options={sqlCodes}
+                  loading={fetchingCodes}
+                  size="small"
+                  renderInput={(params) => <TextField {...params} label="Select SQL Code" />}
+                />
+              </Grid>
+              <Grid item>
+                <Box sx={{ display: 'flex', gap: 1 }}>
+                  <Button 
+                    onClick={handleViewHistory} 
+                    disabled={!selectedSqlCode || fetchingHistory}
+                    size="small"
                     variant="outlined"
+                    startIcon={<History />}
+                    sx={{ 
+                      minWidth: '100px',
+                      height: '36px'
+                    }}
+                  >
+                    History
+                  </Button>
+                  <Button 
+                    onClick={handleCreateNew} 
                     size="small"
-                    fullWidth
-                    value={newSqlCode}
-                    onChange={(e) => setNewSqlCode(e.target.value.replace(/\s/g, ''))}
-                    helperText="No spaces allowed"
-                  />
-                </Grid>
-                <Grid item>
-                  <Button onClick={handleCancelCreate} size="small">Cancel</Button>
-                </Grid>
-              </>
-            ) : (
-              <>
-                <Grid item xs>
-                  <Autocomplete
-                    value={selectedSqlCode}
-                    onChange={handleSelectCode}
-                    options={sqlCodes}
-                    loading={fetchingCodes}
+                    variant="outlined"
+                    startIcon={<Add />}
+                    sx={{ 
+                      minWidth: '100px',
+                      height: '36px'
+                    }}
+                  >
+                    New
+                  </Button>
+                  <Button 
+                    onClick={fetchAllSqlCodes} 
+                    disabled={fetchingCodes} 
                     size="small"
-                    renderInput={(params) => <TextField {...params} label="Select SQL Code" />}
-                  />
-                </Grid>
-                <Grid item>
-                  <Tooltip title="Create New SQL Code">
-                    <IconButton onClick={handleCreateNew} size="small">
-                      <Add />
-                    </IconButton>
-                  </Tooltip>
-                </Grid>
-                <Grid item>
-                  <Tooltip title="Refresh List">
-                    <IconButton onClick={fetchAllSqlCodes} disabled={fetchingCodes} size="small">
-                      <Refresh />
-                    </IconButton>
-                  </Tooltip>
-                </Grid>
-              </>
-            )}
-          </Grid>
-        </Box>
+                    variant="outlined"
+                    startIcon={<Refresh />}
+                    sx={{ 
+                      minWidth: '100px',
+                      height: '36px'
+                    }}
+                  >
+                    Refresh
+                  </Button>
+                </Box>
+              </Grid>
+            </>
+          )}
+        </Grid>
 
         {/* Editor Card */}
         <Card sx={{ borderRadius: 2, bgcolor: 'background.paper' }}>
           <CardContent sx={{ p: 0 }}>
-            <Box sx={{ p: 2, borderBottom: '1px solid', borderColor: 'divider' }}>
+            <Box sx={{ 
+              p: 2, 
+              borderBottom: '1px solid', 
+              borderColor: 'divider',
+              bgcolor: validationStatus === 'valid' ? 'rgba(76, 175, 80, 0.2)' : // Light green
+                       validationStatus === 'invalid' ? 'rgba(244, 67, 54, 0.2)' : // Light red
+                       'inherit',
+              transition: 'background-color 0.3s ease',
+              color: 'text.primary' // Keep text color consistent
+            }}>
               <Grid container spacing={2} alignItems="center">
-                <Grid item xs={12} md={4}>
+                <Grid item xs={12} md={6}>
                   <Stack direction="row" alignItems="center" spacing={1}>
-                    <Code color="primary" />
+                    <Code color={validationStatus === 'valid' ? "success" : 
+                           validationStatus === 'invalid' ? "error" : "primary"} />
                     <Typography variant="h6" sx={{ fontSize: '1rem', fontWeight: 600 }}>
                       {isCreating ? (newSqlCode || 'New SQL Code') : (selectedSqlCode || 'SQL Editor')}
                     </Typography>
                   </Stack>
                 </Grid>
-                <Grid item xs={12} md={4}>
-                  <Stack direction="row" spacing={2} alignItems="center" justifyContent="center">
-                    {validationStatus === 'valid' && <Chip label="Valid" color="success" size="small" />}
-                    {validationStatus === 'invalid' && <Chip label="Invalid" color="error" size="small" />}
-                  </Stack>
-                </Grid>
-                <Grid item xs={12} md={4}>
+                <Grid item xs={12} md={6}>
                   <Stack direction="row" spacing={1} justifyContent="flex-end">
-                    <Button variant="outlined" onClick={validateSql} disabled={!sqlContent || validating} size="small">
+                    <Button variant="contained" 
+                      onClick={validateSql} 
+                      disabled={!sqlContent || validating} 
+                      size="small"
+                      color={validationStatus === 'valid' ? 'success' : 
+                             validationStatus === 'invalid' ? 'error' : 'primary'}
+                    >
                       Validate
+                    </Button>
+                    <Button 
+                      variant="outlined" 
+                      onClick={handleCopySqlContent}
+                      disabled={!sqlContent}
+                      size="small"
+                      startIcon={<ContentCopy />}
+                    >
+                      Copy
                     </Button>
                     <Button variant="contained" onClick={saveSql} disabled={!isSaveEnabled()} color="success" size="small">
                       {isCreating ? 'Create' : 'Save'}
@@ -345,8 +475,135 @@ const ManageSQLPage = () => {
           </CardContent>
         </Card>
       </Container>
+
+      {/* SQL History Dialog */}
+      <Dialog 
+        open={historyDialog} 
+        onClose={() => setHistoryDialog(false)}
+        fullWidth
+        maxWidth="sm"
+      >
+        <DialogTitle sx={{ 
+          bgcolor: theme.palette.primary.main, 
+          color: 'white',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          py: 1.5
+        }}>
+          <Typography variant="h6">SQL History for {selectedSqlCode}</Typography>
+          <IconButton onClick={() => setHistoryDialog(false)} sx={{ color: 'white' }}>
+            <Close />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent dividers sx={{ maxHeight: '300px' }}>
+          {fetchingHistory ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+              <CircularProgress />
+            </Box>
+          ) : sqlHistory.length > 0 ? (
+            <List dense>
+              {sqlHistory.map((item, index) => (
+                <ListItem key={index} disablePadding divider>
+                  <ListItemButton 
+                    onClick={() => handleHistoryItemClick(item)}
+                    sx={{
+                      '&:hover': {
+                        bgcolor: theme.palette.action.hover,
+                      },
+                      py: 1
+                    }}
+                  >
+                    <ListItemText 
+                      primary={
+                        <Typography variant="subtitle2" fontWeight="medium">
+                          {item.date}
+                        </Typography>
+                      }
+                      secondary={
+                        <Typography variant="body2" color="text.secondary">
+                          Click to view
+                        </Typography>
+                      }
+                    />
+                  </ListItemButton>
+                </ListItem>
+              ))}
+            </List>
+          ) : (
+            <Box sx={{ p: 2, textAlign: 'center' }}>
+              <Typography variant="body1" color="text.secondary">
+                No history records found for this SQL code.
+              </Typography>
+            </Box>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* History Preview Dialog */}
+      <Dialog
+        open={historyPreviewDialog}
+        onClose={() => setHistoryPreviewDialog(false)}
+        fullWidth
+        maxWidth="md"
+      >
+        <DialogTitle sx={{ 
+          bgcolor: theme.palette.primary.main, 
+          color: 'white',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          py: 1.5
+        }}>
+          <Typography variant="h6">
+            SQL Version: {selectedHistoryItem ? selectedHistoryItem.date : ''}
+          </Typography>
+          <IconButton onClick={() => setHistoryPreviewDialog(false)} sx={{ color: 'white' }}>
+            <Close />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent dividers>
+          <Box sx={{ height: '35vh' }}>
+            <Editor
+              height="100%"
+              language="sql"
+              value={selectedHistoryItem?.sql_content || ''}
+              theme={isDarkMode ? 'vs-dark' : 'vs-light'}
+              options={{ readOnly: true, minimap: { enabled: false }, automaticLayout: true }}
+            />
+          </Box>
+        </DialogContent>
+        <DialogActions sx={{ p: 1.5, justifyContent: 'space-between' }}>
+          <Button onClick={() => setHistoryPreviewDialog(false)} variant="outlined">
+            Cancel
+          </Button>
+          <Box>
+            <Button 
+              onClick={handleCopyHistoryContent} 
+              startIcon={<ContentCopy />}
+              variant="outlined"
+              sx={{ mr: 1 }}
+            >
+              Copy
+            </Button>
+            <Button 
+              onClick={handleUseHistoryVersion} 
+              variant="contained" 
+              color="primary"
+            >
+              Use This Version
+            </Button>
+          </Box>
+        </DialogActions>
+      </Dialog>
+
       {/* Snackbar */}
-      <Snackbar open={snackbar.open} autoHideDuration={6000} onClose={handleCloseSnackbar}>
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={1000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
         <Alert onClose={handleCloseSnackbar} severity={snackbar.severity} sx={{ width: '100%' }}>
           {snackbar.message}
         </Alert>

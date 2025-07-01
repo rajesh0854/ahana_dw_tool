@@ -47,12 +47,10 @@ def get_mapping_ref(conn, reference):
         cursor = conn.cursor()
         query = """
             SELECT 
-                MAPID, MAPREF, MAPDESC, TRGSCHM, TRGTBTYP, 
-                TRGTBNM, FRQCD, SRCSYSTM, STFLG, CURFLG, BLKPRCROWS
-            FROM DWMAPR 
-            WHERE MAPREF = :1 
-            AND CURFLG = 'Y'
-            AND STFLG = 'A'
+            MAPID, MAPREF, MAPDESC, TRGSCHM, TRGTBTYP, 
+            TRGTBNM, FRQCD, SRCSYSTM, STFLG, BLKPRCROWS, LGVRFYFLG
+            FROM DWMAPR WHERE MAPREF = :1  AND  CURFLG = 'Y'
+
         """
         cursor.execute(query, [reference])
         
@@ -80,7 +78,8 @@ def get_mapping_details(conn, reference):
                 VALCLNM, MAPCMBCD, EXCSEQ, SCDTYP, LGVRFYFLG
             FROM DWMAPRDTL 
             WHERE MAPREF = :1
-            AND CURFLG = 'Y'
+            and CURFLG='Y'
+     
             ORDER BY MAPDTLID
         """
         cursor.execute(query, [reference])
@@ -98,6 +97,25 @@ def get_mapping_details(conn, reference):
     except Exception as e:
         error(f"Error fetching mapping details: {str(e)}")
         raise
+
+def check_if_job_already_created(connection, p_mapref):
+    cursor = None
+    try:
+        cursor = connection.cursor()
+        sql = """
+        SELECT COUNT(*) FROM DWJOB WHERE CURFLG ='Y' AND MAPREF = :p_mapref    
+        """
+        cursor.execute(sql, {'p_mapref': p_mapref})
+        count = cursor.fetchone()[0]
+        if count > 0:
+            return 'Y'
+        else:
+            return 'N'
+    except Exception as e:
+        return 'N'
+    finally:
+        if cursor:
+            cursor.close()  
 
 def get_error_message(conn, map_detail_id):
     """ref: refernece of detail mapping table"""

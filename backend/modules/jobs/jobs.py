@@ -261,6 +261,8 @@ def get_scheduled_jobs():
     try:
         conn = create_oracle_connection()
         try:
+            # Get period from query parameters, default to 7 days
+            period = request.args.get('period', 7, type=int)
             query = """ 
                     select 
                     		jl.joblogid AS log_id,
@@ -272,6 +274,7 @@ def get_scheduled_jobs():
                     		pl.sessionid AS session_id,
                             jl.srcrows AS source_rows,
                     		jl.trgrows AS target_rows,
+                            pl.param1 AS param1,
                            case 
                            when pl.enddt IS NOT NULL THEN
                                 EXTRACT(DAY FROM (pl.enddt - pl.strtdt)) * 86400 + 
@@ -289,12 +292,12 @@ def get_scheduled_jobs():
                     and   err.prcid(+)     = pl.prcid
                     and   err.mapref(+)    = pl.mapref
                     and   err.jobid(+)     = pl.jobid
-                    and   pl.reccrdt >= SYSDATE - 30
+                    and   pl.reccrdt >= SYSDATE - :period
                     order by pl.mapref, jl.reccrdt desc
  
             """
             cursor = conn.cursor()
-            cursor.execute(query)
+            cursor.execute(query, {'period': period})
             column_names = [desc[0] for desc in cursor.description]
             raw_jobs = cursor.fetchall()
             

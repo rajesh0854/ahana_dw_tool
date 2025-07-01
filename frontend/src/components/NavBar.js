@@ -38,6 +38,8 @@ const getPageTitle = (pathname) => {
       return 'Dashboard';
     case '/job_status_and_logs':
         return 'Job Status & Logs';
+    case '/manage_sql':
+        return 'Manage SQL';
     default:
       return 'Menu';
   }

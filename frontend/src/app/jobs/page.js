@@ -879,7 +879,7 @@ const JobsPage = () => {
   };
 
   // Handle confirm execute
-  const handleConfirmExecute = async (executeData) => {
+  const handleConfirmExecute = async (executeData, resetExecutingState) => {
     try {
       const payload = {
         mapref: executingJob.MAPREF,
@@ -909,6 +909,10 @@ const JobsPage = () => {
       console.error('Error executing job:', err);
       setError(err.response?.data?.message || 'Failed to execute job. Please try again.');
     } finally {
+      // Reset the executing state in the dialog if callback is provided
+      if (resetExecutingState && typeof resetExecutingState === 'function') {
+        resetExecutingState();
+      }
       setOpenExecuteDialog(false);
       setExecutingJob(null);
     }
@@ -1372,7 +1376,11 @@ const JobsPage = () => {
       {/* Execute Job Dialog */}
       <ExecuteJobDialog
         open={openExecuteDialog}
-        onClose={() => setOpenExecuteDialog(false)}
+        onClose={() => {
+          // Only close the dialog if the job is not currently executing
+          // This is a safety measure in addition to the disabled button
+          setOpenExecuteDialog(false);
+        }}
         job={executingJob}
         onConfirm={handleConfirmExecute}
       />
@@ -1532,6 +1540,7 @@ const ExecuteJobDialog = ({ open, onClose, job, onConfirm }) => {
   const [endDate, setEndDate] = useState('');
   const [truncateLoad, setTruncateLoad] = useState(false);
   const [errors, setErrors] = useState({});
+  const [isExecuting, setIsExecuting] = useState(false);
 
   // Reset form when dialog opens/closes
   useEffect(() => {
@@ -1541,6 +1550,7 @@ const ExecuteJobDialog = ({ open, onClose, job, onConfirm }) => {
       setEndDate('');
       setTruncateLoad(false);
       setErrors({});
+      setIsExecuting(false);
     }
   }, [open]);
 
@@ -1564,21 +1574,31 @@ const ExecuteJobDialog = ({ open, onClose, job, onConfirm }) => {
   };
 
   const handleExecute = () => {
+    if (isExecuting) return; // Prevent multiple clicks
+    
     if (validateForm()) {
+      setIsExecuting(true); // Disable the button
       const executeData = {
         loadType,
         startDate: loadType === 'history' ? startDate : null,
         endDate: loadType === 'history' ? endDate : null,
         truncateLoad: loadType === 'history' ? truncateLoad : false
       };
-      onConfirm(executeData);
+      
+      // Pass the reset callback along with the data
+      onConfirm(executeData, () => setIsExecuting(false));
     }
   };
 
   return (
     <Dialog
       open={open}
-      onClose={onClose}
+      onClose={(event, reason) => {
+        // Only allow closing if not executing
+        if (!isExecuting && reason !== 'backdropClick' && reason !== 'escapeKeyDown') {
+          onClose();
+        }
+      }}
       maxWidth="md"
       fullWidth
       PaperProps={{
@@ -1725,7 +1745,17 @@ const ExecuteJobDialog = ({ open, onClose, job, onConfirm }) => {
                    </Typography>
                    <DatePicker 
                      value={startDate ? new Date(startDate) : null}
-                     onChange={(date) => setStartDate(date ? date.toISOString().split('T')[0] : '')}
+                     onChange={(date) => {
+                       if (date) {
+                         // Fix timezone issue by using a proper date formatting approach
+                         const year = date.getFullYear();
+                         const month = String(date.getMonth() + 1).padStart(2, '0');
+                         const day = String(date.getDate()).padStart(2, '0');
+                         setStartDate(`${year}-${month}-${day}`);
+                       } else {
+                         setStartDate('');
+                       }
+                     }}
                      slotProps={{
                        textField: {
                          size: "small",
@@ -1768,7 +1798,17 @@ const ExecuteJobDialog = ({ open, onClose, job, onConfirm }) => {
                    </Typography>
                    <DatePicker 
                      value={endDate ? new Date(endDate) : null}
-                     onChange={(date) => setEndDate(date ? date.toISOString().split('T')[0] : '')}
+                     onChange={(date) => {
+                       if (date) {
+                         // Fix timezone issue by using a proper date formatting approach
+                         const year = date.getFullYear();
+                         const month = String(date.getMonth() + 1).padStart(2, '0');
+                         const day = String(date.getDate()).padStart(2, '0');
+                         setEndDate(`${year}-${month}-${day}`);
+                       } else {
+                         setEndDate('');
+                       }
+                     }}
                      minDate={startDate ? new Date(startDate) : undefined}
                      slotProps={{
                        textField: {
@@ -1837,6 +1877,7 @@ const ExecuteJobDialog = ({ open, onClose, job, onConfirm }) => {
           onClick={onClose} 
           variant="outlined"
           size="small"
+          disabled={isExecuting}
           sx={{ 
             borderRadius: 1.5,
             py: 0.75,
@@ -1857,7 +1898,8 @@ const ExecuteJobDialog = ({ open, onClose, job, onConfirm }) => {
           variant="contained" 
           color="primary"
           size="small"
-          startIcon={<PlayArrowIcon sx={{ fontSize: '1rem' }} />}
+          disabled={isExecuting}
+          startIcon={isExecuting ? <CircularProgress size={16} color="inherit" /> : <PlayArrowIcon sx={{ fontSize: '1rem' }} />}
           sx={{ 
             borderRadius: 1.5,
             py: 0.75,
@@ -1866,7 +1908,7 @@ const ExecuteJobDialog = ({ open, onClose, job, onConfirm }) => {
             fontWeight: 600
           }}
         >
-          Execute {loadType === 'history' ? 'History Load' : 'Now'}
+          {isExecuting ? 'Executing...' : `Execute ${loadType === 'history' ? 'History Load' : 'Now'}`}
         </Button>
       </DialogActions>
     </Dialog>

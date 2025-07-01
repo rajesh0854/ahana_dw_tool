@@ -1150,3 +1150,1455 @@
 2025-06-30 18:52:48 : system : info : Fetched 4 SQL codes
 2025-06-30 18:52:49 : system : info : Oracle connection established successfully
 2025-06-30 18:52:49 : system : info : Fetched 4 SQL codes
+2025-07-01 07:22:25 : system : info : Loading secret key from: /mnt/d/INNOVA/DW_TOOL/ahana_dw_tool/backend/modules/license/secret.key
+2025-07-01 07:22:25 : system : info : License Manager initialized with system ID: 00155daaf083
+2025-07-01 07:22:25 : system : info : Loading secret key from: /mnt/d/INNOVA/DW_TOOL/ahana_dw_tool/backend/modules/license/secret.key
+2025-07-01 07:22:25 : system : info : License Manager initialized with system ID: 00155daaf083
+2025-07-01 07:22:26 : system : info : Server starting...
+2025-07-01 07:22:27 : system : info : Loading secret key from: /mnt/d/INNOVA/DW_TOOL/ahana_dw_tool/backend/modules/license/secret.key
+2025-07-01 07:22:27 : system : info : License Manager initialized with system ID: 00155daaf083
+2025-07-01 07:22:27 : system : info : Loading secret key from: /mnt/d/INNOVA/DW_TOOL/ahana_dw_tool/backend/modules/license/secret.key
+2025-07-01 07:22:27 : system : info : License Manager initialized with system ID: 00155daaf083
+2025-07-01 07:22:27 : system : info : Server starting...
+2025-07-01 07:23:39 : rajesh : info : User rajesh authenticated successfully
+2025-07-01 07:23:39 : rajesh : info : User rajesh authenticated successfully
+2025-07-01 07:23:52 : rajesh : info : User rajesh authenticated successfully
+2025-07-01 07:23:52 : rajesh : info : User rajesh authenticated successfully
+2025-07-01 07:23:53 : rajesh : info : User rajesh authenticated successfully
+2025-07-01 07:23:53 : rajesh : info : User rajesh authenticated successfully
+2025-07-01 07:23:53 : rajesh : info : User rajesh authenticated successfully
+2025-07-01 07:23:53 : rajesh : info : User rajesh authenticated successfully
+2025-07-01 07:24:01 : system : info : Oracle connection established successfully
+2025-07-01 07:24:01 : system : info : Oracle connection established successfully
+2025-07-01 07:24:02 : rajesh : info : User rajesh authenticated successfully
+2025-07-01 07:24:03 : rajesh : info : User rajesh authenticated successfully
+2025-07-01 07:24:03 : rajesh : info : User rajesh authenticated successfully
+2025-07-01 07:24:03 : rajesh : info : User rajesh authenticated successfully
+2025-07-01 07:24:03 : rajesh : info : User rajesh authenticated successfully
+2025-07-01 07:24:03 : rajesh : info : User rajesh authenticated successfully
+2025-07-01 07:24:04 : rajesh : info : User rajesh authenticated successfully
+2025-07-01 07:24:04 : rajesh : info : User rajesh authenticated successfully
+2025-07-01 07:24:04 : rajesh : info : User rajesh authenticated successfully
+2025-07-01 07:24:04 : rajesh : info : User rajesh authenticated successfully
+2025-07-01 07:24:04 : rajesh : info : User rajesh authenticated successfully
+2025-07-01 07:24:05 : rajesh : info : User rajesh authenticated successfully
+2025-07-01 07:24:06 : rajesh : info : User rajesh authenticated successfully
+2025-07-01 07:24:06 : rajesh : info : User rajesh authenticated successfully
+2025-07-01 07:24:06 : rajesh : info : User rajesh authenticated successfully
+2025-07-01 07:24:13 : rajesh : info : User rajesh authenticated successfully
+2025-07-01 07:24:13 : rajesh : info : User rajesh authenticated successfully
+2025-07-01 07:24:13 : rajesh : info : User rajesh authenticated successfully
+2025-07-01 07:24:13 : rajesh : info : User rajesh authenticated successfully
+2025-07-01 07:24:14 : rajesh : info : User rajesh authenticated successfully
+2025-07-01 07:24:14 : rajesh : info : User rajesh authenticated successfully
+2025-07-01 07:24:14 : rajesh : info : User rajesh authenticated successfully
+2025-07-01 07:24:14 : rajesh : info : User rajesh authenticated successfully
+2025-07-01 07:24:14 : rajesh : info : User rajesh authenticated successfully
+2025-07-01 07:24:15 : rajesh : info : User rajesh authenticated successfully
+2025-07-01 07:24:15 : rajesh : info : User rajesh authenticated successfully
+2025-07-01 07:24:15 : rajesh : info : User rajesh authenticated successfully
+2025-07-01 07:24:15 : rajesh : info : User rajesh authenticated successfully
+2025-07-01 07:24:16 : rajesh : info : User rajesh authenticated successfully
+2025-07-01 07:24:16 : rajesh : info : User rajesh authenticated successfully
+2025-07-01 07:24:16 : rajesh : info : User rajesh authenticated successfully
+2025-07-01 07:24:16 : rajesh : info : User rajesh authenticated successfully
+2025-07-01 07:24:22 : system : info : Oracle connection established successfully
+2025-07-01 07:24:22 : system : info : Fetched 4 SQL codes
+2025-07-01 07:24:22 : system : info : Oracle connection established successfully
+2025-07-01 07:24:22 : system : info : Fetched 4 SQL codes
+2025-07-01 07:25:01 : system : info : Oracle connection established successfully
+2025-07-01 07:25:02 : system : info : Fetched SQL logic for code: DIM_ACCOUNT
+2025-07-01 07:25:06 : system : info : Oracle connection established successfully
+2025-07-01 07:25:06 : system : info : SQL validation passed successfully
+2025-07-01 07:27:25 : rajesh : info : User rajesh authenticated successfully
+2025-07-01 07:27:25 : rajesh : info : User rajesh authenticated successfully
+2025-07-01 07:27:25 : rajesh : info : User rajesh authenticated successfully
+2025-07-01 07:27:25 : rajesh : info : User rajesh authenticated successfully
+2025-07-01 07:27:25 : rajesh : info : User rajesh authenticated successfully
+2025-07-01 07:27:25 : rajesh : info : User rajesh authenticated successfully
+2025-07-01 07:27:32 : system : info : Oracle connection established successfully
+2025-07-01 07:27:32 : system : info : Fetched 4 SQL codes
+2025-07-01 07:27:33 : system : info : Oracle connection established successfully
+2025-07-01 07:27:33 : system : info : Fetched 4 SQL codes
+2025-07-01 07:27:38 : rajesh : info : User rajesh authenticated successfully
+2025-07-01 07:27:38 : rajesh : info : User rajesh authenticated successfully
+2025-07-01 07:27:38 : rajesh : info : User rajesh authenticated successfully
+2025-07-01 07:27:38 : rajesh : info : User rajesh authenticated successfully
+2025-07-01 07:27:38 : rajesh : info : User rajesh authenticated successfully
+2025-07-01 07:27:38 : rajesh : info : User rajesh authenticated successfully
+2025-07-01 07:27:42 : system : info : Oracle connection established successfully
+2025-07-01 07:27:43 : system : info : Oracle connection established successfully
+2025-07-01 07:27:43 : system : info : Oracle connection established successfully
+2025-07-01 07:27:43 : system : info : Oracle connection established successfully
+2025-07-01 07:27:43 : system : info : Oracle connection established successfully
+2025-07-01 07:27:43 : system : info : Oracle connection established successfully
+2025-07-01 07:27:43 : system : info : Oracle connection established successfully
+2025-07-01 07:27:43 : system : info : Oracle connection established successfully
+2025-07-01 07:27:43 : system : info : Oracle connection established successfully
+2025-07-01 07:27:43 : system : info : Oracle connection established successfully
+2025-07-01 07:27:43 : system : info : Oracle connection established successfully
+2025-07-01 07:27:43 : system : info : Oracle connection established successfully
+2025-07-01 07:27:43 : system : info : Oracle connection established successfully
+2025-07-01 07:27:44 : system : info : Oracle connection established successfully
+2025-07-01 07:27:45 : system : info : Oracle connection established successfully
+2025-07-01 07:27:45 : system : info : Fetched 4 SQL codes
+2025-07-01 07:27:45 : system : info : Oracle connection established successfully
+2025-07-01 07:27:45 : system : info : Fetched 4 SQL codes
+2025-07-01 07:29:01 : system : info : Oracle connection established successfully
+2025-07-01 07:29:01 : system : info : Fetched SQL logic for code: TEST
+2025-07-01 07:29:07 : system : info : Oracle connection established successfully
+2025-07-01 07:29:07 : system : info : SQL validation passed successfully
+2025-07-01 07:29:08 : system : info : Oracle connection established successfully
+2025-07-01 07:33:19 : system : info : Oracle connection established successfully
+2025-07-01 07:33:19 : system : info : Oracle connection established successfully
+2025-07-01 07:47:45 : system : info : Oracle connection established successfully
+2025-07-01 07:47:45 : system : info : Fetched 4 SQL codes
+2025-07-01 07:47:46 : system : info : Oracle connection established successfully
+2025-07-01 07:47:46 : system : info : Fetched 4 SQL codes
+2025-07-01 08:32:37 : system : info : Reading license from: /mnt/d/INNOVA/DW_TOOL/ahana_dw_tool/backend/modules/license/license.key
+2025-07-01 08:32:37 : system : info : Validating license with system ID: 00155daaf083
+2025-07-01 08:32:37 : system : warning : License validation failed: License key is not valid for this system
+2025-07-01 08:32:37 : system : info : License status checked successfully
+2025-07-01 08:32:47 : system : info : Server stopped.
+2025-07-01 08:32:48 : system : info : Server stopped.
+2025-07-01 08:32:55 : system : info : Loading secret key from: /mnt/d/INNOVA/DW_TOOL/ahana_dw_tool/backend/modules/license/secret.key
+2025-07-01 08:32:55 : system : info : License Manager initialized with system ID: 00155daaf083
+2025-07-01 08:32:55 : system : info : Loading secret key from: /mnt/d/INNOVA/DW_TOOL/ahana_dw_tool/backend/modules/license/secret.key
+2025-07-01 08:32:55 : system : info : License Manager initialized with system ID: 00155daaf083
+2025-07-01 08:32:55 : system : info : Server starting...
+2025-07-01 08:32:56 : system : info : Loading secret key from: /mnt/d/INNOVA/DW_TOOL/ahana_dw_tool/backend/modules/license/secret.key
+2025-07-01 08:32:56 : system : info : License Manager initialized with system ID: 00155daaf083
+2025-07-01 08:32:56 : system : info : Loading secret key from: /mnt/d/INNOVA/DW_TOOL/ahana_dw_tool/backend/modules/license/secret.key
+2025-07-01 08:32:56 : system : info : License Manager initialized with system ID: 00155daaf083
+2025-07-01 08:32:56 : system : info : Server starting...
+2025-07-01 08:33:03 : rajesh : info : User rajesh authenticated successfully
+2025-07-01 08:33:03 : rajesh : info : Activating license with system ID: 00155daaf083
+2025-07-01 08:33:03 : rajesh : info : License key: Z0FBQUFBQm9ZNTAwMzBF...
+2025-07-01 08:33:03 : rajesh : info : License validation successful, saving license file
+2025-07-01 08:33:03 : rajesh : info : License key saved to: /mnt/d/INNOVA/DW_TOOL/ahana_dw_tool/backend/modules/license/license.key
+2025-07-01 08:33:03 : rajesh : info : License activated successfully
+2025-07-01 08:33:03 : system : info : Reading license from: /mnt/d/INNOVA/DW_TOOL/ahana_dw_tool/backend/modules/license/license.key
+2025-07-01 08:33:03 : system : info : Validating license with system ID: 00155daaf083
+2025-07-01 08:33:03 : system : info : License validation successful
+2025-07-01 08:33:03 : system : info : License status checked successfully
+2025-07-01 08:33:05 : system : info : Oracle connection established successfully
+2025-07-01 08:33:05 : system : info : Fetched 4 SQL codes
+2025-07-01 08:33:06 : system : info : Oracle connection established successfully
+2025-07-01 08:33:06 : system : info : Fetched 4 SQL codes
+2025-07-01 08:33:34 : rajesh : info : User rajesh authenticated successfully
+2025-07-01 08:33:34 : rajesh : info : User rajesh authenticated successfully
+2025-07-01 08:33:35 : rajesh : info : User rajesh authenticated successfully
+2025-07-01 08:33:35 : rajesh : info : User rajesh authenticated successfully
+2025-07-01 08:33:35 : rajesh : info : User rajesh authenticated successfully
+2025-07-01 08:33:35 : rajesh : info : User rajesh authenticated successfully
+2025-07-01 08:33:35 : system : info : Oracle connection established successfully
+2025-07-01 08:33:35 : system : info : Fetched 4 SQL codes
+2025-07-01 08:33:35 : system : info : Oracle connection established successfully
+2025-07-01 08:33:35 : system : info : Fetched 4 SQL codes
+2025-07-01 08:36:47 : system : info : Oracle connection established successfully
+2025-07-01 08:36:47 : system : info : Fetched SQL logic for code: DIM_ACCOUNT_2
+2025-07-01 08:38:18 : rajesh : info : User rajesh authenticated successfully
+2025-07-01 08:38:18 : rajesh : info : User rajesh authenticated successfully
+2025-07-01 08:38:18 : system : info : Oracle connection established successfully
+2025-07-01 08:38:18 : system : info : Fetched 4 SQL codes
+2025-07-01 08:38:18 : system : info : Oracle connection established successfully
+2025-07-01 08:38:18 : system : info : Fetched 4 SQL codes
+2025-07-01 08:38:21 : system : info : Oracle connection established successfully
+2025-07-01 08:38:21 : system : info : Fetched SQL logic for code: TEST
+2025-07-01 08:42:44 : system : info : Oracle connection established successfully
+2025-07-01 08:42:44 : system : info : Fetched 4 SQL codes
+2025-07-01 08:42:44 : system : info : Oracle connection established successfully
+2025-07-01 08:42:44 : system : info : Fetched 4 SQL codes
+2025-07-01 08:42:50 : system : info : Oracle connection established successfully
+2025-07-01 08:42:50 : system : info : Fetched SQL logic for code: TEST
+2025-07-01 08:42:56 : system : info : Oracle connection established successfully
+2025-07-01 08:43:08 : system : info : Oracle connection established successfully
+2025-07-01 08:43:18 : system : info : Oracle connection established successfully
+2025-07-01 08:43:34 : system : info : Oracle connection established successfully
+2025-07-01 08:43:34 : system : info : Fetched SQL logic for code: DIM_CUSTOMER_INITIAL_MAIN
+2025-07-01 08:43:35 : system : info : Oracle connection established successfully
+2025-07-01 08:43:40 : system : info : Oracle connection established successfully
+2025-07-01 08:43:40 : system : info : Fetched SQL logic for code: TEST
+2025-07-01 08:43:45 : system : info : Oracle connection established successfully
+2025-07-01 08:43:45 : system : info : SQL validation passed successfully
+2025-07-01 08:43:46 : system : info : Oracle connection established successfully
+2025-07-01 08:43:47 : system : info : Oracle connection established successfully
+2025-07-01 08:43:51 : system : info : Oracle connection established successfully
+2025-07-01 08:43:51 : system : info : Fetched SQL logic for code: TEST
+2025-07-01 08:43:52 : system : info : Oracle connection established successfully
+2025-07-01 08:43:59 : system : info : Oracle connection established successfully
+2025-07-01 08:44:04 : system : info : Oracle connection established successfully
+2025-07-01 08:44:17 : system : info : Oracle connection established successfully
+2025-07-01 08:45:34 : system : info : Oracle connection established successfully
+2025-07-01 08:45:34 : system : info : Fetched 4 SQL codes
+2025-07-01 08:45:34 : system : info : Oracle connection established successfully
+2025-07-01 08:45:34 : system : info : Fetched 4 SQL codes
+2025-07-01 08:47:00 : system : info : Oracle connection established successfully
+2025-07-01 08:47:00 : system : info : Fetched 4 SQL codes
+2025-07-01 08:47:00 : system : info : Oracle connection established successfully
+2025-07-01 08:47:00 : system : info : Fetched 4 SQL codes
+2025-07-01 08:47:03 : system : info : Oracle connection established successfully
+2025-07-01 08:47:03 : system : info : Fetched SQL logic for code: TEST
+2025-07-01 08:47:04 : system : info : Oracle connection established successfully
+2025-07-01 08:47:12 : rajesh : info : User rajesh authenticated successfully
+2025-07-01 08:47:13 : rajesh : info : User rajesh authenticated successfully
+2025-07-01 08:47:13 : system : info : Oracle connection established successfully
+2025-07-01 08:47:13 : system : info : Fetched 4 SQL codes
+2025-07-01 08:47:13 : system : info : Oracle connection established successfully
+2025-07-01 08:47:13 : system : info : Fetched 4 SQL codes
+2025-07-01 08:47:21 : system : info : Oracle connection established successfully
+2025-07-01 08:47:21 : system : info : Fetched SQL logic for code: TEST
+2025-07-01 08:47:23 : system : info : Oracle connection established successfully
+2025-07-01 08:47:39 : rajesh : info : User rajesh authenticated successfully
+2025-07-01 08:47:39 : rajesh : info : User rajesh authenticated successfully
+2025-07-01 08:47:39 : rajesh : info : User rajesh authenticated successfully
+2025-07-01 08:47:39 : rajesh : info : User rajesh authenticated successfully
+2025-07-01 08:47:39 : rajesh : info : User rajesh authenticated successfully
+2025-07-01 08:47:39 : rajesh : info : User rajesh authenticated successfully
+2025-07-01 08:47:40 : system : info : Oracle connection established successfully
+2025-07-01 08:47:40 : system : info : Fetched 4 SQL codes
+2025-07-01 08:47:40 : system : info : Oracle connection established successfully
+2025-07-01 08:47:40 : system : info : Fetched 4 SQL codes
+2025-07-01 08:48:05 : system : info : Oracle connection established successfully
+2025-07-01 08:48:05 : system : info : Fetched SQL logic for code: TEST
+2025-07-01 08:48:52 : system : info : Oracle connection established successfully
+2025-07-01 08:48:52 : system : info : Fetched SQL logic for code: TEST
+2025-07-01 08:49:52 : system : info : Oracle connection established successfully
+2025-07-01 08:49:52 : system : info : Fetched 4 SQL codes
+2025-07-01 08:49:52 : system : info : Oracle connection established successfully
+2025-07-01 08:49:52 : system : info : Fetched 4 SQL codes
+2025-07-01 08:50:28 : system : info : Oracle connection established successfully
+2025-07-01 08:50:28 : system : info : Fetched SQL logic for code: TEST
+2025-07-01 08:52:14 : system : info : Oracle connection established successfully
+2025-07-01 08:52:14 : system : info : Fetched 4 SQL codes
+2025-07-01 08:52:14 : system : info : Oracle connection established successfully
+2025-07-01 08:52:14 : system : info : Fetched 4 SQL codes
+2025-07-01 08:52:18 : system : info : Oracle connection established successfully
+2025-07-01 08:52:18 : system : info : Fetched SQL logic for code: TEST
+2025-07-01 08:52:23 : system : info : Oracle connection established successfully
+2025-07-01 08:53:26 : system : info : Oracle connection established successfully
+2025-07-01 08:53:26 : system : info : Fetched 4 SQL codes
+2025-07-01 08:53:26 : system : info : Oracle connection established successfully
+2025-07-01 08:53:26 : system : info : Fetched 4 SQL codes
+2025-07-01 08:56:40 : system : info : Oracle connection established successfully
+2025-07-01 08:56:40 : system : info : Fetched 4 SQL codes
+2025-07-01 08:56:40 : system : info : Oracle connection established successfully
+2025-07-01 08:56:40 : system : info : Fetched 4 SQL codes
+2025-07-01 08:56:45 : system : info : Oracle connection established successfully
+2025-07-01 08:56:45 : system : info : Fetched SQL logic for code: TEST
+2025-07-01 08:56:51 : system : info : Oracle connection established successfully
+2025-07-01 08:56:57 : system : info : Oracle connection established successfully
+2025-07-01 08:56:58 : system : info : Oracle connection established successfully
+2025-07-01 08:57:05 : system : info : Server stopped.
+2025-07-01 08:57:05 : system : info : Server stopped.
+2025-07-01 08:57:07 : system : info : Loading secret key from: /mnt/d/INNOVA/DW_TOOL/ahana_dw_tool/backend/modules/license/secret.key
+2025-07-01 08:57:07 : system : info : License Manager initialized with system ID: 00155daaf083
+2025-07-01 08:57:07 : system : info : Loading secret key from: /mnt/d/INNOVA/DW_TOOL/ahana_dw_tool/backend/modules/license/secret.key
+2025-07-01 08:57:07 : system : info : License Manager initialized with system ID: 00155daaf083
+2025-07-01 08:57:07 : system : info : Server starting...
+2025-07-01 08:57:08 : system : info : Loading secret key from: /mnt/d/INNOVA/DW_TOOL/ahana_dw_tool/backend/modules/license/secret.key
+2025-07-01 08:57:08 : system : info : License Manager initialized with system ID: 00155daaf083
+2025-07-01 08:57:08 : system : info : Loading secret key from: /mnt/d/INNOVA/DW_TOOL/ahana_dw_tool/backend/modules/license/secret.key
+2025-07-01 08:57:08 : system : info : License Manager initialized with system ID: 00155daaf083
+2025-07-01 08:57:08 : system : info : Server starting...
+2025-07-01 08:57:19 : rajesh : info : User rajesh authenticated successfully
+2025-07-01 08:57:19 : rajesh : info : User rajesh authenticated successfully
+2025-07-01 08:57:19 : rajesh : info : User rajesh authenticated successfully
+2025-07-01 08:57:19 : rajesh : info : User rajesh authenticated successfully
+2025-07-01 08:57:19 : rajesh : info : User rajesh authenticated successfully
+2025-07-01 08:57:19 : rajesh : info : User rajesh authenticated successfully
+2025-07-01 08:57:20 : system : info : Oracle connection established successfully
+2025-07-01 08:57:20 : system : info : Fetched 4 SQL codes
+2025-07-01 08:57:20 : system : info : Oracle connection established successfully
+2025-07-01 08:57:20 : system : info : Fetched 4 SQL codes
+2025-07-01 08:57:23 : system : info : Oracle connection established successfully
+2025-07-01 08:57:23 : system : info : Fetched SQL logic for code: TEST
+2025-07-01 08:57:27 : system : info : Oracle connection established successfully
+2025-07-01 08:57:27 : system : info : Fetched 4 historical versions for SQL code: TEST
+2025-07-01 08:58:08 : system : info : Oracle connection established successfully
+2025-07-01 08:58:08 : system : info : Fetched 4 historical versions for SQL code: TEST
+2025-07-01 08:58:32 : system : info : Oracle connection established successfully
+2025-07-01 08:58:32 : system : info : SQL validation failed
+2025-07-01 08:58:38 : system : info : Oracle connection established successfully
+2025-07-01 08:58:38 : system : info : SQL validation failed
+2025-07-01 08:58:44 : system : info : Oracle connection established successfully
+2025-07-01 08:58:44 : system : info : SQL validation failed
+2025-07-01 08:58:48 : system : info : Oracle connection established successfully
+2025-07-01 08:58:48 : system : info : SQL validation failed
+2025-07-01 08:58:57 : system : info : Oracle connection established successfully
+2025-07-01 08:58:57 : system : info : SQL validation failed
+2025-07-01 08:59:06 : system : info : Oracle connection established successfully
+2025-07-01 08:59:06 : system : info : Fetched 4 historical versions for SQL code: TEST
+2025-07-01 08:59:22 : system : info : Oracle connection established successfully
+2025-07-01 08:59:22 : system : info : Fetched 4 historical versions for SQL code: TEST
+2025-07-01 09:01:35 : system : info : Oracle connection established successfully
+2025-07-01 09:01:35 : system : info : SQL validation passed successfully
+2025-07-01 09:04:43 : system : info : Oracle connection established successfully
+2025-07-01 09:04:43 : system : info : Fetched SQL logic for code: TEST
+2025-07-01 09:04:45 : system : info : Oracle connection established successfully
+2025-07-01 09:04:45 : system : info : Fetched 4 historical versions for SQL code: TEST
+2025-07-01 09:04:58 : system : info : Oracle connection established successfully
+2025-07-01 09:04:58 : system : info : SQL validation passed successfully
+2025-07-01 09:05:04 : system : info : Oracle connection established successfully
+2025-07-01 09:05:04 : system : info : SQL validation failed
+2025-07-01 09:08:23 : system : info : Oracle connection established successfully
+2025-07-01 09:08:23 : system : info : Fetched SQL logic for code: TEST
+2025-07-01 09:08:24 : system : info : Oracle connection established successfully
+2025-07-01 09:08:24 : system : info : Fetched 4 historical versions for SQL code: TEST
+2025-07-01 09:11:21 : system : info : Oracle connection established successfully
+2025-07-01 09:11:21 : system : info : SQL validation passed successfully
+2025-07-01 09:11:32 : system : info : Oracle connection established successfully
+2025-07-01 09:11:32 : system : info : SQL validation failed
+2025-07-01 09:12:23 : system : info : Oracle connection established successfully
+2025-07-01 09:12:23 : system : info : Fetched SQL logic for code: TEST
+2025-07-01 09:12:25 : system : info : Oracle connection established successfully
+2025-07-01 09:12:25 : system : info : Fetched 4 historical versions for SQL code: TEST
+2025-07-01 09:14:48 : system : info : Oracle connection established successfully
+2025-07-01 09:14:48 : system : info : SQL validation passed successfully
+2025-07-01 09:15:34 : rajesh : info : User rajesh authenticated successfully
+2025-07-01 09:15:34 : rajesh : info : User rajesh authenticated successfully
+2025-07-01 09:15:34 : system : info : Oracle connection established successfully
+2025-07-01 09:15:34 : system : info : Fetched 4 SQL codes
+2025-07-01 09:15:35 : system : info : Oracle connection established successfully
+2025-07-01 09:15:35 : system : info : Fetched 4 SQL codes
+2025-07-01 09:16:24 : system : info : Oracle connection established successfully
+2025-07-01 09:16:24 : system : info : Fetched SQL logic for code: DIM_ACCOUNT_2
+2025-07-01 09:16:26 : system : info : Oracle connection established successfully
+2025-07-01 09:16:26 : system : info : Fetched 1 historical versions for SQL code: DIM_ACCOUNT_2
+2025-07-01 09:16:40 : system : info : Oracle connection established successfully
+2025-07-01 09:16:40 : system : info : Fetched SQL logic for code: TEST
+2025-07-01 09:16:41 : system : info : Oracle connection established successfully
+2025-07-01 09:16:41 : system : info : Fetched 4 historical versions for SQL code: TEST
+2025-07-01 09:19:08 : rajesh : info : User rajesh authenticated successfully
+2025-07-01 09:19:08 : rajesh : info : User rajesh authenticated successfully
+2025-07-01 09:19:08 : rajesh : info : User rajesh authenticated successfully
+2025-07-01 09:19:08 : rajesh : info : User rajesh authenticated successfully
+2025-07-01 09:19:08 : rajesh : info : User rajesh authenticated successfully
+2025-07-01 09:19:08 : rajesh : info : User rajesh authenticated successfully
+2025-07-01 09:19:13 : system : info : Oracle connection established successfully
+2025-07-01 09:19:13 : system : info : Fetched 4 SQL codes
+2025-07-01 09:19:13 : system : info : Oracle connection established successfully
+2025-07-01 09:19:13 : system : info : Fetched 4 SQL codes
+2025-07-01 09:19:19 : system : info : Oracle connection established successfully
+2025-07-01 09:19:19 : system : info : Fetched SQL logic for code: TEST
+2025-07-01 09:19:23 : system : info : Oracle connection established successfully
+2025-07-01 09:19:23 : system : info : SQL validation passed successfully
+2025-07-01 09:19:50 : system : info : Oracle connection established successfully
+2025-07-01 09:19:58 : system : info : Oracle connection established successfully
+2025-07-01 09:19:58 : system : info : Fetched 4 historical versions for SQL code: TEST
+2025-07-01 09:20:04 : system : info : Oracle connection established successfully
+2025-07-01 09:20:06 : system : info : Oracle connection established successfully
+2025-07-01 09:20:06 : system : info : Fetched 4 historical versions for SQL code: TEST
+2025-07-01 09:20:14 : system : info : Oracle connection established successfully
+2025-07-01 09:20:14 : system : info : SQL validation passed successfully
+2025-07-01 09:20:15 : system : info : Oracle connection established successfully
+2025-07-01 09:20:17 : system : info : Oracle connection established successfully
+2025-07-01 09:20:17 : system : info : Fetched 5 historical versions for SQL code: TEST
+2025-07-01 09:21:00 : system : info : Oracle connection established successfully
+2025-07-01 09:21:00 : system : info : Fetched 4 SQL codes
+2025-07-01 09:21:01 : system : info : Oracle connection established successfully
+2025-07-01 09:21:01 : system : info : Fetched 4 SQL codes
+2025-07-01 09:21:13 : system : info : Oracle connection established successfully
+2025-07-01 09:21:13 : system : info : Fetched SQL logic for code: TEST
+2025-07-01 09:21:16 : system : info : Oracle connection established successfully
+2025-07-01 09:21:16 : system : info : Fetched 5 historical versions for SQL code: TEST
+2025-07-01 09:21:45 : system : info : Oracle connection established successfully
+2025-07-01 09:21:45 : system : info : Fetched 4 SQL codes
+2025-07-01 09:21:50 : system : info : Oracle connection established successfully
+2025-07-01 09:21:50 : system : info : Fetched SQL logic for code: TEST
+2025-07-01 09:21:51 : system : info : Oracle connection established successfully
+2025-07-01 09:21:51 : system : info : SQL validation passed successfully
+2025-07-01 09:21:54 : system : info : Oracle connection established successfully
+2025-07-01 09:21:54 : system : info : SQL validation failed
+2025-07-01 09:22:30 : system : info : Oracle connection established successfully
+2025-07-01 09:22:30 : system : info : SQL validation passed successfully
+2025-07-01 09:22:35 : system : info : Oracle connection established successfully
+2025-07-01 09:22:35 : system : info : SQL validation passed successfully
+2025-07-01 09:22:47 : rajesh : info : User rajesh authenticated successfully
+2025-07-01 09:22:47 : rajesh : info : User rajesh authenticated successfully
+2025-07-01 09:22:48 : rajesh : info : User rajesh authenticated successfully
+2025-07-01 09:22:48 : rajesh : info : User rajesh authenticated successfully
+2025-07-01 09:22:48 : rajesh : info : User rajesh authenticated successfully
+2025-07-01 09:22:48 : rajesh : info : User rajesh authenticated successfully
+2025-07-01 09:22:49 : system : info : Oracle connection established successfully
+2025-07-01 09:22:49 : system : info : Fetched 4 SQL codes
+2025-07-01 09:22:50 : system : info : Oracle connection established successfully
+2025-07-01 09:22:50 : system : info : Fetched 4 SQL codes
+2025-07-01 09:22:54 : system : info : Oracle connection established successfully
+2025-07-01 09:22:55 : system : info : Fetched SQL logic for code: TEST
+2025-07-01 09:22:57 : system : info : Oracle connection established successfully
+2025-07-01 09:22:57 : system : info : SQL validation passed successfully
+2025-07-01 09:23:04 : system : info : Oracle connection established successfully
+2025-07-01 09:23:04 : system : info : SQL validation failed
+2025-07-01 09:23:28 : rajesh : info : User rajesh authenticated successfully
+2025-07-01 09:23:28 : rajesh : info : User rajesh authenticated successfully
+2025-07-01 09:23:28 : rajesh : info : User rajesh authenticated successfully
+2025-07-01 09:23:29 : rajesh : info : User rajesh authenticated successfully
+2025-07-01 09:23:29 : rajesh : info : User rajesh authenticated successfully
+2025-07-01 09:23:29 : rajesh : info : User rajesh authenticated successfully
+2025-07-01 09:23:41 : system : info : Oracle connection established successfully
+2025-07-01 09:23:41 : system : info : Oracle connection established successfully
+2025-07-01 09:24:47 : system : info : Oracle connection established successfully
+2025-07-01 09:24:48 : system : info : Oracle connection established successfully
+2025-07-01 09:24:48 : system : info : Oracle connection established successfully
+2025-07-01 09:24:48 : system : info : Oracle connection established successfully
+2025-07-01 09:24:48 : system : info : Oracle connection established successfully
+2025-07-01 09:24:48 : system : info : Oracle connection established successfully
+2025-07-01 09:24:48 : system : info : Oracle connection established successfully
+2025-07-01 09:24:48 : system : info : Oracle connection established successfully
+2025-07-01 09:24:48 : system : info : Oracle connection established successfully
+2025-07-01 09:24:48 : system : info : Oracle connection established successfully
+2025-07-01 09:24:48 : system : info : Oracle connection established successfully
+2025-07-01 09:24:48 : system : info : Oracle connection established successfully
+2025-07-01 09:24:48 : system : info : Oracle connection established successfully
+2025-07-01 09:24:49 : system : info : Oracle connection established successfully
+2025-07-01 09:25:03 : system : info : Oracle connection established successfully
+2025-07-01 09:25:03 : system : info : Oracle connection established successfully
+2025-07-01 09:25:05 : system : info : Oracle connection established successfully
+2025-07-01 09:25:05 : system : info : Oracle connection established successfully
+2025-07-01 09:25:08 : system : info : Oracle connection established successfully
+2025-07-01 09:25:08 : system : info : Oracle connection established successfully
+2025-07-01 09:25:15 : system : info : Oracle connection established successfully
+2025-07-01 09:25:18 : system : info : Oracle connection established successfully
+2025-07-01 09:25:20 : system : info : Oracle connection established successfully
+2025-07-01 09:25:21 : system : info : Oracle connection established successfully
+2025-07-01 09:25:49 : system : info : Oracle connection established successfully
+2025-07-01 09:25:50 : system : info : Oracle connection established successfully
+2025-07-01 09:26:39 : system : info : Oracle connection established successfully
+2025-07-01 09:26:39 : system : info : Oracle connection established successfully
+2025-07-01 09:28:50 : system : info : Oracle connection established successfully
+2025-07-01 09:28:50 : system : info : Oracle connection established successfully
+2025-07-01 09:28:50 : system : info : Fetched 4 SQL codes
+2025-07-01 09:28:50 : system : info : Oracle connection established successfully
+2025-07-01 09:28:50 : system : info : Oracle connection established successfully
+2025-07-01 09:28:50 : system : info : Fetched 4 SQL codes
+2025-07-01 09:28:54 : system : info : Oracle connection established successfully
+2025-07-01 09:28:54 : system : info : Fetched SQL logic for code: TEST
+2025-07-01 09:28:56 : system : info : Oracle connection established successfully
+2025-07-01 09:28:56 : system : info : Fetched 5 historical versions for SQL code: TEST
+2025-07-01 10:34:06 : system : info : Reading license from: /mnt/d/INNOVA/DW_TOOL/ahana_dw_tool/backend/modules/license/license.key
+2025-07-01 10:34:06 : system : info : Validating license with system ID: 00155daaf083
+2025-07-01 10:34:06 : system : info : License validation successful
+2025-07-01 10:34:06 : system : info : License status checked successfully
+2025-07-01 10:34:32 : system : error : Error establishing Oracle connection: DPY-6005: cannot connect to database (CONNECTION_ID=S9ZF/6W8pWHv0wQyEjtcBA==).
+timed out
+2025-07-01 10:34:32 : system : error : Error in fetch_all_sql_codes: DPY-6005: cannot connect to database (CONNECTION_ID=S9ZF/6W8pWHv0wQyEjtcBA==).
+timed out
+2025-07-01 10:34:34 : system : info : Oracle connection established successfully
+2025-07-01 10:34:34 : system : info : Fetched 4 SQL codes
+2025-07-01 10:34:34 : system : info : Oracle connection established successfully
+2025-07-01 10:34:34 : system : info : Fetched 4 SQL codes
+2025-07-01 10:34:37 : system : info : Oracle connection established successfully
+2025-07-01 10:34:37 : system : info : Fetched SQL logic for code: TEST
+2025-07-01 10:34:38 : system : info : Oracle connection established successfully
+2025-07-01 10:34:39 : system : info : Fetched 5 historical versions for SQL code: TEST
+2025-07-01 10:34:43 : system : info : Oracle connection established successfully
+2025-07-01 10:34:43 : system : info : SQL validation passed successfully
+2025-07-01 10:34:55 : system : info : Oracle connection established successfully
+2025-07-01 10:34:55 : system : info : Oracle connection established successfully
+2025-07-01 10:35:37 : system : info : Oracle connection established successfully
+2025-07-01 10:35:38 : system : info : Oracle connection established successfully
+2025-07-01 10:35:38 : system : info : Oracle connection established successfully
+2025-07-01 10:35:38 : system : info : Oracle connection established successfully
+2025-07-01 10:35:57 : system : info : Oracle connection established successfully
+2025-07-01 10:35:57 : system : info : Oracle connection established successfully
+2025-07-01 10:37:20 : system : info : Oracle connection established successfully
+2025-07-01 10:37:20 : system : info : Oracle connection established successfully
+2025-07-01 10:37:26 : system : info : Oracle connection established successfully
+2025-07-01 10:37:26 : system : info : Oracle connection established successfully
+2025-07-01 10:37:29 : system : info : Oracle connection established successfully
+2025-07-01 10:37:30 : system : info : Oracle connection established successfully
+2025-07-01 10:37:30 : system : info : Oracle connection established successfully
+2025-07-01 10:37:30 : system : info : Oracle connection established successfully
+2025-07-01 10:37:46 : system : info : Oracle connection established successfully
+2025-07-01 10:37:47 : system : info : Oracle connection established successfully
+2025-07-01 10:37:50 : system : info : Oracle connection established successfully
+2025-07-01 10:37:50 : system : info : Oracle connection established successfully
+2025-07-01 10:38:04 : system : info : Oracle connection established successfully
+2025-07-01 10:38:04 : system : info : Oracle connection established successfully
+2025-07-01 10:38:07 : system : info : Server stopped.
+2025-07-01 10:38:08 : system : info : Server stopped.
+2025-07-01 10:38:11 : system : info : Loading secret key from: /mnt/d/INNOVA/DW_TOOL/ahana_dw_tool/backend/modules/license/secret.key
+2025-07-01 10:38:11 : system : info : License Manager initialized with system ID: 00155daaf083
+2025-07-01 10:38:11 : system : info : Loading secret key from: /mnt/d/INNOVA/DW_TOOL/ahana_dw_tool/backend/modules/license/secret.key
+2025-07-01 10:38:11 : system : info : License Manager initialized with system ID: 00155daaf083
+2025-07-01 10:38:11 : system : info : Server starting...
+2025-07-01 10:38:12 : system : info : Loading secret key from: /mnt/d/INNOVA/DW_TOOL/ahana_dw_tool/backend/modules/license/secret.key
+2025-07-01 10:38:12 : system : info : License Manager initialized with system ID: 00155daaf083
+2025-07-01 10:38:12 : system : info : Loading secret key from: /mnt/d/INNOVA/DW_TOOL/ahana_dw_tool/backend/modules/license/secret.key
+2025-07-01 10:38:12 : system : info : License Manager initialized with system ID: 00155daaf083
+2025-07-01 10:38:12 : system : info : Server starting...
+2025-07-01 10:38:20 : system : info : Oracle connection established successfully
+2025-07-01 10:38:21 : system : info : Oracle connection established successfully
+2025-07-01 10:38:21 : system : info : Oracle connection established successfully
+2025-07-01 10:38:21 : system : info : Oracle connection established successfully
+2025-07-01 10:38:31 : system : info : Oracle connection established successfully
+2025-07-01 10:38:32 : system : info : Oracle connection established successfully
+2025-07-01 10:38:41 : system : info : Oracle connection established successfully
+2025-07-01 10:38:42 : system : info : Oracle connection established successfully
+2025-07-01 10:38:50 : system : info : Oracle connection established successfully
+2025-07-01 10:38:50 : system : info : Oracle connection established successfully
+2025-07-01 10:38:51 : system : info : Oracle connection established successfully
+2025-07-01 10:38:52 : system : info : Oracle connection established successfully
+2025-07-01 10:38:52 : system : info : Oracle connection established successfully
+2025-07-01 10:38:52 : system : info : Oracle connection established successfully
+2025-07-01 10:39:12 : system : info : Oracle connection established successfully
+2025-07-01 10:39:12 : system : info : Oracle connection established successfully
+2025-07-01 10:39:19 : system : info : Oracle connection established successfully
+2025-07-01 10:39:20 : system : info : Oracle connection established successfully
+2025-07-01 10:39:26 : system : info : Oracle connection established successfully
+2025-07-01 10:39:26 : system : info : Oracle connection established successfully
+2025-07-01 10:39:26 : system : info : Oracle connection established successfully
+2025-07-01 10:39:27 : system : info : Oracle connection established successfully
+2025-07-01 10:39:27 : system : info : Oracle connection established successfully
+2025-07-01 10:39:27 : system : info : Oracle connection established successfully
+2025-07-01 10:39:30 : system : info : Oracle connection established successfully
+2025-07-01 10:39:31 : system : info : Oracle connection established successfully
+2025-07-01 10:39:33 : system : info : Oracle connection established successfully
+2025-07-01 10:39:33 : system : info : Oracle connection established successfully
+2025-07-01 10:39:33 : system : info : Oracle connection established successfully
+2025-07-01 10:39:33 : system : info : Oracle connection established successfully
+2025-07-01 10:39:33 : system : info : Oracle connection established successfully
+2025-07-01 10:39:34 : system : info : Oracle connection established successfully
+2025-07-01 10:39:38 : system : info : Oracle connection established successfully
+2025-07-01 10:39:38 : system : info : Oracle connection established successfully
+2025-07-01 10:43:44 : system : info : Oracle connection established successfully
+2025-07-01 10:43:44 : system : info : Oracle connection established successfully
+2025-07-01 10:43:44 : system : info : Oracle connection established successfully
+2025-07-01 10:43:44 : system : info : Oracle connection established successfully
+2025-07-01 10:43:44 : system : info : Oracle connection established successfully
+2025-07-01 10:43:44 : system : info : Oracle connection established successfully
+2025-07-01 10:45:27 : system : info : Server stopped.
+2025-07-01 10:45:27 : system : info : Server stopped.
+2025-07-01 10:45:29 : system : info : Loading secret key from: /mnt/d/INNOVA/DW_TOOL/ahana_dw_tool/backend/modules/license/secret.key
+2025-07-01 10:45:29 : system : info : License Manager initialized with system ID: 00155daaf083
+2025-07-01 10:45:29 : system : info : Loading secret key from: /mnt/d/INNOVA/DW_TOOL/ahana_dw_tool/backend/modules/license/secret.key
+2025-07-01 10:45:29 : system : info : License Manager initialized with system ID: 00155daaf083
+2025-07-01 10:45:29 : system : info : Server starting...
+2025-07-01 10:45:30 : system : info : Loading secret key from: /mnt/d/INNOVA/DW_TOOL/ahana_dw_tool/backend/modules/license/secret.key
+2025-07-01 10:45:30 : system : info : License Manager initialized with system ID: 00155daaf083
+2025-07-01 10:45:30 : system : info : Loading secret key from: /mnt/d/INNOVA/DW_TOOL/ahana_dw_tool/backend/modules/license/secret.key
+2025-07-01 10:45:30 : system : info : License Manager initialized with system ID: 00155daaf083
+2025-07-01 10:45:30 : system : info : Server starting...
+2025-07-01 10:45:37 : system : info : Oracle connection established successfully
+2025-07-01 10:45:37 : system : info : Oracle connection established successfully
+2025-07-01 10:45:40 : system : info : Oracle connection established successfully
+2025-07-01 10:45:40 : system : info : Oracle connection established successfully
+2025-07-01 10:45:40 : system : info : Oracle connection established successfully
+2025-07-01 10:45:40 : system : info : Oracle connection established successfully
+2025-07-01 10:45:40 : system : info : Oracle connection established successfully
+2025-07-01 10:45:41 : system : info : Oracle connection established successfully
+2025-07-01 10:46:18 : system : info : Oracle connection established successfully
+2025-07-01 10:46:19 : system : info : Oracle connection established successfully
+2025-07-01 10:46:29 : system : info : Oracle connection established successfully
+2025-07-01 10:46:29 : system : info : Oracle connection established successfully
+2025-07-01 10:46:29 : system : info : Oracle connection established successfully
+2025-07-01 10:46:29 : system : info : Oracle connection established successfully
+2025-07-01 10:46:30 : system : info : Oracle connection established successfully
+2025-07-01 10:46:30 : system : info : Oracle connection established successfully
+2025-07-01 10:46:53 : system : info : Oracle connection established successfully
+2025-07-01 10:46:54 : system : info : Oracle connection established successfully
+2025-07-01 10:46:58 : system : info : Oracle connection established successfully
+2025-07-01 10:46:58 : system : info : Oracle connection established successfully
+2025-07-01 10:46:58 : system : info : Oracle connection established successfully
+2025-07-01 10:46:58 : system : info : Oracle connection established successfully
+2025-07-01 10:47:11 : system : info : Oracle connection established successfully
+2025-07-01 10:47:30 : system : info : Oracle connection established successfully
+2025-07-01 10:47:30 : system : info : Oracle connection established successfully
+2025-07-01 10:47:33 : system : info : Oracle connection established successfully
+2025-07-01 10:47:33 : system : info : Oracle connection established successfully
+2025-07-01 10:47:33 : system : info : Oracle connection established successfully
+2025-07-01 10:47:33 : system : info : Oracle connection established successfully
+2025-07-01 10:47:33 : system : info : Oracle connection established successfully
+2025-07-01 10:47:34 : system : info : Oracle connection established successfully
+2025-07-01 10:47:49 : system : info : Oracle connection established successfully
+2025-07-01 10:47:49 : system : info : Oracle connection established successfully
+2025-07-01 10:47:52 : system : info : Oracle connection established successfully
+2025-07-01 10:47:52 : system : info : Oracle connection established successfully
+2025-07-01 10:47:52 : system : info : Oracle connection established successfully
+2025-07-01 10:47:52 : system : info : Oracle connection established successfully
+2025-07-01 10:47:52 : system : info : Oracle connection established successfully
+2025-07-01 10:47:53 : system : info : Oracle connection established successfully
+2025-07-01 10:49:11 : system : info : Server stopped.
+2025-07-01 10:49:11 : system : info : Server stopped.
+2025-07-01 10:49:14 : system : info : Loading secret key from: /mnt/d/INNOVA/DW_TOOL/ahana_dw_tool/backend/modules/license/secret.key
+2025-07-01 10:49:14 : system : info : License Manager initialized with system ID: 00155daaf083
+2025-07-01 10:49:14 : system : info : Loading secret key from: /mnt/d/INNOVA/DW_TOOL/ahana_dw_tool/backend/modules/license/secret.key
+2025-07-01 10:49:14 : system : info : License Manager initialized with system ID: 00155daaf083
+2025-07-01 10:49:15 : system : info : Server starting...
+2025-07-01 10:49:16 : system : info : Loading secret key from: /mnt/d/INNOVA/DW_TOOL/ahana_dw_tool/backend/modules/license/secret.key
+2025-07-01 10:49:16 : system : info : License Manager initialized with system ID: 00155daaf083
+2025-07-01 10:49:16 : system : info : Loading secret key from: /mnt/d/INNOVA/DW_TOOL/ahana_dw_tool/backend/modules/license/secret.key
+2025-07-01 10:49:16 : system : info : License Manager initialized with system ID: 00155daaf083
+2025-07-01 10:49:16 : system : info : Server starting...
+2025-07-01 11:02:02 : system : info : Oracle connection established successfully
+2025-07-01 11:02:04 : system : info : Oracle connection established successfully
+2025-07-01 11:02:06 : system : info : Oracle connection established successfully
+2025-07-01 11:02:06 : system : info : Oracle connection established successfully
+2025-07-01 11:02:06 : system : info : Oracle connection established successfully
+2025-07-01 11:02:06 : system : info : Oracle connection established successfully
+2025-07-01 11:02:07 : system : info : Oracle connection established successfully
+2025-07-01 11:02:07 : system : info : Oracle connection established successfully
+2025-07-01 11:02:10 : system : info : Oracle connection established successfully
+2025-07-01 11:02:10 : system : info : Oracle connection established successfully
+2025-07-01 11:02:14 : system : info : Oracle connection established successfully
+2025-07-01 11:02:14 : system : info : Oracle connection established successfully
+2025-07-01 11:02:14 : system : info : Oracle connection established successfully
+2025-07-01 11:02:14 : system : info : Oracle connection established successfully
+2025-07-01 11:02:14 : system : info : Oracle connection established successfully
+2025-07-01 11:02:15 : system : info : Oracle connection established successfully
+2025-07-01 11:02:19 : system : info : Oracle connection established successfully
+2025-07-01 11:02:27 : system : info : Oracle connection established successfully
+2025-07-01 11:02:28 : system : info : Oracle connection established successfully
+2025-07-01 11:02:33 : system : info : Oracle connection established successfully
+2025-07-01 11:02:33 : system : info : Oracle connection established successfully
+2025-07-01 11:02:33 : system : info : Oracle connection established successfully
+2025-07-01 11:02:33 : system : info : Oracle connection established successfully
+2025-07-01 11:02:33 : system : info : Oracle connection established successfully
+2025-07-01 11:02:33 : system : info : Oracle connection established successfully
+2025-07-01 11:02:59 : system : info : Oracle connection established successfully
+2025-07-01 11:02:59 : system : info : Oracle connection established successfully
+2025-07-01 11:03:03 : system : info : Oracle connection established successfully
+2025-07-01 11:03:03 : system : info : Oracle connection established successfully
+2025-07-01 11:03:03 : system : info : Oracle connection established successfully
+2025-07-01 11:03:03 : system : info : Oracle connection established successfully
+2025-07-01 11:03:04 : system : info : Oracle connection established successfully
+2025-07-01 11:03:04 : system : info : Oracle connection established successfully
+2025-07-01 11:03:22 : system : info : Oracle connection established successfully
+2025-07-01 11:03:22 : system : info : Oracle connection established successfully
+2025-07-01 11:03:26 : system : info : Oracle connection established successfully
+2025-07-01 11:03:26 : system : info : Oracle connection established successfully
+2025-07-01 11:03:32 : system : info : Oracle connection established successfully
+2025-07-01 11:03:32 : system : info : Oracle connection established successfully
+2025-07-01 11:03:32 : system : info : Oracle connection established successfully
+2025-07-01 11:03:32 : system : info : Oracle connection established successfully
+2025-07-01 11:03:32 : system : info : Oracle connection established successfully
+2025-07-01 11:03:32 : system : info : Oracle connection established successfully
+2025-07-01 11:03:43 : system : info : Oracle connection established successfully
+2025-07-01 11:03:52 : system : info : Oracle connection established successfully
+2025-07-01 11:04:01 : system : info : Oracle connection established successfully
+2025-07-01 11:04:05 : system : info : Oracle connection established successfully
+2025-07-01 11:04:06 : system : info : Oracle connection established successfully
+2025-07-01 11:04:08 : system : info : Oracle connection established successfully
+2025-07-01 11:04:10 : system : info : Oracle connection established successfully
+2025-07-01 11:06:35 : system : info : Oracle connection established successfully
+2025-07-01 11:06:45 : system : info : Oracle connection established successfully
+2025-07-01 11:06:47 : system : info : Oracle connection established successfully
+2025-07-01 11:06:47 : system : info : Oracle connection established successfully
+2025-07-01 11:06:49 : system : info : Oracle connection established successfully
+2025-07-01 11:06:50 : system : info : Oracle connection established successfully
+2025-07-01 11:06:54 : system : info : Oracle connection established successfully
+2025-07-01 11:06:54 : system : info : Oracle connection established successfully
+2025-07-01 11:06:54 : system : info : Oracle connection established successfully
+2025-07-01 11:06:54 : system : info : Oracle connection established successfully
+2025-07-01 11:06:54 : system : info : Oracle connection established successfully
+2025-07-01 11:06:54 : system : info : Oracle connection established successfully
+2025-07-01 11:06:56 : system : info : Oracle connection established successfully
+2025-07-01 11:07:08 : system : info : Oracle connection established successfully
+2025-07-01 11:07:08 : system : info : Oracle connection established successfully
+2025-07-01 11:07:11 : system : info : Oracle connection established successfully
+2025-07-01 11:07:11 : system : info : Oracle connection established successfully
+2025-07-01 11:07:11 : system : info : Oracle connection established successfully
+2025-07-01 11:07:11 : system : info : Oracle connection established successfully
+2025-07-01 11:07:12 : system : info : Oracle connection established successfully
+2025-07-01 11:07:12 : system : info : Oracle connection established successfully
+2025-07-01 11:07:13 : system : info : Oracle connection established successfully
+2025-07-01 11:07:15 : system : info : Oracle connection established successfully
+2025-07-01 11:07:17 : system : info : Oracle connection established successfully
+2025-07-01 11:07:17 : system : info : Oracle connection established successfully
+2025-07-01 11:07:27 : system : info : Oracle connection established successfully
+2025-07-01 11:07:27 : system : info : Oracle connection established successfully
+2025-07-01 11:07:27 : system : info : Oracle connection established successfully
+2025-07-01 11:07:28 : system : info : Oracle connection established successfully
+2025-07-01 11:07:28 : system : info : Oracle connection established successfully
+2025-07-01 11:07:28 : system : info : Oracle connection established successfully
+2025-07-01 11:07:32 : system : info : Oracle connection established successfully
+2025-07-01 11:07:32 : system : info : Oracle connection established successfully
+2025-07-01 11:07:34 : system : info : Oracle connection established successfully
+2025-07-01 11:07:34 : system : info : Oracle connection established successfully
+2025-07-01 11:11:36 : system : info : Oracle connection established successfully
+2025-07-01 11:11:36 : system : info : Oracle connection established successfully
+2025-07-01 11:11:36 : system : info : Oracle connection established successfully
+2025-07-01 11:11:37 : system : info : Oracle connection established successfully
+2025-07-01 11:11:37 : system : info : Oracle connection established successfully
+2025-07-01 11:11:37 : system : info : Oracle connection established successfully
+2025-07-01 11:11:40 : system : info : Oracle connection established successfully
+2025-07-01 11:11:49 : system : info : Oracle connection established successfully
+2025-07-01 11:11:50 : system : info : Oracle connection established successfully
+2025-07-01 11:12:15 : system : info : Oracle connection established successfully
+2025-07-01 11:12:16 : system : info : Oracle connection established successfully
+2025-07-01 11:12:16 : system : info : Oracle connection established successfully
+2025-07-01 11:12:16 : system : info : Oracle connection established successfully
+2025-07-01 11:12:16 : system : info : Oracle connection established successfully
+2025-07-01 11:12:16 : system : info : Oracle connection established successfully
+2025-07-01 11:12:21 : system : info : Oracle connection established successfully
+2025-07-01 11:12:24 : system : info : Oracle connection established successfully
+2025-07-01 11:12:24 : system : info : Oracle connection established successfully
+2025-07-01 11:12:26 : system : info : Oracle connection established successfully
+2025-07-01 11:12:26 : system : info : Oracle connection established successfully
+2025-07-01 11:12:27 : system : info : Oracle connection established successfully
+2025-07-01 11:12:27 : system : info : Oracle connection established successfully
+2025-07-01 11:12:27 : system : info : Oracle connection established successfully
+2025-07-01 11:12:27 : system : info : Oracle connection established successfully
+2025-07-01 11:12:35 : system : info : Oracle connection established successfully
+2025-07-01 11:12:35 : system : info : Oracle connection established successfully
+2025-07-01 11:12:38 : system : info : Oracle connection established successfully
+2025-07-01 11:12:38 : system : info : Oracle connection established successfully
+2025-07-01 11:12:41 : system : info : Oracle connection established successfully
+2025-07-01 11:12:41 : system : info : Oracle connection established successfully
+2025-07-01 11:12:41 : system : info : Oracle connection established successfully
+2025-07-01 11:12:41 : system : info : Oracle connection established successfully
+2025-07-01 11:12:51 : system : info : Oracle connection established successfully
+2025-07-01 11:12:51 : system : info : Oracle connection established successfully
+2025-07-01 11:12:53 : system : info : Oracle connection established successfully
+2025-07-01 11:12:54 : system : info : Oracle connection established successfully
+2025-07-01 11:13:46 : system : info : Oracle connection established successfully
+2025-07-01 11:13:47 : system : info : Oracle connection established successfully
+2025-07-01 11:13:47 : system : info : Oracle connection established successfully
+2025-07-01 11:13:47 : system : info : Oracle connection established successfully
+2025-07-01 11:13:47 : system : info : Oracle connection established successfully
+2025-07-01 11:13:48 : system : info : Oracle connection established successfully
+2025-07-01 11:13:52 : system : info : Oracle connection established successfully
+2025-07-01 11:13:54 : system : info : Oracle connection established successfully
+2025-07-01 11:13:55 : system : info : Oracle connection established successfully
+2025-07-01 11:14:13 : system : info : Oracle connection established successfully
+2025-07-01 11:14:13 : system : info : Oracle connection established successfully
+2025-07-01 11:14:13 : system : info : Oracle connection established successfully
+2025-07-01 11:14:13 : system : info : Oracle connection established successfully
+2025-07-01 11:14:14 : system : info : Oracle connection established successfully
+2025-07-01 11:14:14 : system : info : Oracle connection established successfully
+2025-07-01 11:14:24 : system : info : Oracle connection established successfully
+2025-07-01 11:14:25 : system : info : Oracle connection established successfully
+2025-07-01 11:14:27 : system : info : Oracle connection established successfully
+2025-07-01 11:14:28 : system : info : Oracle connection established successfully
+2025-07-01 11:14:43 : system : info : Oracle connection established successfully
+2025-07-01 11:14:43 : system : info : Oracle connection established successfully
+2025-07-01 11:14:43 : system : info : Oracle connection established successfully
+2025-07-01 11:14:43 : system : info : Oracle connection established successfully
+2025-07-01 11:14:44 : system : info : Oracle connection established successfully
+2025-07-01 11:14:44 : system : info : Oracle connection established successfully
+2025-07-01 11:14:47 : system : info : Oracle connection established successfully
+2025-07-01 11:15:04 : system : info : Oracle connection established successfully
+2025-07-01 11:15:05 : system : info : Oracle connection established successfully
+2025-07-01 11:15:06 : system : info : Oracle connection established successfully
+2025-07-01 11:15:13 : system : info : Oracle connection established successfully
+2025-07-01 11:15:13 : system : info : Oracle connection established successfully
+2025-07-01 11:15:15 : system : info : Oracle connection established successfully
+2025-07-01 11:15:43 : system : info : Oracle connection established successfully
+2025-07-01 11:15:43 : system : info : Oracle connection established successfully
+2025-07-01 11:15:45 : system : info : Oracle connection established successfully
+2025-07-01 11:15:45 : system : info : Oracle connection established successfully
+2025-07-01 11:15:45 : system : info : Oracle connection established successfully
+2025-07-01 11:15:45 : system : info : Oracle connection established successfully
+2025-07-01 11:15:45 : system : info : Oracle connection established successfully
+2025-07-01 11:15:46 : system : info : Oracle connection established successfully
+2025-07-01 11:16:22 : system : info : Server stopped.
+2025-07-01 11:16:22 : system : info : Server stopped.
+2025-07-01 11:16:25 : system : info : Loading secret key from: /mnt/d/INNOVA/DW_TOOL/ahana_dw_tool/backend/modules/license/secret.key
+2025-07-01 11:16:25 : system : info : License Manager initialized with system ID: 00155daaf083
+2025-07-01 11:16:25 : system : info : Loading secret key from: /mnt/d/INNOVA/DW_TOOL/ahana_dw_tool/backend/modules/license/secret.key
+2025-07-01 11:16:25 : system : info : License Manager initialized with system ID: 00155daaf083
+2025-07-01 11:16:25 : system : info : Server starting...
+2025-07-01 11:16:26 : system : info : Loading secret key from: /mnt/d/INNOVA/DW_TOOL/ahana_dw_tool/backend/modules/license/secret.key
+2025-07-01 11:16:26 : system : info : License Manager initialized with system ID: 00155daaf083
+2025-07-01 11:16:26 : system : info : Loading secret key from: /mnt/d/INNOVA/DW_TOOL/ahana_dw_tool/backend/modules/license/secret.key
+2025-07-01 11:16:26 : system : info : License Manager initialized with system ID: 00155daaf083
+2025-07-01 11:16:27 : system : info : Server starting...
+2025-07-01 11:16:34 : system : info : Oracle connection established successfully
+2025-07-01 11:16:34 : system : info : Oracle connection established successfully
+2025-07-01 11:16:38 : system : info : Oracle connection established successfully
+2025-07-01 11:16:39 : system : info : Oracle connection established successfully
+2025-07-01 11:16:40 : system : info : Oracle connection established successfully
+2025-07-01 11:16:40 : system : info : Oracle connection established successfully
+2025-07-01 11:16:40 : system : info : Oracle connection established successfully
+2025-07-01 11:16:41 : system : info : Oracle connection established successfully
+2025-07-01 11:16:49 : system : info : Oracle connection established successfully
+2025-07-01 11:16:49 : system : info : Oracle connection established successfully
+2025-07-01 11:16:51 : system : info : Oracle connection established successfully
+2025-07-01 11:16:51 : system : info : Oracle connection established successfully
+2025-07-01 11:16:56 : system : info : Oracle connection established successfully
+2025-07-01 11:16:56 : system : info : Oracle connection established successfully
+2025-07-01 11:16:56 : system : info : Oracle connection established successfully
+2025-07-01 11:16:57 : system : info : Oracle connection established successfully
+2025-07-01 11:16:57 : system : info : Oracle connection established successfully
+2025-07-01 11:16:57 : system : info : Oracle connection established successfully
+2025-07-01 11:17:05 : system : info : Oracle connection established successfully
+2025-07-01 11:17:05 : system : info : Oracle connection established successfully
+2025-07-01 11:17:07 : system : info : Oracle connection established successfully
+2025-07-01 11:17:08 : system : info : Oracle connection established successfully
+2025-07-01 11:17:10 : system : info : Oracle connection established successfully
+2025-07-01 11:17:10 : system : info : Oracle connection established successfully
+2025-07-01 11:17:11 : system : info : Oracle connection established successfully
+2025-07-01 11:17:11 : system : info : Oracle connection established successfully
+2025-07-01 11:17:11 : system : info : Oracle connection established successfully
+2025-07-01 11:17:11 : system : info : Oracle connection established successfully
+2025-07-01 11:17:18 : system : info : Oracle connection established successfully
+2025-07-01 11:17:18 : system : info : Oracle connection established successfully
+2025-07-01 11:17:22 : system : info : Oracle connection established successfully
+2025-07-01 11:17:59 : system : info : Oracle connection established successfully
+2025-07-01 11:17:59 : system : info : Oracle connection established successfully
+2025-07-01 11:19:39 : rajesh : info : User rajesh authenticated successfully
+2025-07-01 11:19:39 : rajesh : info : User rajesh authenticated successfully
+2025-07-01 11:19:40 : system : info : Oracle connection established successfully
+2025-07-01 11:19:40 : system : info : Oracle connection established successfully
+2025-07-01 11:22:18 : system : info : Oracle connection established successfully
+2025-07-01 11:22:18 : system : info : Oracle connection established successfully
+2025-07-01 11:22:18 : system : info : Oracle connection established successfully
+2025-07-01 11:22:18 : system : info : Oracle connection established successfully
+2025-07-01 11:22:18 : system : info : Oracle connection established successfully
+2025-07-01 11:22:18 : system : info : Oracle connection established successfully
+2025-07-01 11:22:20 : system : info : Oracle connection established successfully
+2025-07-01 11:22:24 : system : info : Oracle connection established successfully
+2025-07-01 11:22:29 : system : info : Oracle connection established successfully
+2025-07-01 11:22:29 : system : info : Oracle connection established successfully
+2025-07-01 11:22:31 : system : info : Oracle connection established successfully
+2025-07-01 11:22:31 : system : info : Oracle connection established successfully
+2025-07-01 11:22:33 : system : info : Oracle connection established successfully
+2025-07-01 11:22:33 : system : info : Oracle connection established successfully
+2025-07-01 11:22:33 : system : info : Oracle connection established successfully
+2025-07-01 11:22:33 : system : info : Oracle connection established successfully
+2025-07-01 11:22:34 : system : info : Oracle connection established successfully
+2025-07-01 11:22:34 : system : info : Oracle connection established successfully
+2025-07-01 11:22:34 : system : info : Oracle connection established successfully
+2025-07-01 11:22:46 : system : info : Oracle connection established successfully
+2025-07-01 11:24:33 : system : info : Oracle connection established successfully
+2025-07-01 11:24:36 : system : info : Oracle connection established successfully
+2025-07-01 11:24:37 : system : info : Oracle connection established successfully
+2025-07-01 11:24:39 : system : info : Oracle connection established successfully
+2025-07-01 11:24:39 : system : info : Oracle connection established successfully
+2025-07-01 11:24:39 : system : info : Oracle connection established successfully
+2025-07-01 11:24:39 : system : info : Oracle connection established successfully
+2025-07-01 11:24:40 : system : info : Oracle connection established successfully
+2025-07-01 11:24:40 : system : info : Oracle connection established successfully
+2025-07-01 11:25:31 : system : info : Oracle connection established successfully
+2025-07-01 11:25:33 : system : info : Oracle connection established successfully
+2025-07-01 11:25:34 : system : info : Oracle connection established successfully
+2025-07-01 11:25:49 : system : info : Oracle connection established successfully
+2025-07-01 11:25:50 : system : info : Oracle connection established successfully
+2025-07-01 11:59:29 : system : info : Reading license from: /mnt/d/INNOVA/DW_TOOL/ahana_dw_tool/backend/modules/license/license.key
+2025-07-01 11:59:29 : system : info : Validating license with system ID: 00155daaf083
+2025-07-01 11:59:29 : system : info : License validation successful
+2025-07-01 11:59:29 : system : info : License status checked successfully
+2025-07-01 11:59:41 : system : info : Oracle connection established successfully
+2025-07-01 11:59:41 : system : info : Fetched 4 SQL codes
+2025-07-01 11:59:41 : system : info : Oracle connection established successfully
+2025-07-01 11:59:41 : system : info : Fetched 4 SQL codes
+2025-07-01 12:00:05 : system : info : Oracle connection established successfully
+2025-07-01 12:00:05 : system : info : Oracle connection established successfully
+2025-07-01 12:00:05 : system : info : Fetched 5 historical versions for SQL code: TEST
+2025-07-01 12:00:05 : system : info : Fetched SQL logic for code: TEST
+2025-07-01 12:00:16 : system : info : Oracle connection established successfully
+2025-07-01 12:00:16 : system : info : SQL validation passed successfully
+2025-07-01 12:00:22 : system : info : Oracle connection established successfully
+2025-07-01 12:00:22 : system : info : SQL validation failed
+2025-07-01 12:01:21 : system : info : Oracle connection established successfully
+2025-07-01 12:01:23 : system : info : Oracle connection established successfully
+2025-07-01 12:01:26 : system : info : Oracle connection established successfully
+2025-07-01 12:01:27 : system : info : Oracle connection established successfully
+2025-07-01 12:01:27 : system : info : Oracle connection established successfully
+2025-07-01 12:01:27 : system : info : Oracle connection established successfully
+2025-07-01 12:01:28 : system : info : Oracle connection established successfully
+2025-07-01 12:01:30 : system : info : Oracle connection established successfully
+2025-07-01 12:01:30 : system : info : Oracle connection established successfully
+2025-07-01 12:01:32 : system : info : Oracle connection established successfully
+2025-07-01 12:03:26 : system : info : Oracle connection established successfully
+2025-07-01 12:03:26 : system : info : Oracle connection established successfully
+2025-07-01 12:14:57 : system : info : Server stopped.
+2025-07-01 12:14:57 : system : info : Server stopped.
+2025-07-01 12:15:01 : system : info : Loading secret key from: /mnt/d/INNOVA/DW_TOOL/ahana_dw_tool/backend/modules/license/secret.key
+2025-07-01 12:15:01 : system : info : License Manager initialized with system ID: 00155daaf083
+2025-07-01 12:15:01 : system : info : Loading secret key from: /mnt/d/INNOVA/DW_TOOL/ahana_dw_tool/backend/modules/license/secret.key
+2025-07-01 12:15:01 : system : info : License Manager initialized with system ID: 00155daaf083
+2025-07-01 12:15:02 : system : info : Server starting...
+2025-07-01 12:15:04 : system : info : Loading secret key from: /mnt/d/INNOVA/DW_TOOL/ahana_dw_tool/backend/modules/license/secret.key
+2025-07-01 12:15:04 : system : info : License Manager initialized with system ID: 00155daaf083
+2025-07-01 12:15:04 : system : info : Loading secret key from: /mnt/d/INNOVA/DW_TOOL/ahana_dw_tool/backend/modules/license/secret.key
+2025-07-01 12:15:04 : system : info : License Manager initialized with system ID: 00155daaf083
+2025-07-01 12:15:04 : system : info : Server starting...
+2025-07-01 12:17:31 : rajesh : info : User rajesh authenticated successfully
+2025-07-01 12:17:31 : system : info : Oracle connection established successfully
+2025-07-01 12:17:31 : rajesh : info : User rajesh authenticated successfully
+2025-07-01 12:17:31 : system : info : Fetched 4 SQL codes
+2025-07-01 12:17:32 : system : info : Oracle connection established successfully
+2025-07-01 12:17:32 : system : info : Fetched 4 SQL codes
+2025-07-01 12:17:34 : system : info : Oracle connection established successfully
+2025-07-01 12:17:34 : system : info : Fetched SQL logic for code: TEST
+2025-07-01 12:17:36 : system : info : Oracle connection established successfully
+2025-07-01 12:17:37 : system : info : Fetched 5 historical versions for SQL code: TEST
+2025-07-01 12:17:45 : system : info : Oracle connection established successfully
+2025-07-01 12:17:45 : system : info : SQL validation passed successfully
+2025-07-01 12:17:51 : system : info : Oracle connection established successfully
+2025-07-01 12:17:51 : system : info : Fetched 5 historical versions for SQL code: TEST
+2025-07-01 12:18:10 : system : info : Oracle connection established successfully
+2025-07-01 12:18:10 : system : info : Oracle connection established successfully
+2025-07-01 12:18:19 : system : info : Oracle connection established successfully
+2025-07-01 12:18:20 : system : info : Oracle connection established successfully
+2025-07-01 12:49:49 : system : info : Reading license from: /mnt/d/INNOVA/DW_TOOL/ahana_dw_tool/backend/modules/license/license.key
+2025-07-01 12:49:49 : system : info : Validating license with system ID: 00155daaf083
+2025-07-01 12:49:49 : system : info : License validation successful
+2025-07-01 12:49:49 : system : info : License status checked successfully
+2025-07-01 12:55:50 : rajesh : info : User rajesh authenticated successfully
+2025-07-01 12:55:50 : rajesh : info : User rajesh authenticated successfully
+2025-07-01 12:56:13 : system : error : Error establishing Oracle connection: DPY-6005: cannot connect to database (CONNECTION_ID=4Vb75atfEKzTFUhfV+/FjQ==).
+timed out
+2025-07-01 12:56:13 : system : error : Error in fetch_all_sql_codes: DPY-6005: cannot connect to database (CONNECTION_ID=4Vb75atfEKzTFUhfV+/FjQ==).
+timed out
+2025-07-01 12:56:17 : system : error : Error establishing Oracle connection: DPY-6005: cannot connect to database (CONNECTION_ID=4u17awDtBsj+ZgUugRaQ+w==).
+timed out
+2025-07-01 12:56:17 : system : error : Error in get_all_mapper_reference: DPY-6005: cannot connect to database (CONNECTION_ID=4u17awDtBsj+ZgUugRaQ+w==).
+timed out
+2025-07-01 12:56:20 : system : info : Oracle connection established successfully
+2025-07-01 12:56:20 : system : info : Oracle connection established successfully
+2025-07-01 12:56:20 : system : info : Fetched 4 SQL codes
+2025-07-01 12:56:51 : system : info : Oracle connection established successfully
+2025-07-01 12:57:03 : system : info : Oracle connection established successfully
+2025-07-01 12:57:03 : system : info : Oracle connection established successfully
+2025-07-01 12:57:03 : system : info : Oracle connection established successfully
+2025-07-01 12:57:04 : system : info : Oracle connection established successfully
+2025-07-01 12:57:04 : system : info : Oracle connection established successfully
+2025-07-01 12:57:04 : system : info : Oracle connection established successfully
+2025-07-01 12:57:24 : system : info : Oracle connection established successfully
+2025-07-01 12:57:25 : system : info : Oracle connection established successfully
+2025-07-01 12:57:28 : system : info : Oracle connection established successfully
+2025-07-01 12:57:28 : system : info : Oracle connection established successfully
+2025-07-01 12:57:29 : system : info : Oracle connection established successfully
+2025-07-01 12:57:29 : system : info : Oracle connection established successfully
+2025-07-01 12:57:39 : system : info : Oracle connection established successfully
+2025-07-01 12:57:40 : system : info : Oracle connection established successfully
+2025-07-01 12:57:49 : system : info : Oracle connection established successfully
+2025-07-01 12:57:49 : system : info : Oracle connection established successfully
+2025-07-01 12:57:53 : system : info : Oracle connection established successfully
+2025-07-01 12:57:53 : system : info : Oracle connection established successfully
+2025-07-01 12:57:53 : system : info : Oracle connection established successfully
+2025-07-01 12:57:53 : system : info : Oracle connection established successfully
+2025-07-01 12:57:53 : system : info : Oracle connection established successfully
+2025-07-01 12:57:54 : system : info : Oracle connection established successfully
+2025-07-01 12:57:56 : system : info : Oracle connection established successfully
+2025-07-01 12:58:01 : system : info : Oracle connection established successfully
+2025-07-01 12:58:01 : system : info : Oracle connection established successfully
+2025-07-01 12:58:04 : system : info : Oracle connection established successfully
+2025-07-01 12:58:04 : system : info : Oracle connection established successfully
+2025-07-01 12:58:04 : system : info : Oracle connection established successfully
+2025-07-01 12:58:05 : system : info : Oracle connection established successfully
+2025-07-01 12:58:05 : system : info : Oracle connection established successfully
+2025-07-01 12:58:05 : system : info : Oracle connection established successfully
+2025-07-01 12:58:13 : system : info : Oracle connection established successfully
+2025-07-01 12:58:14 : system : info : Oracle connection established successfully
+2025-07-01 12:58:16 : system : info : Oracle connection established successfully
+2025-07-01 12:58:16 : system : info : Oracle connection established successfully
+2025-07-01 12:58:18 : system : info : Oracle connection established successfully
+2025-07-01 12:58:19 : system : info : Oracle connection established successfully
+2025-07-01 12:58:19 : system : info : Oracle connection established successfully
+2025-07-01 12:58:19 : system : info : Oracle connection established successfully
+2025-07-01 12:58:19 : system : info : Oracle connection established successfully
+2025-07-01 12:58:19 : system : info : Oracle connection established successfully
+2025-07-01 12:58:21 : system : info : Oracle connection established successfully
+2025-07-01 12:58:22 : system : info : Oracle connection established successfully
+2025-07-01 12:58:23 : system : info : Oracle connection established successfully
+2025-07-01 12:58:26 : system : info : Oracle connection established successfully
+2025-07-01 12:58:26 : system : info : Oracle connection established successfully
+2025-07-01 12:58:26 : system : info : Oracle connection established successfully
+2025-07-01 12:58:27 : system : info : Oracle connection established successfully
+2025-07-01 12:58:27 : system : info : Oracle connection established successfully
+2025-07-01 12:58:27 : system : info : Oracle connection established successfully
+2025-07-01 12:58:31 : system : info : Oracle connection established successfully
+2025-07-01 12:58:35 : system : info : Oracle connection established successfully
+2025-07-01 12:58:36 : system : info : Oracle connection established successfully
+2025-07-01 12:58:39 : system : info : Oracle connection established successfully
+2025-07-01 12:58:39 : system : info : Oracle connection established successfully
+2025-07-01 12:58:39 : system : info : Oracle connection established successfully
+2025-07-01 12:58:39 : system : info : Oracle connection established successfully
+2025-07-01 12:58:40 : system : info : Oracle connection established successfully
+2025-07-01 12:58:40 : system : info : Oracle connection established successfully
+2025-07-01 12:58:45 : system : info : Oracle connection established successfully
+2025-07-01 12:58:45 : system : info : Oracle connection established successfully
+2025-07-01 12:58:47 : system : info : Oracle connection established successfully
+2025-07-01 12:58:48 : system : info : Oracle connection established successfully
+2025-07-01 12:58:52 : system : info : Oracle connection established successfully
+2025-07-01 12:58:53 : system : info : Oracle connection established successfully
+2025-07-01 12:58:56 : system : info : Oracle connection established successfully
+2025-07-01 12:58:56 : system : info : Oracle connection established successfully
+2025-07-01 12:58:56 : system : info : Oracle connection established successfully
+2025-07-01 12:58:56 : system : info : Oracle connection established successfully
+2025-07-01 12:58:57 : system : info : Oracle connection established successfully
+2025-07-01 12:58:57 : system : info : Oracle connection established successfully
+2025-07-01 12:59:07 : system : info : Oracle connection established successfully
+2025-07-01 12:59:07 : system : info : Oracle connection established successfully
+2025-07-01 12:59:11 : system : info : Oracle connection established successfully
+2025-07-01 12:59:11 : system : info : Oracle connection established successfully
+2025-07-01 12:59:19 : system : info : Oracle connection established successfully
+2025-07-01 12:59:19 : system : info : Oracle connection established successfully
+2025-07-01 12:59:19 : system : info : Oracle connection established successfully
+2025-07-01 12:59:20 : system : info : Oracle connection established successfully
+2025-07-01 12:59:30 : system : info : Oracle connection established successfully
+2025-07-01 12:59:31 : system : info : Oracle connection established successfully
+2025-07-01 12:59:36 : system : info : Oracle connection established successfully
+2025-07-01 12:59:44 : system : info : Oracle connection established successfully
+2025-07-01 12:59:44 : system : error : Error creating/updating mapping detail: ORA-20099: PKGDWMAPR - CREATE_UPDATE_MAPPING_DETAIL:-
+108 : Mapref=Q2-COD_CCY User=rajesh
+ Err:ORA-20099: PKGDWMAPR - CREATE_UPDATE_MAPPING_DETAIL:-
+107 : Mapref=Q2 Trgcol=COD_CCY::Both logic verification flag and date must be provide or both must be blank.
+ Err:ORA-06502: PL/SQL: numeric or value error
+ORA-06512: at "TRG.PKGERR", line 30
+ORA-06512: at "TRG.PKGDWMAPR", line 581
+ORA-06512: at line 2
+2025-07-01 12:59:48 : system : info : Oracle connection established successfully
+2025-07-01 12:59:48 : system : error : Error creating/updating mapping detail: ORA-20099: PKGDWMAPR - CREATE_UPDATE_MAPPING_DETAIL:-
+108 : Mapref=Q2-COD_CCY User=rajesh
+ Err:ORA-20099: PKGDWMAPR - CREATE_UPDATE_MAPPING_DETAIL:-
+107 : Mapref=Q2 Trgcol=COD_CCY::Both logic verification flag and date must be provide or both must be blank.
+ Err:ORA-06502: PL/SQL: numeric or value error
+ORA-06512: at "TRG.PKGERR", line 30
+ORA-06512: at "TRG.PKGDWMAPR", line 581
+ORA-06512: at line 2
+2025-07-01 13:00:05 : system : info : Oracle connection established successfully
+2025-07-01 13:00:05 : system : error : Error creating/updating mapping detail: ORA-20099: PKGDWMAPR - CREATE_UPDATE_MAPPING_DETAIL:-
+108 : Mapref=Q2-COD_CCY User=rajesh
+ Err:ORA-20099: PKGDWMAPR - CREATE_UPDATE_MAPPING_DETAIL:-
+107 : Mapref=Q2 Trgcol=COD_CCY::Both logic verification flag and date must be provide or both must be blank.
+ Err:ORA-06502: PL/SQL: numeric or value error
+ORA-06512: at "TRG.PKGERR", line 30
+ORA-06512: at "TRG.PKGDWMAPR", line 581
+ORA-06512: at line 2
+2025-07-01 13:00:15 : system : info : Oracle connection established successfully
+2025-07-01 13:00:17 : system : info : Oracle connection established successfully
+2025-07-01 13:00:18 : system : info : Oracle connection established successfully
+2025-07-01 13:00:20 : system : info : Oracle connection established successfully
+2025-07-01 13:00:21 : system : info : Oracle connection established successfully
+2025-07-01 13:00:21 : system : info : Oracle connection established successfully
+2025-07-01 13:00:21 : system : info : Oracle connection established successfully
+2025-07-01 13:00:21 : system : info : Oracle connection established successfully
+2025-07-01 13:00:21 : system : info : Oracle connection established successfully
+2025-07-01 13:00:28 : system : info : Oracle connection established successfully
+2025-07-01 13:00:41 : system : info : Oracle connection established successfully
+2025-07-01 13:00:41 : system : info : Oracle connection established successfully
+2025-07-01 13:00:45 : system : info : Oracle connection established successfully
+2025-07-01 13:00:45 : system : info : Oracle connection established successfully
+2025-07-01 13:00:47 : system : info : Oracle connection established successfully
+2025-07-01 13:00:47 : system : info : Oracle connection established successfully
+2025-07-01 13:00:47 : system : info : Oracle connection established successfully
+2025-07-01 13:00:47 : system : info : Oracle connection established successfully
+2025-07-01 13:00:48 : system : info : Oracle connection established successfully
+2025-07-01 13:00:48 : system : info : Oracle connection established successfully
+2025-07-01 13:00:49 : system : info : Oracle connection established successfully
+2025-07-01 13:00:52 : system : info : Oracle connection established successfully
+2025-07-01 13:00:52 : system : info : Oracle connection established successfully
+2025-07-01 13:00:54 : system : info : Oracle connection established successfully
+2025-07-01 13:00:54 : system : info : Oracle connection established successfully
+2025-07-01 13:00:54 : system : info : Oracle connection established successfully
+2025-07-01 13:00:55 : system : info : Oracle connection established successfully
+2025-07-01 13:00:55 : system : info : Oracle connection established successfully
+2025-07-01 13:00:55 : system : info : Oracle connection established successfully
+2025-07-01 13:00:57 : system : info : Oracle connection established successfully
+2025-07-01 13:01:02 : system : info : Oracle connection established successfully
+2025-07-01 13:01:02 : system : info : Oracle connection established successfully
+2025-07-01 13:01:05 : system : info : Oracle connection established successfully
+2025-07-01 13:01:05 : system : info : Oracle connection established successfully
+2025-07-01 13:01:14 : system : info : Oracle connection established successfully
+2025-07-01 13:01:14 : system : info : Oracle connection established successfully
+2025-07-01 13:01:15 : system : info : Oracle connection established successfully
+2025-07-01 13:01:15 : system : info : Oracle connection established successfully
+2025-07-01 13:01:24 : system : info : Oracle connection established successfully
+2025-07-01 13:01:24 : system : info : Oracle connection established successfully
+2025-07-01 13:01:25 : system : info : Oracle connection established successfully
+2025-07-01 13:01:26 : system : info : Oracle connection established successfully
+2025-07-01 13:01:28 : system : info : Oracle connection established successfully
+2025-07-01 13:01:28 : system : info : Oracle connection established successfully
+2025-07-01 13:01:28 : system : info : Oracle connection established successfully
+2025-07-01 13:01:29 : system : info : Oracle connection established successfully
+2025-07-01 13:01:29 : system : info : Oracle connection established successfully
+2025-07-01 13:01:29 : system : info : Oracle connection established successfully
+2025-07-01 13:03:06 : system : info : Oracle connection established successfully
+2025-07-01 13:03:07 : system : info : Oracle connection established successfully
+2025-07-01 13:06:31 : system : info : Oracle connection established successfully
+2025-07-01 13:06:32 : system : info : Oracle connection established successfully
+2025-07-01 13:06:41 : system : info : Oracle connection established successfully
+2025-07-01 13:06:42 : system : info : Oracle connection established successfully
+2025-07-01 13:19:54 : rajesh : info : User rajesh authenticated successfully
+2025-07-01 13:19:54 : rajesh : info : User rajesh authenticated successfully
+2025-07-01 13:19:54 : system : info : Oracle connection established successfully
+2025-07-01 13:19:55 : system : info : Oracle connection established successfully
+2025-07-01 13:22:17 : system : info : Server stopped.
+2025-07-01 13:22:17 : system : info : Server stopped.
+2025-07-01 13:22:20 : system : info : Loading secret key from: /mnt/d/INNOVA/DW_TOOL/ahana_dw_tool/backend/modules/license/secret.key
+2025-07-01 13:22:20 : system : info : License Manager initialized with system ID: 00155daaf083
+2025-07-01 13:22:20 : system : info : Loading secret key from: /mnt/d/INNOVA/DW_TOOL/ahana_dw_tool/backend/modules/license/secret.key
+2025-07-01 13:22:20 : system : info : License Manager initialized with system ID: 00155daaf083
+2025-07-01 13:22:20 : system : info : Server starting...
+2025-07-01 13:22:21 : system : info : Loading secret key from: /mnt/d/INNOVA/DW_TOOL/ahana_dw_tool/backend/modules/license/secret.key
+2025-07-01 13:22:21 : system : info : License Manager initialized with system ID: 00155daaf083
+2025-07-01 13:22:21 : system : info : Loading secret key from: /mnt/d/INNOVA/DW_TOOL/ahana_dw_tool/backend/modules/license/secret.key
+2025-07-01 13:22:21 : system : info : License Manager initialized with system ID: 00155daaf083
+2025-07-01 13:22:21 : system : info : Server starting...
+2025-07-01 13:22:33 : system : info : Oracle connection established successfully
+2025-07-01 13:22:34 : system : info : Oracle connection established successfully
+2025-07-01 13:22:36 : system : info : Oracle connection established successfully
+2025-07-01 13:22:37 : system : info : Oracle connection established successfully
+2025-07-01 13:22:40 : system : info : Oracle connection established successfully
+2025-07-01 13:22:41 : system : info : Oracle connection established successfully
+2025-07-01 13:22:42 : system : info : Oracle connection established successfully
+2025-07-01 13:22:42 : system : info : Oracle connection established successfully
+2025-07-01 13:22:42 : system : info : Oracle connection established successfully
+2025-07-01 13:22:42 : system : info : Oracle connection established successfully
+2025-07-01 13:22:54 : system : info : Oracle connection established successfully
+2025-07-01 13:22:54 : system : info : Oracle connection established successfully
+2025-07-01 13:22:56 : system : info : Oracle connection established successfully
+2025-07-01 13:22:56 : system : info : Oracle connection established successfully
+2025-07-01 13:23:00 : system : info : Oracle connection established successfully
+2025-07-01 13:23:00 : system : info : Oracle connection established successfully
+2025-07-01 13:23:00 : system : info : Oracle connection established successfully
+2025-07-01 13:23:00 : system : info : Oracle connection established successfully
+2025-07-01 13:23:00 : system : info : Oracle connection established successfully
+2025-07-01 13:23:00 : system : info : Oracle connection established successfully
+2025-07-01 13:23:14 : system : info : Oracle connection established successfully
+2025-07-01 13:23:14 : system : info : Oracle connection established successfully
+2025-07-01 13:23:16 : system : info : Oracle connection established successfully
+2025-07-01 13:23:17 : system : info : Oracle connection established successfully
+2025-07-01 13:23:18 : system : info : Oracle connection established successfully
+2025-07-01 13:23:18 : system : info : Oracle connection established successfully
+2025-07-01 13:23:18 : system : info : Oracle connection established successfully
+2025-07-01 13:23:19 : system : info : Oracle connection established successfully
+2025-07-01 13:23:30 : system : info : Oracle connection established successfully
+2025-07-01 13:23:30 : system : info : Oracle connection established successfully
+2025-07-01 13:23:31 : system : info : Oracle connection established successfully
+2025-07-01 13:23:41 : system : info : Oracle connection established successfully
+2025-07-01 13:23:42 : system : info : Oracle connection established successfully
+2025-07-01 13:23:43 : system : info : Oracle connection established successfully
+2025-07-01 13:23:48 : system : info : Oracle connection established successfully
+2025-07-01 13:23:48 : system : info : Oracle connection established successfully
+2025-07-01 13:23:48 : system : info : Oracle connection established successfully
+2025-07-01 13:23:49 : system : info : Oracle connection established successfully
+2025-07-01 13:23:49 : system : info : Oracle connection established successfully
+2025-07-01 13:23:49 : system : info : Oracle connection established successfully
+2025-07-01 13:23:51 : system : info : Oracle connection established successfully
+2025-07-01 13:23:51 : system : info : Oracle connection established successfully
+2025-07-01 13:23:56 : system : info : Oracle connection established successfully
+2025-07-01 13:23:56 : system : info : Oracle connection established successfully
+2025-07-01 13:23:58 : system : info : Oracle connection established successfully
+2025-07-01 13:23:58 : system : info : Oracle connection established successfully
+2025-07-01 13:23:58 : system : info : Oracle connection established successfully
+2025-07-01 13:23:59 : system : info : Oracle connection established successfully
+2025-07-01 13:24:09 : system : info : Oracle connection established successfully
+2025-07-01 13:24:09 : system : info : Oracle connection established successfully
+2025-07-01 13:24:18 : system : info : Oracle connection established successfully
+2025-07-01 13:24:18 : system : info : Oracle connection established successfully
+2025-07-01 13:24:21 : system : info : Oracle connection established successfully
+2025-07-01 13:24:25 : system : info : Oracle connection established successfully
+2025-07-01 13:24:25 : system : info : Oracle connection established successfully
+2025-07-01 13:24:26 : system : info : Oracle connection established successfully
+2025-07-01 13:24:27 : system : info : Oracle connection established successfully
+2025-07-01 13:24:27 : system : info : Oracle connection established successfully
+2025-07-01 13:24:27 : system : info : Oracle connection established successfully
+2025-07-01 13:24:27 : system : info : Oracle connection established successfully
+2025-07-01 13:24:27 : system : info : Oracle connection established successfully
+2025-07-01 13:24:31 : system : info : Oracle connection established successfully
+2025-07-01 13:24:31 : system : info : Oracle connection established successfully
+2025-07-01 13:24:33 : system : info : Oracle connection established successfully
+2025-07-01 13:24:34 : system : info : Oracle connection established successfully
+2025-07-01 13:24:35 : system : info : Oracle connection established successfully
+2025-07-01 13:24:37 : system : info : Oracle connection established successfully
+2025-07-01 13:24:37 : system : info : Oracle connection established successfully
+2025-07-01 13:24:37 : system : info : Oracle connection established successfully
+2025-07-01 13:24:38 : system : info : Oracle connection established successfully
+2025-07-01 13:24:38 : system : info : Oracle connection established successfully
+2025-07-01 13:24:38 : system : info : Oracle connection established successfully
+2025-07-01 13:24:42 : system : info : Oracle connection established successfully
+2025-07-01 13:24:42 : system : info : Oracle connection established successfully
+2025-07-01 13:24:45 : system : info : Oracle connection established successfully
+2025-07-01 13:24:45 : system : info : Oracle connection established successfully
+2025-07-01 13:24:45 : system : info : Oracle connection established successfully
+2025-07-01 13:24:46 : system : info : Oracle connection established successfully
+2025-07-01 13:24:46 : system : info : Oracle connection established successfully
+2025-07-01 13:24:46 : system : info : Oracle connection established successfully
+2025-07-01 13:24:50 : system : info : Oracle connection established successfully
+2025-07-01 13:24:50 : system : info : Oracle connection established successfully
+2025-07-01 13:24:53 : system : info : Oracle connection established successfully
+2025-07-01 13:24:53 : system : info : Oracle connection established successfully
+2025-07-01 13:24:53 : system : info : Oracle connection established successfully
+2025-07-01 13:24:54 : system : info : Oracle connection established successfully
+2025-07-01 13:24:54 : system : info : Oracle connection established successfully
+2025-07-01 13:24:54 : system : info : Oracle connection established successfully
+2025-07-01 13:25:01 : system : info : Oracle connection established successfully
+2025-07-01 13:25:02 : system : info : Oracle connection established successfully
+2025-07-01 13:25:07 : system : info : Oracle connection established successfully
+2025-07-01 13:25:08 : system : info : Oracle connection established successfully
+2025-07-01 13:25:08 : system : info : Oracle connection established successfully
+2025-07-01 13:25:08 : system : info : Oracle connection established successfully
+2025-07-01 13:25:08 : system : info : Oracle connection established successfully
+2025-07-01 13:25:08 : system : info : Oracle connection established successfully
+2025-07-01 13:25:13 : system : info : Oracle connection established successfully
+2025-07-01 13:25:14 : system : info : Oracle connection established successfully
+2025-07-01 13:25:17 : system : info : Oracle connection established successfully
+2025-07-01 13:25:17 : system : info : Oracle connection established successfully
+2025-07-01 13:25:17 : system : info : Oracle connection established successfully
+2025-07-01 13:25:17 : system : info : Oracle connection established successfully
+2025-07-01 13:25:18 : system : info : Oracle connection established successfully
+2025-07-01 13:25:18 : system : info : Oracle connection established successfully
+2025-07-01 13:25:22 : system : info : Oracle connection established successfully
+2025-07-01 13:25:22 : system : info : Oracle connection established successfully
+2025-07-01 13:25:25 : system : info : Oracle connection established successfully
+2025-07-01 13:25:25 : system : info : Oracle connection established successfully
+2025-07-01 13:25:25 : system : info : Oracle connection established successfully
+2025-07-01 13:25:26 : system : info : Oracle connection established successfully
+2025-07-01 13:25:26 : system : info : Oracle connection established successfully
+2025-07-01 13:25:26 : system : info : Oracle connection established successfully
+2025-07-01 13:25:32 : system : info : Oracle connection established successfully
+2025-07-01 13:25:32 : system : info : Oracle connection established successfully
+2025-07-01 13:25:37 : system : info : Oracle connection established successfully
+2025-07-01 13:25:37 : system : info : Oracle connection established successfully
+2025-07-01 13:25:37 : system : info : Oracle connection established successfully
+2025-07-01 13:25:37 : system : info : Oracle connection established successfully
+2025-07-01 13:25:37 : system : info : Oracle connection established successfully
+2025-07-01 13:25:37 : system : info : Oracle connection established successfully
+2025-07-01 13:25:43 : system : info : Oracle connection established successfully
+2025-07-01 13:25:43 : system : info : Oracle connection established successfully
+2025-07-01 13:25:45 : system : info : Oracle connection established successfully
+2025-07-01 13:25:46 : system : info : Oracle connection established successfully
+2025-07-01 13:25:46 : system : info : Oracle connection established successfully
+2025-07-01 13:25:46 : system : info : Oracle connection established successfully
+2025-07-01 13:25:47 : system : info : Oracle connection established successfully
+2025-07-01 13:25:47 : system : info : Oracle connection established successfully
+2025-07-01 13:25:49 : system : info : Oracle connection established successfully
+2025-07-01 13:25:49 : system : info : Oracle connection established successfully
+2025-07-01 13:26:15 : system : info : Oracle connection established successfully
+2025-07-01 13:26:16 : system : info : Oracle connection established successfully
+2025-07-01 13:26:18 : system : info : Oracle connection established successfully
+2025-07-01 13:26:19 : system : info : Oracle connection established successfully
+2025-07-01 13:26:25 : system : info : Oracle connection established successfully
+2025-07-01 13:26:25 : system : info : Oracle connection established successfully
+2025-07-01 13:26:27 : system : info : Oracle connection established successfully
+2025-07-01 13:26:27 : system : info : Oracle connection established successfully
+2025-07-01 13:27:19 : system : info : Oracle connection established successfully
+2025-07-01 13:27:20 : system : info : Oracle connection established successfully
+2025-07-01 13:28:33 : system : info : Server stopped.
+2025-07-01 13:28:33 : system : info : Server stopped.
+2025-07-01 13:28:35 : system : info : Loading secret key from: /mnt/d/INNOVA/DW_TOOL/ahana_dw_tool/backend/modules/license/secret.key
+2025-07-01 13:28:35 : system : info : License Manager initialized with system ID: 00155daaf083
+2025-07-01 13:28:35 : system : info : Loading secret key from: /mnt/d/INNOVA/DW_TOOL/ahana_dw_tool/backend/modules/license/secret.key
+2025-07-01 13:28:35 : system : info : License Manager initialized with system ID: 00155daaf083
+2025-07-01 13:28:36 : system : info : Server starting...
+2025-07-01 13:28:37 : system : info : Loading secret key from: /mnt/d/INNOVA/DW_TOOL/ahana_dw_tool/backend/modules/license/secret.key
+2025-07-01 13:28:37 : system : info : License Manager initialized with system ID: 00155daaf083
+2025-07-01 13:28:37 : system : info : Loading secret key from: /mnt/d/INNOVA/DW_TOOL/ahana_dw_tool/backend/modules/license/secret.key
+2025-07-01 13:28:37 : system : info : License Manager initialized with system ID: 00155daaf083
+2025-07-01 13:28:37 : system : info : Server starting...
+2025-07-01 13:29:33 : system : info : Oracle connection established successfully
+2025-07-01 13:29:33 : system : info : Oracle connection established successfully
+2025-07-01 13:29:33 : system : info : Oracle connection established successfully
+2025-07-01 13:29:33 : system : info : Oracle connection established successfully
+2025-07-01 13:29:33 : system : info : Oracle connection established successfully
+2025-07-01 13:29:33 : system : info : Oracle connection established successfully
+2025-07-01 13:29:33 : system : info : Oracle connection established successfully
+2025-07-01 13:29:33 : system : info : Oracle connection established successfully
+2025-07-01 13:29:34 : system : info : Oracle connection established successfully
+2025-07-01 13:29:34 : system : info : Oracle connection established successfully
+2025-07-01 13:29:34 : system : info : Oracle connection established successfully
+2025-07-01 13:29:34 : system : info : Oracle connection established successfully
+2025-07-01 13:29:34 : system : info : Oracle connection established successfully
+2025-07-01 13:29:34 : system : info : Oracle connection established successfully
+2025-07-01 13:29:34 : system : info : Oracle connection established successfully
+2025-07-01 13:29:35 : system : info : Oracle connection established successfully
+2025-07-01 13:33:37 : system : info : Oracle connection established successfully
+2025-07-01 13:33:37 : system : info : Oracle connection established successfully
+2025-07-01 13:34:15 : system : info : Server stopped.
+2025-07-01 13:34:15 : system : info : Server stopped.
+2025-07-01 13:34:18 : system : info : Loading secret key from: /mnt/d/INNOVA/DW_TOOL/ahana_dw_tool/backend/modules/license/secret.key
+2025-07-01 13:34:18 : system : info : License Manager initialized with system ID: 00155daaf083
+2025-07-01 13:34:18 : system : info : Loading secret key from: /mnt/d/INNOVA/DW_TOOL/ahana_dw_tool/backend/modules/license/secret.key
+2025-07-01 13:34:18 : system : info : License Manager initialized with system ID: 00155daaf083
+2025-07-01 13:34:18 : system : info : Server starting...
+2025-07-01 13:34:19 : system : info : Loading secret key from: /mnt/d/INNOVA/DW_TOOL/ahana_dw_tool/backend/modules/license/secret.key
+2025-07-01 13:34:19 : system : info : License Manager initialized with system ID: 00155daaf083
+2025-07-01 13:34:19 : system : info : Loading secret key from: /mnt/d/INNOVA/DW_TOOL/ahana_dw_tool/backend/modules/license/secret.key
+2025-07-01 13:34:19 : system : info : License Manager initialized with system ID: 00155daaf083
+2025-07-01 13:34:19 : system : info : Server starting...
+2025-07-01 13:34:25 : system : info : Oracle connection established successfully
+2025-07-01 13:34:26 : system : info : Oracle connection established successfully
+2025-07-01 13:34:26 : system : info : Oracle connection established successfully
+2025-07-01 13:34:26 : system : info : Oracle connection established successfully
+2025-07-01 13:34:26 : system : info : Oracle connection established successfully
+2025-07-01 13:34:26 : system : info : Oracle connection established successfully
+2025-07-01 13:34:26 : system : info : Oracle connection established successfully
+2025-07-01 13:34:26 : system : info : Oracle connection established successfully
+2025-07-01 13:34:26 : system : info : Oracle connection established successfully
+2025-07-01 13:34:26 : system : info : Oracle connection established successfully
+2025-07-01 13:34:26 : system : info : Oracle connection established successfully
+2025-07-01 13:34:26 : system : info : Oracle connection established successfully
+2025-07-01 13:34:26 : system : info : Oracle connection established successfully
+2025-07-01 13:34:27 : system : info : Oracle connection established successfully
+2025-07-01 13:34:32 : system : info : Oracle connection established successfully
+2025-07-01 13:34:32 : system : info : Oracle connection established successfully
+2025-07-01 13:34:51 : system : info : Oracle connection established successfully
+2025-07-01 13:34:56 : system : info : Oracle connection established successfully
+2025-07-01 13:35:05 : system : info : Oracle connection established successfully
+2025-07-01 13:35:14 : system : info : Oracle connection established successfully
+2025-07-01 13:35:26 : system : info : Oracle connection established successfully
+2025-07-01 13:35:26 : system : info : Oracle connection established successfully
+2025-07-01 13:35:26 : system : info : Oracle connection established successfully
+2025-07-01 13:35:26 : system : info : Oracle connection established successfully
+2025-07-01 13:35:26 : system : info : Oracle connection established successfully
+2025-07-01 13:35:26 : system : info : Oracle connection established successfully
+2025-07-01 13:35:26 : system : info : Oracle connection established successfully
+2025-07-01 13:35:27 : system : info : Oracle connection established successfully
+2025-07-01 13:35:27 : system : info : Oracle connection established successfully
+2025-07-01 13:35:27 : system : info : Oracle connection established successfully
+2025-07-01 13:35:27 : system : info : Oracle connection established successfully
+2025-07-01 13:35:27 : system : info : Oracle connection established successfully
+2025-07-01 13:35:27 : system : info : Oracle connection established successfully
+2025-07-01 13:35:27 : system : info : Oracle connection established successfully
+2025-07-01 13:35:29 : system : info : Oracle connection established successfully
+2025-07-01 13:35:29 : system : info : Oracle connection established successfully
+2025-07-01 13:35:32 : system : info : Oracle connection established successfully
+2025-07-01 13:35:32 : system : info : Oracle connection established successfully
+2025-07-01 13:35:34 : system : info : Oracle connection established successfully
+2025-07-01 13:35:34 : system : info : Oracle connection established successfully
+2025-07-01 13:40:13 : system : info : Oracle connection established successfully
+2025-07-01 13:40:13 : system : info : Oracle connection established successfully
+2025-07-01 13:40:57 : system : info : Oracle connection established successfully
+2025-07-01 13:40:57 : system : info : Oracle connection established successfully
+2025-07-01 13:41:11 : system : info : Oracle connection established successfully
+2025-07-01 13:41:11 : system : info : Oracle connection established successfully
+2025-07-01 13:41:45 : system : info : Oracle connection established successfully
+2025-07-01 13:41:45 : system : info : Oracle connection established successfully
+2025-07-01 13:42:56 : system : info : Oracle connection established successfully
+2025-07-01 13:42:57 : system : info : Oracle connection established successfully
+2025-07-01 13:42:57 : system : info : Oracle connection established successfully
+2025-07-01 13:42:58 : system : info : Oracle connection established successfully
+2025-07-01 13:43:10 : system : info : Oracle connection established successfully
+2025-07-01 13:43:10 : system : info : Oracle connection established successfully
+2025-07-01 13:43:12 : system : info : Oracle connection established successfully
+2025-07-01 13:43:12 : system : info : Oracle connection established successfully
+2025-07-01 13:43:12 : system : info : Oracle connection established successfully
+2025-07-01 13:43:12 : system : info : Oracle connection established successfully
+2025-07-01 13:43:12 : system : info : Oracle connection established successfully
+2025-07-01 13:43:12 : system : info : Oracle connection established successfully
+2025-07-01 13:43:12 : system : info : Oracle connection established successfully
+2025-07-01 13:43:13 : system : info : Oracle connection established successfully
+2025-07-01 13:43:13 : system : info : Oracle connection established successfully
+2025-07-01 13:43:13 : system : info : Oracle connection established successfully
+2025-07-01 13:43:13 : system : info : Oracle connection established successfully
+2025-07-01 13:43:13 : system : info : Oracle connection established successfully
+2025-07-01 13:43:13 : system : info : Oracle connection established successfully
+2025-07-01 13:43:13 : system : info : Oracle connection established successfully
+2025-07-01 13:43:13 : system : info : Oracle connection established successfully
+2025-07-01 13:43:14 : system : info : Oracle connection established successfully
+2025-07-01 13:43:20 : system : info : Oracle connection established successfully
+2025-07-01 13:43:20 : system : info : Oracle connection established successfully
+2025-07-01 13:43:26 : system : info : Oracle connection established successfully
+2025-07-01 13:43:26 : system : info : Fetched 4 SQL codes
+2025-07-01 13:43:26 : system : info : Oracle connection established successfully
+2025-07-01 13:43:26 : system : info : Fetched 4 SQL codes
+2025-07-01 13:44:06 : system : info : Oracle connection established successfully
+2025-07-01 13:44:07 : system : info : Oracle connection established successfully
+2025-07-01 13:51:41 : system : info : Oracle connection established successfully
+2025-07-01 13:51:41 : system : info : Fetched 4 SQL codes
+2025-07-01 13:51:41 : system : info : Oracle connection established successfully
+2025-07-01 13:51:41 : system : info : Fetched 4 SQL codes
+2025-07-01 13:51:42 : system : info : Oracle connection established successfully
+2025-07-01 13:51:42 : system : info : Oracle connection established successfully
+2025-07-01 13:51:46 : system : info : Oracle connection established successfully
+2025-07-01 13:51:46 : system : info : Oracle connection established successfully
+2025-07-01 13:51:46 : system : info : Oracle connection established successfully
+2025-07-01 13:51:46 : system : info : Oracle connection established successfully
+2025-07-01 13:51:47 : system : info : Oracle connection established successfully
+2025-07-01 13:51:47 : system : info : Oracle connection established successfully
+2025-07-01 13:51:53 : system : info : Oracle connection established successfully
+2025-07-01 13:51:53 : system : info : Oracle connection established successfully
+2025-07-01 13:51:55 : system : info : Oracle connection established successfully
+2025-07-01 13:51:56 : system : info : Oracle connection established successfully
+2025-07-01 13:51:56 : system : info : Oracle connection established successfully
+2025-07-01 13:51:56 : system : info : Oracle connection established successfully
+2025-07-01 13:51:56 : system : info : Oracle connection established successfully
+2025-07-01 13:51:56 : system : info : Oracle connection established successfully
+2025-07-01 13:52:00 : system : info : Oracle connection established successfully
+2025-07-01 13:52:00 : system : error : Error creating/updating mapping detail: ORA-20099: PKGDWMAPR - CREATE_UPDATE_MAPPING_DETAIL:-
+108 : Mapref=Q2-COD_CCY User=rajesh
+ Err:ORA-20099: PKGDWMAPR - CREATE_UPDATE_MAPPING_DETAIL:-
+107 : Mapref=Q2 Trgcol=COD_CCY::Key sequence must be provided for Primary key columns.
+ Err:ORA-06502: PL/SQL: numeric or value error
+ORA-06512: at "TRG.PKGERR", line 30
+ORA-06512: at "TRG.PKGDWMAPR", line 581
+ORA-06512: at line 2
+2025-07-01 13:52:03 : system : info : Oracle connection established successfully
+2025-07-01 13:52:03 : system : info : Oracle connection established successfully
+2025-07-01 13:52:06 : system : info : Oracle connection established successfully
+2025-07-01 13:52:09 : system : info : Oracle connection established successfully
+2025-07-01 13:52:09 : system : info : Oracle connection established successfully
+2025-07-01 13:52:12 : system : info : Oracle connection established successfully
+2025-07-01 13:52:12 : system : info : Oracle connection established successfully
+2025-07-01 13:52:12 : system : info : Oracle connection established successfully
+2025-07-01 13:52:12 : system : info : Oracle connection established successfully
+2025-07-01 13:52:12 : system : info : Oracle connection established successfully
+2025-07-01 13:52:13 : system : info : Oracle connection established successfully
+2025-07-01 13:52:14 : system : info : Oracle connection established successfully
+2025-07-01 13:52:14 : system : info : Oracle connection established successfully
+2025-07-01 13:52:43 : system : info : Oracle connection established successfully
+2025-07-01 13:52:43 : system : info : Oracle connection established successfully
+2025-07-01 13:54:53 : system : info : Oracle connection established successfully
+2025-07-01 13:54:54 : system : info : Oracle connection established successfully
+2025-07-01 13:54:54 : system : info : Oracle connection established successfully
+2025-07-01 13:54:54 : system : info : Fetched 4 SQL codes
+2025-07-01 13:54:55 : system : info : Oracle connection established successfully
+2025-07-01 13:54:55 : system : info : Fetched 4 SQL codes
+2025-07-01 13:57:36 : system : info : Oracle connection established successfully
+2025-07-01 13:57:36 : system : info : Oracle connection established successfully
+2025-07-01 13:58:18 : system : info : Oracle connection established successfully
+2025-07-01 13:58:18 : system : info : Oracle connection established successfully
+2025-07-01 13:58:18 : system : info : Oracle connection established successfully
+2025-07-01 13:58:19 : system : info : Oracle connection established successfully
+2025-07-01 13:58:19 : system : info : Oracle connection established successfully
+2025-07-01 13:58:19 : system : info : Oracle connection established successfully
+2025-07-01 13:58:19 : system : info : Oracle connection established successfully
+2025-07-01 13:58:19 : system : info : Oracle connection established successfully
+2025-07-01 13:58:19 : system : info : Oracle connection established successfully
+2025-07-01 13:58:19 : system : info : Oracle connection established successfully
+2025-07-01 13:58:19 : system : info : Oracle connection established successfully
+2025-07-01 13:58:20 : system : info : Oracle connection established successfully
+2025-07-01 13:58:20 : system : info : Oracle connection established successfully
+2025-07-01 13:58:20 : system : info : Oracle connection established successfully
+2025-07-01 13:58:20 : system : info : Oracle connection established successfully
+2025-07-01 13:58:20 : system : info : Oracle connection established successfully
+2025-07-01 13:58:23 : system : info : Oracle connection established successfully
+2025-07-01 13:58:24 : system : info : Oracle connection established successfully
+2025-07-01 13:58:35 : system : info : Oracle connection established successfully
+2025-07-01 13:58:36 : system : info : Oracle connection established successfully
+2025-07-01 14:01:59 : system : info : Oracle connection established successfully
+2025-07-01 14:01:59 : system : info : Oracle connection established successfully
+2025-07-01 14:02:05 : system : info : Oracle connection established successfully
+2025-07-01 14:02:05 : system : info : Oracle connection established successfully
+2025-07-01 14:02:06 : system : info : Oracle connection established successfully
+2025-07-01 14:02:06 : system : info : Oracle connection established successfully
+2025-07-01 14:02:06 : system : info : Oracle connection established successfully
+2025-07-01 14:02:06 : system : info : Oracle connection established successfully
+2025-07-01 14:02:06 : system : info : Oracle connection established successfully
+2025-07-01 14:02:06 : system : info : Oracle connection established successfully
+2025-07-01 14:02:06 : system : info : Oracle connection established successfully
+2025-07-01 14:02:07 : system : info : Oracle connection established successfully
+2025-07-01 14:02:07 : system : info : Oracle connection established successfully
+2025-07-01 14:02:07 : system : info : Oracle connection established successfully
+2025-07-01 14:02:07 : system : info : Oracle connection established successfully
+2025-07-01 14:02:07 : system : info : Oracle connection established successfully
+2025-07-01 14:02:07 : system : info : Oracle connection established successfully
+2025-07-01 14:02:07 : system : info : Oracle connection established successfully
+2025-07-01 14:02:20 : system : info : Oracle connection established successfully
+2025-07-01 14:02:20 : system : info : Starting background history job scheduling for Q1 from 2025-07-30 to 2025-07-30
+2025-07-01 14:02:20 : system : info : Oracle connection established successfully
+2025-07-01 14:02:20 : system : info : Oracle connection established successfully
+2025-07-01 14:02:20 : system : info : History job Q1 scheduled for immediate execution successfully
+2025-07-01 14:02:21 : system : info : Oracle connection established successfully
+2025-07-01 14:02:21 : system : info : Oracle connection established successfully
+2025-07-01 14:02:21 : system : info : Oracle connection established successfully
+2025-07-01 14:02:21 : system : info : Oracle connection established successfully
+2025-07-01 14:02:21 : system : info : Oracle connection established successfully
+2025-07-01 14:02:21 : system : info : Oracle connection established successfully
+2025-07-01 14:02:21 : system : info : Oracle connection established successfully
+2025-07-01 14:02:21 : system : info : Oracle connection established successfully
+2025-07-01 14:02:21 : system : info : Oracle connection established successfully
+2025-07-01 14:02:21 : system : info : Oracle connection established successfully
+2025-07-01 14:02:21 : system : info : Oracle connection established successfully
+2025-07-01 14:02:22 : system : info : Oracle connection established successfully
+2025-07-01 14:02:22 : system : info : Oracle connection established successfully
+2025-07-01 14:02:24 : system : info : Oracle connection established successfully
+2025-07-01 14:02:24 : system : info : Oracle connection established successfully
+2025-07-01 14:02:53 : system : info : Oracle connection established successfully
+2025-07-01 14:02:53 : system : info : Oracle connection established successfully
