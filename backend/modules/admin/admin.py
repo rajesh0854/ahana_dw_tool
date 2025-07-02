@@ -856,7 +856,7 @@ def get_audit_logs(current_user_id):
                 FROM login_audit_log l
                 JOIN users u ON l.user_id = u.user_id
                 ORDER BY login_timestamp DESC
-                LIMIT 1000
+                LIMIT 50
             """)
         ).fetchall()
         

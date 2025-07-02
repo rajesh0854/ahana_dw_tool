@@ -9,6 +9,7 @@ import pandas as pd
 import json
 import traceback
 from modules.logger import logger, info, warning, error, exception
+from datetime import datetime
 dotenv.load_dotenv()
 ORACLE_SCHEMA = os.getenv("SCHEMA")
 # Create blueprint
@@ -856,4 +857,110 @@ def schedule_job_immediately():
     except Exception as e:
         error(f"Error in schedule_job_immediately: {str(e)}")
         return jsonify({'error': str(e)}), 500
+    
+
+# stop a running job
+@jobs_bp.route('/stop-running-job', methods=['POST'])
+def stop_running_job():
+    try:
+        data = request.json
+        p_mapref = data.get('mapref')
+        p_strtdt = data.get('startDate')
+        p_force = data.get('force', 'N')  # Default to graceful stop if not provided
+        
+        info(f"Stopping job: {p_mapref}, Start Date: {p_strtdt}, Force: {p_force}")
+        
+        if not p_mapref or not p_strtdt:
+            return jsonify({
+                'success': False,
+                'message': 'Missing required parameters: mapref or startDate'
+            }), 400
+        
+        # Format already provided as YYYY-MM-DD HH:MM:SS from frontend
+        oracle_date = p_strtdt
+        
+        # If it's not in the expected format, try to parse it
+        if not (len(p_strtdt) >= 10 and p_strtdt[4] == '-' and p_strtdt[7] == '-'):
+            try:
+                from datetime import datetime
+                # Try to parse the ISO format date
+                if 'T' in p_strtdt:
+                    # Handle ISO format with timezone info
+                    date_obj = datetime.fromisoformat(p_strtdt.replace('Z', '+00:00'))
+                else:
+                    # Handle simple date format
+                    date_obj = datetime.strptime(p_strtdt, '%Y-%m-%d')
+                    
+                # Format date in a way Oracle will definitely understand
+                oracle_date = date_obj.strftime('%Y-%m-%d %H:%M:%S')
+                info(f"Parsed date: {oracle_date}")
+            except Exception as e:
+                warning(f"Error parsing date: {str(e)}. Using original date string.")
+                oracle_date = p_strtdt
+            
+        conn = create_oracle_connection()
+        try:
+            cursor = conn.cursor()
+            
+            # Call the Oracle package procedure with a simpler date format
+            sql = f"""
+            DECLARE
+                v_err VARCHAR2(4000);
+            BEGIN
+                {ORACLE_SCHEMA}.PKGDWPRC.STOP_RUNNING_JOB(
+                    p_mapref => :p_mapref,
+                    p_strtdt => TO_DATE(:p_strtdt, 'YYYY-MM-DD HH24:MI:SS'),
+                    p_force => :p_force,
+                    p_err => v_err
+                );
+                :error_message := v_err;
+            END;
+            """
+            
+            # Prepare the parameters
+            error_message = cursor.var(oracledb.STRING, 4000)
+            
+            # Execute the PL/SQL block
+            cursor.execute(sql, {
+                'p_mapref': p_mapref,
+                'p_strtdt': oracle_date,
+                'p_force': p_force,
+                'error_message': error_message
+            })
+            
+            # Commit the transaction
+            conn.commit()
+            
+            # Check if there was an error
+            if error_message.getvalue():
+                warning(f"Error stopping job: {error_message.getvalue()}")
+                return jsonify({
+                    'success': False,
+                    'message': f'Error stopping job: {error_message.getvalue()}'
+                }), 500
+            
+            info(f"Job {p_mapref} stopped successfully")
+            print({error_message.getvalue()})
+            return jsonify({
+                'success': True,
+                'message': f'Job {p_mapref} has been stopped successfully : {error_message.getvalue()}'
+            })
+            
+        except Exception as e:
+            conn.rollback()
+            error_message = str(e)
+            exception(f"Database error in stop_running_job: {error_message}")
+            return jsonify({
+                'success': False,
+                'message': f'Database error: {error_message}'
+            }), 500
+        finally:
+            conn.close()
+            
+    except Exception as e:
+        error(f"Error in stop_running_job: {str(e)}", exc_info=True)
+        return jsonify({
+            'success': False,
+            'message': f'An error occurred while stopping the job: {str(e)}'
+        }), 500
     

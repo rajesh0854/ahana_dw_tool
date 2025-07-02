@@ -29,6 +29,7 @@ import {
 import { useTheme } from '@/context/ThemeContext';
 import { API_BASE_URL } from '../config';
 import ErrorDetailsDialog from './ErrorDetailsDialog';
+import StopJobDialog from './StopJobDialog';
 
 const JobStatusAndLogs = () => {
   const { darkMode } = useTheme();
@@ -40,10 +41,12 @@ const JobStatusAndLogs = () => {
   const [expandedJobs, setExpandedJobs] = useState(new Set());
   const [selectedError, setSelectedError] = useState(null);
   const [errorDialogOpen, setErrorDialogOpen] = useState(false);
+  const [stopJobDialogOpen, setStopJobDialogOpen] = useState(false);
+  const [selectedJobToStop, setSelectedJobToStop] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
   const [sortBy, setSortBy] = useState('log_date');
   const [sortOrder, setSortOrder] = useState('desc');
-  const [timePeriod, setTimePeriod] = useState(7); // Default to 7 days
+  const [timePeriod, setTimePeriod] = useState(2); // Default to 7 days
 
   // Fetch scheduled jobs data
   const fetchScheduledJobs = async () => {
@@ -111,6 +114,7 @@ const JobStatusAndLogs = () => {
       const successfulRuns = processedLogs.filter(log => log.status === 'PC').length;
       const failedRuns = processedLogs.filter(log => log.status === 'FL').length;
       const inProgressRuns = processedLogs.filter(log => log.status === 'IP').length;
+      const stoppedRuns = processedLogs.filter(log => log.status === 'ST').length;
       const hasFailedLogs = failedRuns > 0;
 
       // Get latest status and last run date (logs are already sorted by date desc from backend)
@@ -134,6 +138,7 @@ const JobStatusAndLogs = () => {
         successfulRuns,
         failedRuns,
         inProgressRuns,
+        stoppedRuns,
         lastRunDate,
         avgDuration,
         hasFailedLogs
@@ -203,6 +208,13 @@ const JobStatusAndLogs = () => {
           bgColor: 'bg-blue-100 dark:bg-blue-900/30',
           icon: <Activity size={16} />,
           label: 'In Progress'
+        };
+      case 'ST':
+        return {
+          color: 'text-amber-500',
+          bgColor: 'bg-amber-100 dark:bg-amber-900/30',
+          icon: <PauseCircle size={16} />,
+          label: 'Stopped'
         };
       default:
         return {
@@ -288,15 +300,54 @@ const JobStatusAndLogs = () => {
     setErrorDialogOpen(true);
   };
 
+  // Handle stopping a job
+  const handleStopJob = (jobName, startDate) => {
+    console.log("Stopping job:", jobName, "Start date (original):", startDate);
+    
+    if (!startDate) {
+      console.error("No start date provided for job:", jobName);
+      return;
+    }
+    
+    // Log the date object to help debug
+    try {
+      const dateObj = new Date(startDate);
+      console.log("Date object:", dateObj);
+      console.log("Date components:", {
+        year: dateObj.getFullYear(),
+        month: dateObj.getMonth() + 1,
+        day: dateObj.getDate(),
+        hours: dateObj.getHours(),
+        minutes: dateObj.getMinutes(),
+        seconds: dateObj.getSeconds()
+      });
+    } catch (error) {
+      console.error("Error parsing date:", error);
+    }
+    
+    setSelectedJobToStop({
+      jobName,
+      startDate: startDate
+    });
+    setStopJobDialogOpen(true);
+  };
+
+  // Handle successful job stop
+  const handleJobStopSuccess = () => {
+    // Refresh the job list after stopping a job
+    fetchScheduledJobs();
+  };
+
   // Statistics
   const stats = useMemo(() => {
     const totalJobs = groupedJobs.length;
     const runningJobs = groupedJobs.filter(job => job.latestStatus === 'IP').length;
     const successfulJobs = groupedJobs.filter(job => job.latestStatus === 'PC').length;
     const failedJobs = groupedJobs.filter(job => job.latestStatus === 'FL').length;
+    const stoppedJobs = groupedJobs.filter(job => job.latestStatus === 'ST').length;
     const totalRuns = groupedJobs.reduce((sum, job) => sum + job.totalRuns, 0);
     
-    return { totalJobs, runningJobs, successfulJobs, failedJobs, totalRuns };
+    return { totalJobs, runningJobs, successfulJobs, failedJobs, stoppedJobs, totalRuns };
   }, [groupedJobs]);
 
   if (loading) {
@@ -381,6 +432,7 @@ const JobStatusAndLogs = () => {
                       focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all
                     `}
                   >
+                   <option value={2}>Last 2 Days</option>
                     <option value={7}>Last 7 Days</option>
                     <option value={15}>Last 15 Days</option>
                     <option value={30}>Last 30 Days</option>
@@ -404,6 +456,7 @@ const JobStatusAndLogs = () => {
                     <option value="PC">Process Complete</option>
                     <option value="FL">Failed</option>
                     <option value="IP">In Progress</option>
+                    <option value="ST">Stopped</option>
                   </select>
                 </div>
 
@@ -455,7 +508,7 @@ const JobStatusAndLogs = () => {
           </div>
 
           {/* Statistics Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-2 mb-2">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 mb-2">
             {[
               { 
                 label: 'Total Jobs', 
@@ -486,6 +539,13 @@ const JobStatusAndLogs = () => {
                 gradient: darkMode ? 'from-red-900/40 to-rose-900/30' : 'from-red-50 to-rose-100/70'
               },
               { 
+                label: 'Stopped', 
+                value: stats.stoppedJobs, 
+                icon: <PauseCircle size={18} />, 
+                color: 'amber',
+                gradient: darkMode ? 'from-amber-900/40 to-amber-900/30' : 'from-amber-50 to-amber-100/70'
+              },
+              { 
                 label: 'Total Runs', 
                 value: stats.totalRuns, 
                 icon: <BarChart3 size={18} />, 
@@ -495,15 +555,15 @@ const JobStatusAndLogs = () => {
             ].map((stat, index) => (
               <motion.div
                 key={stat.label}
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
                 className={`
-                  p-2 rounded-md border bg-gradient-to-br ${stat.gradient}
+                  p-3 rounded-md border bg-gradient-to-br ${stat.gradient}
                   ${darkMode 
                     ? 'border-gray-700' 
                     : 'border-gray-200'}
-                  shadow-sm hover:shadow-md transition-all
+                  shadow-sm hover:shadow-md transition-all h-full
                 `}
               >
                 <div className="flex items-center justify-between">
@@ -521,6 +581,7 @@ const JobStatusAndLogs = () => {
                     ${stat.color === 'green' ? 'bg-green-100/80 text-green-600 dark:bg-green-900/40 dark:text-green-400' : ''}
                     ${stat.color === 'red' ? 'bg-red-100/80 text-red-600 dark:bg-red-900/40 dark:text-red-400' : ''}
                     ${stat.color === 'purple' ? 'bg-purple-100/80 text-purple-600 dark:bg-purple-900/40 dark:text-purple-400' : ''}
+                    ${stat.color === 'amber' ? 'bg-amber-100/80 text-amber-600 dark:bg-amber-900/40 dark:text-amber-400' : ''}
                   `}>
                     <div className="w-4 h-4">{stat.icon}</div>
                   </div>
@@ -644,6 +705,12 @@ const JobStatusAndLogs = () => {
                                 </span>
                               </div>
                               <div className="flex items-center space-x-1">
+                                <PauseCircle size={14} className="text-amber-500" />
+                                <span className={`font-medium ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                                  {job.stoppedRuns}
+                                </span>
+                              </div>
+                              <div className="flex items-center space-x-1">
                                 <Timer size={14} className="text-purple-500" />
                                 <span className={`font-medium ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
                                   {formatDuration(job.avgDuration)}
@@ -678,6 +745,31 @@ const JobStatusAndLogs = () => {
                                 >
                                   <AlertTriangle size={12} />
                                   <span>View Error</span>
+                                </motion.button>
+                              )}
+                              {job.latestStatus === 'IP' && (
+                                <motion.button
+                                  whileHover={{ scale: 1.03 }}
+                                  whileTap={{ scale: 0.97 }}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    // Find the most recent in-progress log
+                                    const inProgressLog = job.logs.find(log => log.status === 'IP');
+                                    if (inProgressLog) {
+                                      console.log("Found in-progress log:", inProgressLog);
+                                      handleStopJob(job.jobName, inProgressLog.actualStartDate);
+                                    } else {
+                                      console.error("No in-progress log found for job:", job.jobName);
+                                    }
+                                  }}
+                                  className={`
+                                    flex items-center space-x-1 px-3 py-1 rounded-md text-xs font-medium
+                                    bg-amber-100 text-amber-600 dark:bg-amber-900/40 dark:text-amber-400
+                                    hover:bg-amber-200 dark:hover:bg-amber-900/60 transition-colors
+                                  `}
+                                >
+                                  <PauseCircle size={12} />
+                                  <span>Stop Job</span>
                                 </motion.button>
                               )}
                             </div>
@@ -736,13 +828,9 @@ const JobStatusAndLogs = () => {
                                                 {logStatusDisplay.icon}
                                                 <span>{logStatusDisplay.label}</span>
                                               </span>
-                                              <div className={`text-xs flex items-center ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                                                <Calendar size={12} className="mr-1" />
-                                                {formatDate(log.logDate)}
-                                              </div>
                                               {log.actualStartDate && (
                                                 <div className={`text-xs flex items-center ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                                                  <PlayCircle size={12} className="mr-1" />
+                                                  <Calendar size={12} className="mr-1" />
                                                   Started: {formatDate(log.actualStartDate)}
                                                 </div>
                                               )}
@@ -788,6 +876,25 @@ const JobStatusAndLogs = () => {
                                                 >
                                                   <AlertTriangle size={12} />
                                                   <span>View Error</span>
+                                                </motion.button>
+                                              )}
+                                              {log.status === 'IP' && (
+                                                <motion.button
+                                                  whileHover={{ scale: 1.03 }}
+                                                  whileTap={{ scale: 0.97 }}
+                                                  onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    console.log("Stop job clicked for log entry:", log);
+                                                    handleStopJob(job.jobName, log.actualStartDate);
+                                                  }}
+                                                  className={`
+                                                    flex items-center space-x-1 px-3 py-1 rounded-md text-xs font-medium
+                                                    bg-amber-100 text-amber-600 dark:bg-amber-900/40 dark:text-amber-400
+                                                    hover:bg-amber-200 dark:hover:bg-amber-900/60 transition-colors
+                                                  `}
+                                                >
+                                                  <PauseCircle size={12} />
+                                                  <span>Stop Job</span>
                                                 </motion.button>
                                               )}
                                               <motion.button
@@ -857,6 +964,16 @@ const JobStatusAndLogs = () => {
           jobId={selectedError?.logId || selectedError?.jobName}
           loading={false}
           darkMode={darkMode}
+        />
+
+        {/* Stop Job Dialog */}
+        <StopJobDialog
+          open={stopJobDialogOpen}
+          onClose={() => setStopJobDialogOpen(false)}
+          jobName={selectedJobToStop?.jobName}
+          startDate={selectedJobToStop?.startDate}
+          darkMode={darkMode}
+          onSuccess={handleJobStopSuccess}
         />
       </div>
     </div>

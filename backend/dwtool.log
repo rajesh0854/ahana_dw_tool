@@ -2602,3 +2602,602 @@ ORA-06512: at line 2
 2025-07-01 14:02:24 : system : info : Oracle connection established successfully
 2025-07-01 14:02:53 : system : info : Oracle connection established successfully
 2025-07-01 14:02:53 : system : info : Oracle connection established successfully
+2025-07-01 14:05:40 : system : info : Oracle connection established successfully
+2025-07-01 14:05:40 : system : info : Oracle connection established successfully
+2025-07-01 14:05:41 : system : info : Oracle connection established successfully
+2025-07-01 14:05:41 : system : info : Oracle connection established successfully
+2025-07-01 14:05:52 : system : info : Oracle connection established successfully
+2025-07-01 14:05:52 : system : info : Starting background history job scheduling for MAP001 from 2025-07-29 to 2025-07-30
+2025-07-01 14:05:52 : system : info : Oracle connection established successfully
+2025-07-01 14:05:52 : system : info : Oracle connection established successfully
+2025-07-01 14:05:52 : system : info : History job MAP001 scheduled for immediate execution successfully
+2025-07-01 14:05:53 : system : info : Oracle connection established successfully
+2025-07-01 14:05:53 : system : info : Oracle connection established successfully
+2025-07-01 14:05:53 : system : info : Oracle connection established successfully
+2025-07-01 14:05:53 : system : info : Oracle connection established successfully
+2025-07-01 14:05:53 : system : info : Oracle connection established successfully
+2025-07-01 14:05:53 : system : info : Oracle connection established successfully
+2025-07-01 14:05:53 : system : info : Oracle connection established successfully
+2025-07-01 14:05:53 : system : info : Oracle connection established successfully
+2025-07-01 14:05:53 : system : info : Oracle connection established successfully
+2025-07-01 14:05:53 : system : info : Oracle connection established successfully
+2025-07-01 14:05:53 : system : info : Oracle connection established successfully
+2025-07-01 14:05:53 : system : info : Oracle connection established successfully
+2025-07-01 14:05:54 : system : info : Oracle connection established successfully
+2025-07-01 14:05:55 : system : info : Oracle connection established successfully
+2025-07-01 14:05:55 : system : info : Oracle connection established successfully
+2025-07-02 06:36:08 : system : info : Loading secret key from: /mnt/d/INNOVA/DW_TOOL/ahana_dw_tool/backend/modules/license/secret.key
+2025-07-02 06:36:08 : system : info : License Manager initialized with system ID: 00155daaf457
+2025-07-02 06:36:08 : system : info : Loading secret key from: /mnt/d/INNOVA/DW_TOOL/ahana_dw_tool/backend/modules/license/secret.key
+2025-07-02 06:36:08 : system : info : License Manager initialized with system ID: 00155daaf457
+2025-07-02 06:36:08 : system : info : Server starting...
+2025-07-02 06:36:09 : system : info : Loading secret key from: /mnt/d/INNOVA/DW_TOOL/ahana_dw_tool/backend/modules/license/secret.key
+2025-07-02 06:36:09 : system : info : License Manager initialized with system ID: 00155daaf457
+2025-07-02 06:36:09 : system : info : Loading secret key from: /mnt/d/INNOVA/DW_TOOL/ahana_dw_tool/backend/modules/license/secret.key
+2025-07-02 06:36:09 : system : info : License Manager initialized with system ID: 00155daaf457
+2025-07-02 06:36:09 : system : info : Server starting...
+2025-07-02 06:37:22 : rajesh : info : User rajesh authenticated successfully
+2025-07-02 06:37:22 : rajesh : info : User rajesh authenticated successfully
+2025-07-02 06:38:04 : system : info : Oracle connection established successfully
+2025-07-02 06:38:04 : system : info : Fetched 4 SQL codes
+2025-07-02 06:38:06 : system : info : Oracle connection established successfully
+2025-07-02 06:38:06 : system : info : Fetched 4 SQL codes
+2025-07-02 06:38:25 : system : info : Oracle connection established successfully
+2025-07-02 06:38:26 : system : info : Oracle connection established successfully
+2025-07-02 06:38:44 : system : info : Oracle connection established successfully
+2025-07-02 06:38:45 : system : info : Oracle connection established successfully
+2025-07-02 06:41:06 : system : info : Oracle connection established successfully
+2025-07-02 06:55:50 : system : info : Oracle connection established successfully
+2025-07-02 06:55:51 : system : info : Oracle connection established successfully
+2025-07-02 06:55:51 : system : info : Oracle connection established successfully
+2025-07-02 06:55:51 : system : info : Oracle connection established successfully
+2025-07-02 06:55:51 : system : info : Oracle connection established successfully
+2025-07-02 06:55:51 : system : info : Oracle connection established successfully
+2025-07-02 06:55:51 : system : info : Oracle connection established successfully
+2025-07-02 06:55:51 : system : info : Oracle connection established successfully
+2025-07-02 06:55:52 : system : info : Oracle connection established successfully
+2025-07-02 06:55:52 : system : info : Oracle connection established successfully
+2025-07-02 06:55:52 : system : info : Oracle connection established successfully
+2025-07-02 06:55:52 : system : info : Oracle connection established successfully
+2025-07-02 06:55:52 : system : info : Oracle connection established successfully
+2025-07-02 06:55:52 : system : info : Oracle connection established successfully
+2025-07-02 06:56:06 : system : info : Oracle connection established successfully
+2025-07-02 06:56:07 : system : info : Oracle connection established successfully
+2025-07-02 06:57:04 : system : info : Oracle connection established successfully
+2025-07-02 06:57:05 : system : info : Oracle connection established successfully
+2025-07-02 06:59:21 : system : error : Unhandled exception: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2025-07-02 07:00:35 : system : info : Oracle connection established successfully
+2025-07-02 07:00:36 : system : info : Oracle connection established successfully
+2025-07-02 07:00:59 : system : info : Server stopped.
+2025-07-02 07:00:59 : system : info : Server stopped.
+2025-07-02 07:01:02 : system : info : Loading secret key from: /mnt/d/INNOVA/DW_TOOL/ahana_dw_tool/backend/modules/license/secret.key
+2025-07-02 07:01:02 : system : info : License Manager initialized with system ID: 00155daaf457
+2025-07-02 07:01:02 : system : info : Loading secret key from: /mnt/d/INNOVA/DW_TOOL/ahana_dw_tool/backend/modules/license/secret.key
+2025-07-02 07:01:02 : system : info : License Manager initialized with system ID: 00155daaf457
+2025-07-02 07:01:02 : system : info : Server starting...
+2025-07-02 07:01:03 : system : info : Loading secret key from: /mnt/d/INNOVA/DW_TOOL/ahana_dw_tool/backend/modules/license/secret.key
+2025-07-02 07:01:03 : system : info : License Manager initialized with system ID: 00155daaf457
+2025-07-02 07:01:03 : system : info : Loading secret key from: /mnt/d/INNOVA/DW_TOOL/ahana_dw_tool/backend/modules/license/secret.key
+2025-07-02 07:01:03 : system : info : License Manager initialized with system ID: 00155daaf457
+2025-07-02 07:01:03 : system : info : Server starting...
+2025-07-02 07:01:09 : system : info : Oracle connection established successfully
+2025-07-02 07:01:16 : system : info : Oracle connection established successfully
+2025-07-02 07:01:43 : system : info : Oracle connection established successfully
+2025-07-02 07:05:02 : system : info : Server stopped.
+2025-07-02 07:05:03 : system : info : Server stopped.
+2025-07-02 07:05:05 : system : info : Loading secret key from: /mnt/d/INNOVA/DW_TOOL/ahana_dw_tool/backend/modules/license/secret.key
+2025-07-02 07:05:05 : system : info : License Manager initialized with system ID: 00155daaf457
+2025-07-02 07:05:05 : system : info : Loading secret key from: /mnt/d/INNOVA/DW_TOOL/ahana_dw_tool/backend/modules/license/secret.key
+2025-07-02 07:05:05 : system : info : License Manager initialized with system ID: 00155daaf457
+2025-07-02 07:05:05 : system : info : Server starting...
+2025-07-02 07:05:06 : system : info : Loading secret key from: /mnt/d/INNOVA/DW_TOOL/ahana_dw_tool/backend/modules/license/secret.key
+2025-07-02 07:05:06 : system : info : License Manager initialized with system ID: 00155daaf457
+2025-07-02 07:05:06 : system : info : Loading secret key from: /mnt/d/INNOVA/DW_TOOL/ahana_dw_tool/backend/modules/license/secret.key
+2025-07-02 07:05:06 : system : info : License Manager initialized with system ID: 00155daaf457
+2025-07-02 07:05:06 : system : info : Server starting...
+2025-07-02 07:05:18 : system : info : Oracle connection established successfully
+2025-07-02 07:05:26 : system : info : Oracle connection established successfully
+2025-07-02 07:05:27 : system : info : Oracle connection established successfully
+2025-07-02 07:05:27 : system : info : Oracle connection established successfully
+2025-07-02 07:05:27 : system : info : Oracle connection established successfully
+2025-07-02 07:05:27 : system : info : Oracle connection established successfully
+2025-07-02 07:05:27 : system : info : Oracle connection established successfully
+2025-07-02 07:05:27 : system : info : Oracle connection established successfully
+2025-07-02 07:05:27 : system : info : Oracle connection established successfully
+2025-07-02 07:05:27 : system : info : Oracle connection established successfully
+2025-07-02 07:05:27 : system : info : Oracle connection established successfully
+2025-07-02 07:05:28 : system : info : Oracle connection established successfully
+2025-07-02 07:05:28 : system : info : Oracle connection established successfully
+2025-07-02 07:05:28 : system : info : Oracle connection established successfully
+2025-07-02 07:05:28 : system : info : Oracle connection established successfully
+2025-07-02 07:05:28 : system : info : Oracle connection established successfully
+2025-07-02 07:05:28 : system : info : Oracle connection established successfully
+2025-07-02 07:05:32 : system : info : Stopping job: MAP001, Start Date: 2025-07-01T04:35:53.000Z, Force: Y
+2025-07-02 07:05:32 : system : info : Parsed date: 2025-07-01 04:35:53
+2025-07-02 07:05:32 : system : info : Oracle connection established successfully
+2025-07-02 07:05:32 : system : info : Job MAP001 stopped successfully
+2025-07-02 07:05:33 : system : info : Oracle connection established successfully
+2025-07-02 07:05:41 : system : info : Oracle connection established successfully
+2025-07-02 07:05:42 : system : info : Oracle connection established successfully
+2025-07-02 07:06:08 : system : info : Stopping job: MAP001, Start Date: 2025-07-01T04:35:53.000Z, Force: Y
+2025-07-02 07:06:08 : system : info : Parsed date: 2025-07-01 04:35:53
+2025-07-02 07:06:08 : system : info : Oracle connection established successfully
+2025-07-02 07:06:08 : system : info : Job MAP001 stopped successfully
+2025-07-02 07:06:09 : system : info : Oracle connection established successfully
+2025-07-02 07:06:19 : system : info : Stopping job: MAP001, Start Date: 2025-07-01T04:35:53.000Z, Force: Y
+2025-07-02 07:06:19 : system : info : Parsed date: 2025-07-01 04:35:53
+2025-07-02 07:06:20 : system : info : Oracle connection established successfully
+2025-07-02 07:06:20 : system : info : Job MAP001 stopped successfully
+2025-07-02 07:06:20 : system : info : Oracle connection established successfully
+2025-07-02 07:06:25 : system : info : Stopping job: MAP001, Start Date: 2025-07-01T04:35:53.000Z, Force: Y
+2025-07-02 07:06:25 : system : info : Parsed date: 2025-07-01 04:35:53
+2025-07-02 07:06:26 : system : info : Oracle connection established successfully
+2025-07-02 07:06:26 : system : info : Job MAP001 stopped successfully
+2025-07-02 07:06:26 : system : info : Oracle connection established successfully
+2025-07-02 07:06:43 : system : info : Oracle connection established successfully
+2025-07-02 07:06:51 : system : info : Stopping job: MAP001, Start Date: 2025-07-01T04:35:53.000Z, Force: Y
+2025-07-02 07:06:51 : system : info : Parsed date: 2025-07-01 04:35:53
+2025-07-02 07:06:51 : system : info : Oracle connection established successfully
+2025-07-02 07:06:51 : system : info : Job MAP001 stopped successfully
+2025-07-02 07:06:52 : system : info : Oracle connection established successfully
+2025-07-02 07:06:55 : system : info : Stopping job: DIM_ACCOUNT, Start Date: 2025-06-30T04:05:09.000Z, Force: Y
+2025-07-02 07:06:55 : system : info : Parsed date: 2025-06-30 04:05:09
+2025-07-02 07:06:55 : system : info : Oracle connection established successfully
+2025-07-02 07:06:56 : system : info : Job DIM_ACCOUNT stopped successfully
+2025-07-02 07:06:56 : system : info : Oracle connection established successfully
+2025-07-02 07:06:58 : system : info : Oracle connection established successfully
+2025-07-02 07:07:00 : system : info : Oracle connection established successfully
+2025-07-02 07:07:08 : system : info : Oracle connection established successfully
+2025-07-02 07:07:12 : system : info : Stopping job: DIM_ACCOUNT, Start Date: 2025-06-30T04:05:09.000Z, Force: Y
+2025-07-02 07:07:12 : system : info : Parsed date: 2025-06-30 04:05:09
+2025-07-02 07:07:12 : system : info : Oracle connection established successfully
+2025-07-02 07:07:12 : system : info : Job DIM_ACCOUNT stopped successfully
+2025-07-02 07:07:13 : system : info : Oracle connection established successfully
+2025-07-02 07:14:24 : system : info : Server stopped.
+2025-07-02 07:14:24 : system : info : Server stopped.
+2025-07-02 07:14:27 : system : info : Loading secret key from: /mnt/d/INNOVA/DW_TOOL/ahana_dw_tool/backend/modules/license/secret.key
+2025-07-02 07:14:27 : system : info : License Manager initialized with system ID: 00155daaf457
+2025-07-02 07:14:27 : system : info : Loading secret key from: /mnt/d/INNOVA/DW_TOOL/ahana_dw_tool/backend/modules/license/secret.key
+2025-07-02 07:14:27 : system : info : License Manager initialized with system ID: 00155daaf457
+2025-07-02 07:14:27 : system : info : Server starting...
+2025-07-02 07:14:28 : system : info : Loading secret key from: /mnt/d/INNOVA/DW_TOOL/ahana_dw_tool/backend/modules/license/secret.key
+2025-07-02 07:14:28 : system : info : License Manager initialized with system ID: 00155daaf457
+2025-07-02 07:14:28 : system : info : Loading secret key from: /mnt/d/INNOVA/DW_TOOL/ahana_dw_tool/backend/modules/license/secret.key
+2025-07-02 07:14:28 : system : info : License Manager initialized with system ID: 00155daaf457
+2025-07-02 07:14:28 : system : info : Server starting...
+2025-07-02 07:14:35 : system : info : Oracle connection established successfully
+2025-07-02 07:14:35 : system : info : Fetched 4 SQL codes
+2025-07-02 07:14:36 : system : info : Oracle connection established successfully
+2025-07-02 07:14:36 : system : info : Fetched 4 SQL codes
+2025-07-02 07:14:38 : system : info : Oracle connection established successfully
+2025-07-02 07:14:39 : system : info : Oracle connection established successfully
+2025-07-02 07:14:41 : system : info : Oracle connection established successfully
+2025-07-02 07:14:42 : system : info : Oracle connection established successfully
+2025-07-02 07:14:57 : system : info : Stopping job: MAP001, Start Date: 2025-07-01T04:35:53.000Z, Force: Y
+2025-07-02 07:14:57 : system : info : Parsed date: 2025-07-01 04:35:53
+2025-07-02 07:14:57 : system : info : Oracle connection established successfully
+2025-07-02 07:14:57 : system : info : Job MAP001 stopped successfully
+2025-07-02 07:14:57 : system : info : Oracle connection established successfully
+2025-07-02 07:15:27 : system : info : Oracle connection established successfully
+2025-07-02 07:15:28 : system : info : Oracle connection established successfully
+2025-07-02 07:15:34 : system : info : Oracle connection established successfully
+2025-07-02 07:15:34 : system : info : Oracle connection established successfully
+2025-07-02 07:15:35 : system : info : Oracle connection established successfully
+2025-07-02 07:15:36 : system : info : Oracle connection established successfully
+2025-07-02 07:15:36 : system : info : Oracle connection established successfully
+2025-07-02 07:15:36 : system : info : Oracle connection established successfully
+2025-07-02 07:15:36 : system : info : Oracle connection established successfully
+2025-07-02 07:15:36 : system : info : Oracle connection established successfully
+2025-07-02 07:15:36 : system : info : Oracle connection established successfully
+2025-07-02 07:15:37 : system : info : Oracle connection established successfully
+2025-07-02 07:15:37 : system : info : Oracle connection established successfully
+2025-07-02 07:15:37 : system : info : Oracle connection established successfully
+2025-07-02 07:15:37 : system : info : Oracle connection established successfully
+2025-07-02 07:15:37 : system : info : Oracle connection established successfully
+2025-07-02 07:15:37 : system : info : Oracle connection established successfully
+2025-07-02 07:15:37 : system : info : Oracle connection established successfully
+2025-07-02 07:15:37 : system : info : Oracle connection established successfully
+2025-07-02 07:15:38 : system : info : Oracle connection established successfully
+2025-07-02 07:15:44 : system : info : Oracle connection established successfully
+2025-07-02 07:15:44 : system : info : Oracle connection established successfully
+2025-07-02 07:15:44 : system : info : Oracle connection established successfully
+2025-07-02 07:15:44 : system : info : Oracle connection established successfully
+2025-07-02 07:15:44 : system : info : Oracle connection established successfully
+2025-07-02 07:15:45 : system : info : Oracle connection established successfully
+2025-07-02 07:15:45 : system : info : Oracle connection established successfully
+2025-07-02 07:15:45 : system : info : Oracle connection established successfully
+2025-07-02 07:15:45 : system : info : Oracle connection established successfully
+2025-07-02 07:15:45 : system : info : Oracle connection established successfully
+2025-07-02 07:15:45 : system : info : Oracle connection established successfully
+2025-07-02 07:15:45 : system : info : Oracle connection established successfully
+2025-07-02 07:15:45 : system : info : Oracle connection established successfully
+2025-07-02 07:15:46 : system : info : Oracle connection established successfully
+2025-07-02 07:15:46 : system : info : Oracle connection established successfully
+2025-07-02 07:15:46 : system : info : Oracle connection established successfully
+2025-07-02 07:15:52 : system : info : Oracle connection established successfully
+2025-07-02 07:15:53 : system : info : Oracle connection established successfully
+2025-07-02 07:15:53 : system : info : Oracle connection established successfully
+2025-07-02 07:15:55 : system : info : Oracle connection established successfully
+2025-07-02 07:15:55 : system : info : Oracle connection established successfully
+2025-07-02 07:15:55 : system : info : Oracle connection established successfully
+2025-07-02 07:15:55 : system : info : Oracle connection established successfully
+2025-07-02 07:15:55 : system : info : Oracle connection established successfully
+2025-07-02 07:15:55 : system : info : Oracle connection established successfully
+2025-07-02 07:15:55 : system : info : Oracle connection established successfully
+2025-07-02 07:15:55 : system : info : Oracle connection established successfully
+2025-07-02 07:15:55 : system : info : Oracle connection established successfully
+2025-07-02 07:15:55 : system : info : Oracle connection established successfully
+2025-07-02 07:15:55 : system : info : Oracle connection established successfully
+2025-07-02 07:15:55 : system : info : Oracle connection established successfully
+2025-07-02 07:15:56 : system : info : Oracle connection established successfully
+2025-07-02 07:15:56 : system : info : Oracle connection established successfully
+2025-07-02 07:15:56 : system : info : Oracle connection established successfully
+2025-07-02 07:15:59 : system : info : Stopping job: LOAN_DISB_DEDN, Start Date: 2025-07-01T21:45:54.000Z, Force: Y
+2025-07-02 07:15:59 : system : info : Parsed date: 2025-07-01 21:45:54
+2025-07-02 07:16:00 : system : info : Oracle connection established successfully
+2025-07-02 07:16:00 : system : info : Job LOAN_DISB_DEDN stopped successfully
+2025-07-02 07:16:00 : system : info : Oracle connection established successfully
+2025-07-02 07:16:03 : system : info : Oracle connection established successfully
+2025-07-02 07:16:05 : system : info : Oracle connection established successfully
+2025-07-02 07:16:08 : system : info : Stopping job: LOAN_DISB_DEDN, Start Date: 2025-07-01T21:45:54.000Z, Force: Y
+2025-07-02 07:16:08 : system : info : Parsed date: 2025-07-01 21:45:54
+2025-07-02 07:16:08 : system : info : Oracle connection established successfully
+2025-07-02 07:16:08 : system : info : Job LOAN_DISB_DEDN stopped successfully
+2025-07-02 07:16:08 : system : info : Oracle connection established successfully
+2025-07-02 07:16:13 : system : info : Stopping job: LOAN_DISB_DEDN, Start Date: 2025-07-01T21:45:54.000Z, Force: Y
+2025-07-02 07:16:13 : system : info : Parsed date: 2025-07-01 21:45:54
+2025-07-02 07:16:13 : system : info : Oracle connection established successfully
+2025-07-02 07:16:14 : system : info : Job LOAN_DISB_DEDN stopped successfully
+2025-07-02 07:16:14 : system : info : Oracle connection established successfully
+2025-07-02 07:16:18 : system : info : Oracle connection established successfully
+2025-07-02 07:16:18 : system : info : Oracle connection established successfully
+2025-07-02 07:16:20 : system : info : Oracle connection established successfully
+2025-07-02 07:16:27 : system : info : Stopping job: LOAN_DISB_DEDN, Start Date: 2025-07-01T21:45:54.000Z, Force: Y
+2025-07-02 07:16:27 : system : info : Parsed date: 2025-07-01 21:45:54
+2025-07-02 07:16:27 : system : info : Oracle connection established successfully
+2025-07-02 07:16:27 : system : info : Job LOAN_DISB_DEDN stopped successfully
+2025-07-02 07:16:27 : system : info : Oracle connection established successfully
+2025-07-02 07:16:29 : system : info : Oracle connection established successfully
+2025-07-02 07:16:30 : system : info : Oracle connection established successfully
+2025-07-02 07:17:00 : system : info : Stopping job: LOAN_DISB_DEDN, Start Date: 2025-07-01T21:45:54.000Z, Force: Y
+2025-07-02 07:17:00 : system : info : Parsed date: 2025-07-01 21:45:54
+2025-07-02 07:17:01 : system : info : Oracle connection established successfully
+2025-07-02 07:17:01 : system : info : Job LOAN_DISB_DEDN stopped successfully
+2025-07-02 07:17:01 : system : info : Oracle connection established successfully
+2025-07-02 07:17:09 : system : info : Oracle connection established successfully
+2025-07-02 07:17:10 : system : info : Oracle connection established successfully
+2025-07-02 07:21:11 : system : info : Stopping job: LOAN_DISB_DEDN, Start Date: 2025-07-01T21:45:54.000Z, Force: Y
+2025-07-02 07:21:11 : system : info : Parsed date: 2025-07-01 21:45:54
+2025-07-02 07:21:11 : system : info : Oracle connection established successfully
+2025-07-02 07:21:11 : system : info : Job LOAN_DISB_DEDN stopped successfully
+2025-07-02 07:21:12 : system : info : Oracle connection established successfully
+2025-07-02 07:31:39 : rajesh : info : User rajesh authenticated successfully
+2025-07-02 07:31:39 : rajesh : info : User rajesh authenticated successfully
+2025-07-02 07:31:41 : system : info : Oracle connection established successfully
+2025-07-02 07:31:41 : system : info : Oracle connection established successfully
+2025-07-02 07:31:42 : system : error : Error establishing Oracle connection: DPY-6005: cannot connect to database (CONNECTION_ID=BjZ2JnS1QBH1mGMVjDcEIQ==).
+timed out
+2025-07-02 07:32:18 : system : info : Stopping job: LOAN_DISB_DEDN, Start Date: 2025-07-01T21:45:54.000Z, Force: Y
+2025-07-02 07:32:18 : system : info : Parsed date: 2025-07-01 21:45:54
+2025-07-02 07:32:19 : system : info : Oracle connection established successfully
+2025-07-02 07:32:19 : system : info : Job LOAN_DISB_DEDN stopped successfully
+2025-07-02 07:32:20 : system : info : Oracle connection established successfully
+2025-07-02 07:32:27 : system : info : Oracle connection established successfully
+2025-07-02 07:32:31 : system : info : Stopping job: LOAN_DISB_DEDN, Start Date: 2025-07-01T21:45:54.000Z, Force: Y
+2025-07-02 07:32:31 : system : info : Parsed date: 2025-07-01 21:45:54
+2025-07-02 07:32:32 : system : info : Oracle connection established successfully
+2025-07-02 07:32:32 : system : info : Job LOAN_DISB_DEDN stopped successfully
+2025-07-02 07:32:32 : system : info : Oracle connection established successfully
+2025-07-02 07:35:11 : system : info : Server stopped.
+2025-07-02 07:35:11 : system : info : Server stopped.
+2025-07-02 07:35:13 : system : info : Loading secret key from: /mnt/d/INNOVA/DW_TOOL/ahana_dw_tool/backend/modules/license/secret.key
+2025-07-02 07:35:13 : system : info : License Manager initialized with system ID: 00155daaf457
+2025-07-02 07:35:13 : system : info : Loading secret key from: /mnt/d/INNOVA/DW_TOOL/ahana_dw_tool/backend/modules/license/secret.key
+2025-07-02 07:35:13 : system : info : License Manager initialized with system ID: 00155daaf457
+2025-07-02 07:35:13 : system : info : Server starting...
+2025-07-02 07:35:14 : system : info : Loading secret key from: /mnt/d/INNOVA/DW_TOOL/ahana_dw_tool/backend/modules/license/secret.key
+2025-07-02 07:35:14 : system : info : License Manager initialized with system ID: 00155daaf457
+2025-07-02 07:35:14 : system : info : Loading secret key from: /mnt/d/INNOVA/DW_TOOL/ahana_dw_tool/backend/modules/license/secret.key
+2025-07-02 07:35:14 : system : info : License Manager initialized with system ID: 00155daaf457
+2025-07-02 07:35:14 : system : info : Server starting...
+2025-07-02 07:36:24 : system : info : Oracle connection established successfully
+2025-07-02 07:36:31 : system : info : Stopping job: LOAN_DISB_DEDN, Start Date: 2025-07-01T21:45:54.000Z, Force: Y
+2025-07-02 07:36:31 : system : info : Parsed date: 2025-07-01 21:45:54
+2025-07-02 07:36:32 : system : info : Oracle connection established successfully
+2025-07-02 07:36:32 : system : info : Job LOAN_DISB_DEDN stopped successfully
+2025-07-02 07:36:32 : system : info : Oracle connection established successfully
+2025-07-02 07:37:03 : system : info : Oracle connection established successfully
+2025-07-02 07:44:00 : system : info : Oracle connection established successfully
+2025-07-02 07:44:32 : rajesh : info : User rajesh authenticated successfully
+2025-07-02 07:44:33 : rajesh : info : User rajesh authenticated successfully
+2025-07-02 07:44:33 : system : info : Oracle connection established successfully
+2025-07-02 07:44:33 : system : info : Oracle connection established successfully
+2025-07-02 07:45:33 : system : info : Oracle connection established successfully
+2025-07-02 07:46:29 : system : info : Stopping job: LOAN_DISB_DEDN, Start Date: 2025-07-01T21:45:54.000Z, Force: Y
+2025-07-02 07:46:29 : system : info : Parsed date: 2025-07-01 21:45:54
+2025-07-02 07:46:29 : system : info : Oracle connection established successfully
+2025-07-02 07:46:29 : system : info : Job LOAN_DISB_DEDN stopped successfully
+2025-07-02 07:46:29 : system : info : Oracle connection established successfully
+2025-07-02 07:52:41 : system : info : Oracle connection established successfully
+2025-07-02 07:52:43 : system : info : Oracle connection established successfully
+2025-07-02 07:52:44 : system : info : Oracle connection established successfully
+2025-07-02 07:53:07 : system : info : Oracle connection established successfully
+2025-07-02 07:53:08 : system : info : Oracle connection established successfully
+2025-07-02 07:53:35 : system : info : Oracle connection established successfully
+2025-07-02 07:53:40 : system : info : Oracle connection established successfully
+2025-07-02 07:53:44 : system : info : Stopping job: DIM_ACT, Start Date: 2025-07-01T22:23:30.000Z, Force: Y
+2025-07-02 07:53:44 : system : info : Parsed date: 2025-07-01 22:23:30
+2025-07-02 07:53:44 : system : info : Oracle connection established successfully
+2025-07-02 07:53:44 : system : info : Job DIM_ACT stopped successfully
+2025-07-02 07:53:44 : system : info : Oracle connection established successfully
+2025-07-02 07:53:57 : system : info : Oracle connection established successfully
+2025-07-02 07:54:03 : system : info : Oracle connection established successfully
+2025-07-02 07:54:21 : system : info : Oracle connection established successfully
+2025-07-02 07:56:31 : system : info : Oracle connection established successfully
+2025-07-02 07:56:39 : system : info : Oracle connection established successfully
+2025-07-02 07:57:15 : system : info : Oracle connection established successfully
+2025-07-02 07:57:15 : system : info : Oracle connection established successfully
+2025-07-02 07:57:32 : system : info : Oracle connection established successfully
+2025-07-02 07:57:52 : system : info : Oracle connection established successfully
+2025-07-02 07:58:23 : system : info : Oracle connection established successfully
+2025-07-02 07:58:48 : system : info : Oracle connection established successfully
+2025-07-02 07:59:37 : system : info : Oracle connection established successfully
+2025-07-02 07:59:48 : rajesh : info : User rajesh authenticated successfully
+2025-07-02 07:59:48 : rajesh : info : User rajesh authenticated successfully
+2025-07-02 07:59:49 : system : info : Oracle connection established successfully
+2025-07-02 07:59:49 : system : info : Oracle connection established successfully
+2025-07-02 08:00:43 : system : info : Oracle connection established successfully
+2025-07-02 08:00:47 : system : info : Oracle connection established successfully
+2025-07-02 08:00:50 : system : info : Oracle connection established successfully
+2025-07-02 08:01:00 : system : info : Oracle connection established successfully
+2025-07-02 08:01:12 : system : info : Stopping job: DIM_ACT, Start Date: 2025-07-01T22:31:01.000Z, Force: Y
+2025-07-02 08:01:12 : system : info : Parsed date: 2025-07-01 22:31:01
+2025-07-02 08:01:12 : system : info : Oracle connection established successfully
+2025-07-02 08:01:12 : system : info : Job DIM_ACT stopped successfully
+2025-07-02 08:01:12 : system : info : Oracle connection established successfully
+2025-07-02 08:01:21 : system : info : Oracle connection established successfully
+2025-07-02 08:01:22 : system : info : Oracle connection established successfully
+2025-07-02 08:05:15 : system : info : Stopping job: DIM_ACT, Start Date: 2025-07-01T22:31:01.000Z, Force: Y
+2025-07-02 08:05:15 : system : info : Parsed date: 2025-07-01 22:31:01
+2025-07-02 08:05:15 : system : info : Oracle connection established successfully
+2025-07-02 08:05:15 : system : info : Job DIM_ACT stopped successfully
+2025-07-02 08:05:15 : system : info : Oracle connection established successfully
+2025-07-02 08:05:21 : system : info : Oracle connection established successfully
+2025-07-02 08:05:22 : system : info : Oracle connection established successfully
+2025-07-02 08:05:22 : system : info : Oracle connection established successfully
+2025-07-02 08:05:22 : system : info : Oracle connection established successfully
+2025-07-02 08:05:22 : system : info : Oracle connection established successfully
+2025-07-02 08:05:22 : system : info : Oracle connection established successfully
+2025-07-02 08:05:22 : system : info : Oracle connection established successfully
+2025-07-02 08:05:22 : system : info : Oracle connection established successfully
+2025-07-02 08:05:23 : system : info : Oracle connection established successfully
+2025-07-02 08:05:23 : system : info : Oracle connection established successfully
+2025-07-02 08:05:23 : system : info : Oracle connection established successfully
+2025-07-02 08:05:23 : system : info : Oracle connection established successfully
+2025-07-02 08:05:23 : system : info : Oracle connection established successfully
+2025-07-02 08:05:23 : system : info : Oracle connection established successfully
+2025-07-02 08:05:24 : system : info : Oracle connection established successfully
+2025-07-02 08:05:25 : system : info : Oracle connection established successfully
+2025-07-02 08:05:26 : system : info : Oracle connection established successfully
+2025-07-02 08:05:26 : system : info : Oracle connection established successfully
+2025-07-02 08:06:17 : system : info : Stopping job: DIM_ACCOUNT, Start Date: 2025-07-01T22:22:29.000Z, Force: Y
+2025-07-02 08:06:17 : system : info : Parsed date: 2025-07-01 22:22:29
+2025-07-02 08:06:17 : system : info : Oracle connection established successfully
+2025-07-02 08:06:17 : system : info : Job DIM_ACCOUNT stopped successfully
+2025-07-02 08:06:18 : system : info : Oracle connection established successfully
+2025-07-02 08:06:29 : system : info : Oracle connection established successfully
+2025-07-02 08:06:31 : system : info : Oracle connection established successfully
+2025-07-02 08:06:38 : system : info : Oracle connection established successfully
+2025-07-02 08:06:38 : system : info : Oracle connection established successfully
+2025-07-02 08:06:38 : system : info : Oracle connection established successfully
+2025-07-02 08:06:39 : system : info : Oracle connection established successfully
+2025-07-02 08:06:39 : system : info : Oracle connection established successfully
+2025-07-02 08:06:39 : system : info : Oracle connection established successfully
+2025-07-02 08:06:39 : system : info : Oracle connection established successfully
+2025-07-02 08:06:39 : system : info : Oracle connection established successfully
+2025-07-02 08:06:40 : system : info : Oracle connection established successfully
+2025-07-02 08:06:40 : system : info : Oracle connection established successfully
+2025-07-02 08:06:40 : system : info : Oracle connection established successfully
+2025-07-02 08:06:40 : system : info : Oracle connection established successfully
+2025-07-02 08:06:40 : system : info : Oracle connection established successfully
+2025-07-02 08:06:40 : system : info : Oracle connection established successfully
+2025-07-02 08:06:40 : system : info : Oracle connection established successfully
+2025-07-02 08:06:41 : system : info : Oracle connection established successfully
+2025-07-02 08:06:41 : system : info : Oracle connection established successfully
+2025-07-02 08:06:41 : system : info : Oracle connection established successfully
+2025-07-02 08:06:46 : system : info : Stopping job: DIM_ACT, Start Date: 2025-07-01T22:36:40.000Z, Force: Y
+2025-07-02 08:06:46 : system : info : Parsed date: 2025-07-01 22:36:40
+2025-07-02 08:06:46 : system : info : Oracle connection established successfully
+2025-07-02 08:06:46 : system : info : Job DIM_ACT stopped successfully
+2025-07-02 08:06:47 : system : info : Oracle connection established successfully
+2025-07-02 08:17:36 : system : info : Oracle connection established successfully
+2025-07-02 08:56:26 : system : info : Reading license from: /mnt/d/INNOVA/DW_TOOL/ahana_dw_tool/backend/modules/license/license.key
+2025-07-02 08:56:26 : system : info : Validating license with system ID: 00155daaf457
+2025-07-02 08:56:26 : system : info : License validation successful
+2025-07-02 08:56:26 : system : info : License status checked successfully
+2025-07-02 08:56:55 : system : error : Error establishing Oracle connection: DPY-6005: cannot connect to database (CONNECTION_ID=jlq/QAsCHc30ah4gST2TWw==).
+timed out
+2025-07-02 08:57:16 : system : error : Error establishing Oracle connection: DPY-6005: cannot connect to database (CONNECTION_ID=hs569ybWOb/50Lzfgg3IqQ==).
+timed out
+2025-07-02 08:57:23 : system : info : Oracle connection established successfully
+2025-07-02 08:58:35 : system : info : Oracle connection established successfully
+2025-07-02 09:02:40 : system : info : Oracle connection established successfully
+2025-07-02 09:03:34 : system : info : Oracle connection established successfully
+2025-07-02 09:03:37 : system : info : Oracle connection established successfully
+2025-07-02 09:03:38 : system : info : Oracle connection established successfully
+2025-07-02 09:04:03 : system : info : Oracle connection established successfully
+2025-07-02 09:04:03 : system : info : Oracle connection established successfully
+2025-07-02 09:04:28 : rajesh : info : User rajesh authenticated successfully
+2025-07-02 09:04:28 : rajesh : info : User rajesh authenticated successfully
+2025-07-02 09:04:29 : system : info : Oracle connection established successfully
+2025-07-02 09:04:29 : system : info : Oracle connection established successfully
+2025-07-02 09:04:56 : system : info : Stopping job: DIM_ACCOUNT, Start Date: 2025-07-01T22:22:29.000Z, Force: Y
+2025-07-02 09:04:56 : system : info : Parsed date: 2025-07-01 22:22:29
+2025-07-02 09:04:56 : system : info : Oracle connection established successfully
+2025-07-02 09:04:56 : system : info : Job DIM_ACCOUNT stopped successfully
+2025-07-02 09:04:57 : system : info : Oracle connection established successfully
+2025-07-02 09:26:18 : system : info : Oracle connection established successfully
+2025-07-02 09:32:11 : system : info : Server stopped.
+2025-07-02 09:32:11 : system : info : Server stopped.
+2025-07-02 09:32:14 : system : info : Loading secret key from: /mnt/d/INNOVA/DW_TOOL/ahana_dw_tool/backend/modules/license/secret.key
+2025-07-02 09:32:14 : system : info : License Manager initialized with system ID: 00155daaf457
+2025-07-02 09:32:14 : system : info : Loading secret key from: /mnt/d/INNOVA/DW_TOOL/ahana_dw_tool/backend/modules/license/secret.key
+2025-07-02 09:32:14 : system : info : License Manager initialized with system ID: 00155daaf457
+2025-07-02 09:32:15 : system : info : Server starting...
+2025-07-02 09:32:16 : system : info : Loading secret key from: /mnt/d/INNOVA/DW_TOOL/ahana_dw_tool/backend/modules/license/secret.key
+2025-07-02 09:32:16 : system : info : License Manager initialized with system ID: 00155daaf457
+2025-07-02 09:32:16 : system : info : Loading secret key from: /mnt/d/INNOVA/DW_TOOL/ahana_dw_tool/backend/modules/license/secret.key
+2025-07-02 09:32:16 : system : info : License Manager initialized with system ID: 00155daaf457
+2025-07-02 09:32:16 : system : info : Server starting...
+2025-07-02 09:32:30 : rajesh : info : User rajesh authenticated successfully
+2025-07-02 09:32:30 : rajesh : info : User rajesh authenticated successfully
+2025-07-02 09:32:31 : system : info : Oracle connection established successfully
+2025-07-02 09:32:31 : system : info : Oracle connection established successfully
+2025-07-02 09:32:39 : system : info : Stopping job: DIM_ACCOUNT, Start Date: 2025-07-02 03:52:29, Force: Y
+2025-07-02 09:32:39 : system : info : Oracle connection established successfully
+2025-07-02 09:32:39 : system : info : Job DIM_ACCOUNT stopped successfully
+2025-07-02 09:32:40 : system : info : Oracle connection established successfully
+2025-07-02 09:32:58 : system : info : Oracle connection established successfully
+2025-07-02 09:32:59 : system : info : Oracle connection established successfully
+2025-07-02 09:33:04 : system : info : Oracle connection established successfully
+2025-07-02 09:33:05 : system : info : Oracle connection established successfully
+2025-07-02 09:33:14 : system : info : Oracle connection established successfully
+2025-07-02 09:33:14 : system : info : Oracle connection established successfully
+2025-07-02 09:33:14 : system : info : Oracle connection established successfully
+2025-07-02 09:33:16 : system : info : Oracle connection established successfully
+2025-07-02 09:33:16 : system : info : Oracle connection established successfully
+2025-07-02 09:33:16 : system : info : Oracle connection established successfully
+2025-07-02 09:33:16 : system : info : Oracle connection established successfully
+2025-07-02 09:33:16 : system : info : Oracle connection established successfully
+2025-07-02 09:33:16 : system : info : Oracle connection established successfully
+2025-07-02 09:33:16 : system : info : Oracle connection established successfully
+2025-07-02 09:33:16 : system : info : Oracle connection established successfully
+2025-07-02 09:33:16 : system : info : Oracle connection established successfully
+2025-07-02 09:33:17 : system : info : Oracle connection established successfully
+2025-07-02 09:33:17 : system : info : Oracle connection established successfully
+2025-07-02 09:33:17 : system : info : Oracle connection established successfully
+2025-07-02 09:33:17 : system : info : Oracle connection established successfully
+2025-07-02 09:33:17 : system : info : Oracle connection established successfully
+2025-07-02 09:33:18 : system : info : Oracle connection established successfully
+2025-07-02 09:33:21 : system : info : Stopping job: DIM_ACT, Start Date: 2025-07-02 05:33:15, Force: Y
+2025-07-02 09:33:21 : system : info : Oracle connection established successfully
+2025-07-02 09:33:21 : system : info : Job DIM_ACT stopped successfully
+2025-07-02 09:33:22 : system : info : Oracle connection established successfully
+2025-07-02 09:34:47 : system : info : Oracle connection established successfully
+2025-07-02 09:34:47 : system : info : Fetched 4 SQL codes
+2025-07-02 09:34:47 : system : info : Oracle connection established successfully
+2025-07-02 09:34:47 : system : info : Fetched 4 SQL codes
+2025-07-02 09:34:49 : system : info : Oracle connection established successfully
+2025-07-02 09:34:49 : system : info : Oracle connection established successfully
+2025-07-02 09:34:58 : system : info : Oracle connection established successfully
+2025-07-02 09:34:59 : system : info : Oracle connection established successfully
+2025-07-02 09:35:05 : system : info : Oracle connection established successfully
+2025-07-02 09:35:17 : system : info : Oracle connection established successfully
+2025-07-02 09:35:17 : system : info : Oracle connection established successfully
+2025-07-02 09:35:18 : system : info : Oracle connection established successfully
+2025-07-02 09:35:18 : system : info : Oracle connection established successfully
+2025-07-02 09:35:26 : system : info : Oracle connection established successfully
+2025-07-02 09:35:26 : system : info : Oracle connection established successfully
+2025-07-02 09:35:28 : system : info : Oracle connection established successfully
+2025-07-02 09:35:31 : system : info : Oracle connection established successfully
+2025-07-02 09:35:32 : system : info : Oracle connection established successfully
+2025-07-02 09:35:33 : system : info : Oracle connection established successfully
+2025-07-02 09:35:35 : system : info : Oracle connection established successfully
+2025-07-02 09:35:35 : system : info : Oracle connection established successfully
+2025-07-02 09:35:35 : system : info : Oracle connection established successfully
+2025-07-02 09:35:36 : system : info : Oracle connection established successfully
+2025-07-02 09:35:36 : system : info : Oracle connection established successfully
+2025-07-02 09:35:36 : system : info : Oracle connection established successfully
+2025-07-02 09:35:39 : system : info : Oracle connection established successfully
+2025-07-02 09:36:00 : system : info : Oracle connection established successfully
+2025-07-02 09:36:00 : system : info : Oracle connection established successfully
+2025-07-02 09:36:03 : system : info : Oracle connection established successfully
+2025-07-02 09:36:03 : system : info : Oracle connection established successfully
+2025-07-02 09:36:07 : system : info : Oracle connection established successfully
+2025-07-02 09:36:07 : system : info : Oracle connection established successfully
+2025-07-02 09:36:07 : system : info : Oracle connection established successfully
+2025-07-02 09:36:07 : system : info : Oracle connection established successfully
+2025-07-02 09:36:07 : system : info : Oracle connection established successfully
+2025-07-02 09:36:07 : system : info : Oracle connection established successfully
+2025-07-02 09:38:54 : system : info : Oracle connection established successfully
+2025-07-02 09:38:54 : system : info : Fetched 4 SQL codes
+2025-07-02 09:38:54 : system : info : Oracle connection established successfully
+2025-07-02 09:38:54 : system : info : Fetched 4 SQL codes
+2025-07-02 09:39:07 : system : info : Oracle connection established successfully
+2025-07-02 09:39:07 : system : info : Oracle connection established successfully
+2025-07-02 09:39:18 : system : info : Oracle connection established successfully
+2025-07-02 09:39:19 : system : info : Oracle connection established successfully
+2025-07-02 09:42:17 : system : error : Unhandled exception: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2025-07-02 09:42:36 : system : error : Unhandled exception: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2025-07-02 09:43:07 : rajesh : info : User rajesh authenticated successfully
+2025-07-02 09:43:07 : rajesh : info : User rajesh authenticated successfully
+2025-07-02 09:43:08 : system : info : Oracle connection established successfully
+2025-07-02 09:43:08 : system : info : Oracle connection established successfully
+2025-07-02 09:54:01 : system : info : Oracle connection established successfully
+2025-07-02 09:54:01 : system : info : Fetched 4 SQL codes
+2025-07-02 09:54:01 : system : info : Oracle connection established successfully
+2025-07-02 09:54:01 : system : info : Fetched 4 SQL codes
+2025-07-02 09:54:04 : system : info : Oracle connection established successfully
+2025-07-02 09:54:05 : system : info : Oracle connection established successfully
+2025-07-02 09:54:07 : system : info : Oracle connection established successfully
+2025-07-02 09:54:08 : system : info : Oracle connection established successfully
+2025-07-02 09:54:08 : system : info : Oracle connection established successfully
+2025-07-02 09:54:08 : system : info : Oracle connection established successfully
+2025-07-02 09:54:09 : system : info : Oracle connection established successfully
+2025-07-02 09:54:09 : system : info : Oracle connection established successfully
+2025-07-02 09:54:15 : system : info : Oracle connection established successfully
+2025-07-02 09:54:27 : system : info : Oracle connection established successfully
+2025-07-02 09:54:28 : system : info : Oracle connection established successfully
+2025-07-02 09:54:31 : system : info : Oracle connection established successfully
+2025-07-02 09:54:32 : system : info : Oracle connection established successfully
+2025-07-02 09:54:34 : system : info : Oracle connection established successfully
+2025-07-02 09:54:39 : system : info : Oracle connection established successfully
+2025-07-02 09:54:40 : system : info : Oracle connection established successfully
+2025-07-02 09:54:42 : system : info : Oracle connection established successfully
+2025-07-02 09:54:42 : system : info : Oracle connection established successfully
+2025-07-02 09:54:46 : system : info : Oracle connection established successfully
+2025-07-02 09:54:50 : system : info : Oracle connection established successfully
+2025-07-02 09:54:50 : system : info : Oracle connection established successfully
+2025-07-02 09:54:50 : system : info : Oracle connection established successfully
+2025-07-02 09:54:50 : system : info : Oracle connection established successfully
+2025-07-02 09:54:50 : system : info : Oracle connection established successfully
+2025-07-02 09:54:51 : system : info : Oracle connection established successfully
+2025-07-02 09:54:53 : system : info : Oracle connection established successfully
+2025-07-02 09:54:54 : system : info : Oracle connection established successfully
+2025-07-02 09:54:55 : system : info : Oracle connection established successfully
+2025-07-02 09:54:59 : system : info : Oracle connection established successfully
+2025-07-02 09:54:59 : system : info : Oracle connection established successfully
+2025-07-02 09:54:59 : system : info : Oracle connection established successfully
+2025-07-02 09:55:00 : system : info : Oracle connection established successfully
+2025-07-02 09:55:00 : system : info : Oracle connection established successfully
+2025-07-02 09:55:00 : system : info : Oracle connection established successfully
+2025-07-02 09:55:02 : system : info : Oracle connection established successfully
+2025-07-02 09:55:05 : system : info : Oracle connection established successfully
+2025-07-02 09:55:06 : system : info : Oracle connection established successfully
+2025-07-02 09:55:08 : system : info : Oracle connection established successfully
+2025-07-02 09:55:08 : system : info : Oracle connection established successfully
+2025-07-02 09:55:08 : system : info : Oracle connection established successfully
+2025-07-02 09:55:09 : system : info : Oracle connection established successfully
+2025-07-02 09:55:09 : system : info : Oracle connection established successfully
+2025-07-02 09:55:09 : system : info : Oracle connection established successfully
+2025-07-02 09:55:10 : system : info : Oracle connection established successfully
+2025-07-02 09:55:22 : system : info : Oracle connection established successfully
+2025-07-02 09:55:23 : system : info : Oracle connection established successfully
+2025-07-02 09:55:44 : system : info : Oracle connection established successfully
+2025-07-02 09:55:44 : system : info : Fetched 4 SQL codes
+2025-07-02 09:55:44 : system : info : Oracle connection established successfully
+2025-07-02 09:55:44 : system : info : Fetched 4 SQL codes
+2025-07-02 09:55:49 : system : info : Oracle connection established successfully
+2025-07-02 09:55:49 : system : info : Fetched SQL logic for code: DIM_ACCOUNT
+2025-07-02 09:55:52 : system : info : Oracle connection established successfully
+2025-07-02 09:55:52 : system : info : SQL validation passed successfully
+2025-07-02 09:56:07 : system : info : Oracle connection established successfully
+2025-07-02 09:56:07 : system : info : SQL validation failed
+2025-07-02 09:56:23 : system : info : Oracle connection established successfully
+2025-07-02 09:56:23 : system : info : Fetched SQL logic for code: DIM_ACCOUNT_2
+2025-07-02 09:56:29 : system : info : Oracle connection established successfully
+2025-07-02 09:56:29 : system : info : Fetched SQL logic for code: TEST
+2025-07-02 09:56:31 : system : info : Oracle connection established successfully
+2025-07-02 09:56:31 : system : info : Fetched SQL logic for code: DIM_ACCOUNT
+2025-07-02 10:04:08 : system : info : Oracle connection established successfully
+2025-07-02 10:04:08 : system : info : Fetched 4 SQL codes
